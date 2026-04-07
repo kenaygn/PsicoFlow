@@ -60,3 +60,27 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# --- ADIÇÕES EXTRAS ---
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode extra
+DerivedData/
+build/
+*.xcuserstate
+*.xcbkptlist
+
+# SPM extra
+.swiftpm/xcode/xcuserdata/
+
+# Segredos e Configurações Locais
+.env
+.env.*
+Secrets.swift
+
+# Caches
+.swiftlint
