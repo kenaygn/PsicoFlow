@@ -1,0 +1,73 @@
+//
+//  OccupiedSlotCard.swift
+//  PsicoFlow
+//
+//  Created by Kenay on 08/04/26.
+//
+
+import SwiftUI
+
+// O cartão que aparece quando tem paciente marcado
+struct OccupiedSlotCard: View {
+    var sessao: Session
+    var paciente: Patient
+    var onSelect: () -> Void
+    
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    Text(paciente.nome)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(Color(.darkText))
+                        .multilineTextAlignment(.leading)
+                    
+                    Spacer()
+                    
+                    // Badge de Status
+                    Text(sessao.status.rawValue.capitalized)
+                        .font(.system(size: 10, weight: .bold))
+                        .textCase(.uppercase)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(corBadge(status: sessao.status).opacity(0.15))
+                        .foregroundColor(corBadge(status: sessao.status))
+                        .clipShape(Capsule())
+                }
+                
+                HStack(spacing: 16) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                        Text("50 min")
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "creditcard")
+                        Text(String(format: "R$ %.0f", paciente.valor))
+                    }
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.secondary)
+            }
+            .padding(16)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color(.systemGray6), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.02), radius: 5, y: 2)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func corBadge(status: SessionStatus) -> Color {
+        switch status {
+        case .realizada: return .gray
+        case .agendada: return .teal
+        case .adiada: return .orange
+        case .cancelada: return .red
+        }
+    }
+}
+

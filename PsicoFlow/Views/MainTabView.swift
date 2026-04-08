@@ -24,9 +24,7 @@ struct MainTabView: View {
                 .tag(0)
             
             // 2. ABA: AGENDA (Placeholder)
-            Text("Tela de Agenda em construção 🗓️")
-                .font(.title)
-                .foregroundColor(.gray)
+            AgendaView()
                 .tabItem {
                     Image(systemName: "calendar")
                     Text("Agenda")

@@ -63,6 +63,9 @@ class FinanceViewModel: ObservableObject {
     
     var labelPeriodo: String {
         let formatter = DateFormatter()
+        
+        formatter.locale = Locale(identifier: "pt_BR")
+        
         if viewMode == .mensal {
             formatter.dateFormat = "MMMM yyyy"
         } else {
