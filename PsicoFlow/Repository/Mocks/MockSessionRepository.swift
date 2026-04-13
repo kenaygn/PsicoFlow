@@ -17,4 +17,8 @@ class MockSessionRepository: SessionRepositoryProtocol {
             MockData.sessoesExemplo[index] = sessao
         }
     }
+    
+    func salvarSessao(_ sessao: Session) {
+            MockData.sessoesExemplo.append(sessao)
+        }
 }

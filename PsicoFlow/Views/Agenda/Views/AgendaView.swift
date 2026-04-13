@@ -13,17 +13,82 @@ struct AgendaView: View {
     // Gatilhos de Navegação Programática
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
+    @State private var mostrarNovaSessao = false
+    
+    @State private var horarioSugerido: String = "08:00"
     
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
+                    // --- 1. CABEÇALHO DA AGENDA (CONTROLES DE TEMPO) ---
+                    HStack {
+                        
+                        Text(viewModel.mesAnoAtual)
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(Color(.darkText))
+                        
+                        Spacer()
+                        
+                        // Lado Direito: Botão Hoje e Setas de Navegação
+                        HStack(spacing: 12) {
+                            
+                            // Botão Hoje
+                            Button(action: {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                    viewModel.irParaHoje()
+                                }
+                            }) {
+                                Text("Hoje")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(viewModel.isHojeSelecionado ? Color(.gray) : Color(.teal))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(viewModel.isHojeSelecionado ? Color(.systemGray6) : Color.teal.opacity(0.15))
+                                    .clipShape(Capsule())
+                            }
+                            .disabled(viewModel.isHojeSelecionado)
+                            
+                            // Setinhas de Navegação
+                            HStack(spacing: 8) {
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                        viewModel.voltarSemana()
+                                    }
+                                }) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.gray)
+                                        .frame(width: 32, height: 32)
+                                        .background(Color(.systemGray6))
+                                        .clipShape(Circle())
+                                }
+                                
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                        viewModel.avancarSemana()
+                                    }
+                                }) {
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.gray)
+                                        .frame(width: 32, height: 32)
+                                        .background(Color(.systemGray6))
+                                        .clipShape(Circle())
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, -12)
                     
-                    // --- 1. SELETOR DE DIAS DA SEMANA ---
+                    // --- 2. SELETOR DE DIAS DA SEMANA ---
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(viewModel.weekDays, id: \.self) { date in
                                 let isSelected = viewModel.isMesmoDia(date, viewModel.selectedDate)
+                                let isToday = viewModel.isHoje(date) // 👇 Nosso novo radar
                                 
                                 Button(action: {
                                     withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -33,18 +98,22 @@ struct AgendaView: View {
                                     VStack(spacing: 4) {
                                         Text(viewModel.nomeCurtoDoDia(date))
                                             .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(isSelected ? Color.white.opacity(0.8) : .secondary)
+                                        // Se for hoje, a sigla ganha um tom sutil da cor do app
+                                            .foregroundColor(isSelected ? .white.opacity(0.8) : (isToday ? .teal.opacity(0.8) : .secondary))
                                         
                                         Text(viewModel.numeroDoDia(date))
                                             .font(.system(size: 20, weight: .bold))
-                                            .foregroundColor(isSelected ? .white : Color(.darkText))
+                                        // Se for hoje, o número brilha na cor do app
+                                            .foregroundColor(isSelected ? .white : (isToday ? .teal : Color(.darkText)))
                                     }
                                     .frame(width: 60, height: 72)
-                                    .background(isSelected ? Color(.darkText) : Color.white)
+                                    // Se for hoje E estiver selecionado, o fundo fica Teal. Se não, segue a regra normal.
+                                    .background(isSelected ? (isToday ? Color.teal : Color(.darkText)) : Color.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .stroke(Color(.systemGray6), lineWidth: isSelected ? 0 : 1)
+                                        // Adiciona uma bordinha colorida se for hoje e não estiver selecionado
+                                            .stroke(isToday && !isSelected ? Color.teal.opacity(0.3) : Color(.systemGray6), lineWidth: isSelected ? 0 : 1)
                                     )
                                     .shadow(color: Color.black.opacity(isSelected ? 0.2 : 0.02), radius: 5, y: 3)
                                 }
@@ -52,16 +121,15 @@ struct AgendaView: View {
                         }
                         .padding(.horizontal, 20)
                     }
-                    .padding(.top, 8)
                     
-                    // --- 2. LINHA DO TEMPO (TIMELINE) ---
+                    // --- 3. LINHA DO TEMPO (TIMELINE) ---
                     ZStack(alignment: .topLeading) {
                         
                         // A Linha Vertical Decorativa (Fica no fundo)
                         Rectangle()
                             .fill(Color(.systemGray5))
                             .frame(width: 2)
-                            // Movemos a linha para alinhar com os pontinhos (ajuste fino)
+                        // Movemos a linha para alinhar com os pontinhos (ajuste fino)
                             .padding(.leading, 63)
                             .padding(.top, 24)
                         
@@ -86,7 +154,7 @@ struct AgendaView: View {
                                             .frame(width: 12, height: 12)
                                             .overlay(Circle().stroke(Color(.systemGroupedBackground), lineWidth: 3))
                                             .padding(.leading, 10)
-                                            // Ajuda a alinhar perfeitamente no topo do cartão
+                                        // Ajuda a alinhar perfeitamente no topo do cartão
                                             .offset(y: 4)
                                     }
                                     
@@ -101,7 +169,8 @@ struct AgendaView: View {
                                     } else {
                                         // Slot Vazio
                                         EmptySlotCard {
-                                            print("Abrir modal de Nova Sessão para às \(time)")
+                                            self.horarioSugerido = time
+                                            self.mostrarNovaSessao = true
                                         }
                                     }
                                 }
@@ -112,7 +181,6 @@ struct AgendaView: View {
                 }
                 .padding(.bottom, 100)
             }
-            .background(Color(.systemGroupedBackground))
             .navigationTitle("Agenda")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
@@ -124,6 +192,18 @@ struct AgendaView: View {
                     PatientDetailView(paciente: paciente)
                 }
             }
+            .sheet(isPresented: $mostrarNovaSessao, onDismiss: {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    viewModel.carregarDados()
+                }
+                
+            }) {
+                NewSessionView(
+                    dataSugerida: viewModel.selectedDate, 
+                    horarioSugerido: horarioSugerido
+                )
+            }
+            
         }
     }
 }

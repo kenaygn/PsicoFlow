@@ -11,4 +11,5 @@ import Foundation
 protocol SessionRepositoryProtocol {
     func fetchSessoes() -> [Session]
     func atualizarSessao(_ sessao: Session)
+    func salvarSessao(_ sessao: Session)
 }

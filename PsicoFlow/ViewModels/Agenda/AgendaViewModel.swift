@@ -13,11 +13,13 @@ class AgendaViewModel: ObservableObject {
     @Published var selectedDate: Date = Date()
     @Published var weekDays: [Date] = []
     
+    @Published private var dataBaseDaSemana: Date = Date()
+    
     // Dados Brutos
     @Published private var todasSessoes: [Session] = []
     @Published private var pacientes: [Patient] = []
     
-    // Horários fixos da clínica (08:00 às 22:00)
+    // Horários fixos da clínica (07:00 às 22:00)
     let timeSlots: [String] = [
         "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
         "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
@@ -43,15 +45,37 @@ class AgendaViewModel: ObservableObject {
         self.pacientes = patientRepository.fetchPacientes()
     }
     
+    // MARK: - Lógica de Navegação de Semanas
+    
+    func avancarSemana() {
+        if let proxima = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: dataBaseDaSemana) {
+            dataBaseDaSemana = proxima
+            gerarDiasDaSemana()
+        }
+    }
+    
+    func voltarSemana() {
+        if let anterior = Calendar.current.date(byAdding: .weekOfYear, value: -1, to: dataBaseDaSemana) {
+            dataBaseDaSemana = anterior
+            gerarDiasDaSemana()
+        }
+    }
+    
+    var mesAnoAtual: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: selectedDate).capitalized
+    }
+    
     // MARK: - Lógica de Calendário
     
-    // Gera os 7 dias da semana atual (Domingo a Sábado)
+    // Gera os 7 dias baseados na "dataBaseDaSemana" em vez de ser fixo no hoje
     private func gerarDiasDaSemana() {
         let calendar = Calendar.current
-        let hoje = Date()
         
-        // Encontra o domingo desta semana
-        guard let inicioDaSemana = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: hoje)) else { return }
+        // Encontra o domingo da semana base
+        guard let inicioDaSemana = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: dataBaseDaSemana)) else { return }
         
         var dias: [Date] = []
         for i in 0..<7 {
@@ -61,11 +85,12 @@ class AgendaViewModel: ObservableObject {
         }
         self.weekDays = dias
         
-        // Se o dia atual estiver nessa semana, seleciona ele por padrão
-        if dias.contains(where: { calendar.isDate($0, inSameDayAs: hoje) }) {
-            self.selectedDate = hoje
+        // Se a semana gerada for a semana atual, seleciona o dia de hoje.
+        // Se for uma semana do futuro/passado, seleciona a segunda-feira (índice 1).
+        if dias.contains(where: { calendar.isDate($0, inSameDayAs: Date()) }) {
+            self.selectedDate = Date()
         } else {
-            self.selectedDate = inicioDaSemana
+            self.selectedDate = dias[1] // Segunda-feira
         }
     }
     
@@ -94,7 +119,6 @@ class AgendaViewModel: ObservableObject {
     
     // MARK: - Lógica de Timeline
     
-    // A View vai passar "14:00" e essa função retorna a sessão se existir
     func sessaoPara(horario: String) -> Session? {
         return todasSessoes.first { sessao in
             isMesmoDia(sessao.dataDaSessão, selectedDate) && sessao.horaInicio == horario && sessao.status != .cancelada
@@ -103,5 +127,28 @@ class AgendaViewModel: ObservableObject {
     
     func pacientePara(sessao: Session) -> Patient? {
         return pacientes.first { $0.id == sessao.pacienteID }
+    }
+    
+    // Pula direto para a data de Hoje
+    func irParaHoje() {
+        dataBaseDaSemana = Date()
+        gerarDiasDaSemana()
+    }
+    
+    // Pula para qualquer data selecionada no calendário
+    func pularParaData(_ data: Date) {
+        dataBaseDaSemana = data
+        gerarDiasDaSemana()
+        selecionarData(data)
+    }
+    
+    // Verifica se o dia selecionado na tela é o dia de hoje
+    var isHojeSelecionado: Bool {
+        return Calendar.current.isDateInToday(selectedDate)
+    }
+    
+    // Verifica se uma data específica da fileira é o dia de hoje
+    func isHoje(_ data: Date) -> Bool {
+        return Calendar.current.isDateInToday(data)
     }
 }
