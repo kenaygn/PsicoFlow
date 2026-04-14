@@ -14,8 +14,15 @@ struct AgendaView: View {
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
     @State private var mostrarNovaSessao = false
-    
     @State private var horarioSugerido: String = "08:00"
+    
+    // Gatilhos da Modal de Ação Rápida
+    @State private var sessaoParaAcao: Session? = nil
+    @State private var mostrarAcoesRapidas: Bool = false
+    
+    @State private var mostrarEdicaoDeSessao: Bool = false
+    @State private var sessaoParaEditar: Session? = nil
+    
     
     var body: some View {
         NavigationStack {
@@ -88,7 +95,7 @@ struct AgendaView: View {
                         HStack(spacing: 12) {
                             ForEach(viewModel.weekDays, id: \.self) { date in
                                 let isSelected = viewModel.isMesmoDia(date, viewModel.selectedDate)
-                                let isToday = viewModel.isHoje(date) // 👇 Nosso novo radar
+                                let isToday = viewModel.isHoje(date)
                                 
                                 Button(action: {
                                     withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -98,21 +105,17 @@ struct AgendaView: View {
                                     VStack(spacing: 4) {
                                         Text(viewModel.nomeCurtoDoDia(date))
                                             .font(.system(size: 11, weight: .semibold))
-                                        // Se for hoje, a sigla ganha um tom sutil da cor do app
                                             .foregroundColor(isSelected ? .white.opacity(0.8) : (isToday ? .teal.opacity(0.8) : .secondary))
                                         
                                         Text(viewModel.numeroDoDia(date))
                                             .font(.system(size: 20, weight: .bold))
-                                        // Se for hoje, o número brilha na cor do app
                                             .foregroundColor(isSelected ? .white : (isToday ? .teal : Color(.darkText)))
                                     }
                                     .frame(width: 60, height: 72)
-                                    // Se for hoje E estiver selecionado, o fundo fica Teal. Se não, segue a regra normal.
                                     .background(isSelected ? (isToday ? Color.teal : Color(.darkText)) : Color.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        // Adiciona uma bordinha colorida se for hoje e não estiver selecionado
                                             .stroke(isToday && !isSelected ? Color.teal.opacity(0.3) : Color(.systemGray6), lineWidth: isSelected ? 0 : 1)
                                     )
                                     .shadow(color: Color.black.opacity(isSelected ? 0.2 : 0.02), radius: 5, y: 3)
@@ -129,7 +132,6 @@ struct AgendaView: View {
                         Rectangle()
                             .fill(Color(.systemGray5))
                             .frame(width: 2)
-                        // Movemos a linha para alinhar com os pontinhos (ajuste fino)
                             .padding(.leading, 63)
                             .padding(.top, 24)
                         
@@ -154,7 +156,6 @@ struct AgendaView: View {
                                             .frame(width: 12, height: 12)
                                             .overlay(Circle().stroke(Color(.systemGroupedBackground), lineWidth: 3))
                                             .padding(.leading, 10)
-                                        // Ajuda a alinhar perfeitamente no topo do cartão
                                             .offset(y: 4)
                                     }
                                     
@@ -162,9 +163,9 @@ struct AgendaView: View {
                                     if let sessao = sessao, let paciente = viewModel.pacientePara(sessao: sessao) {
                                         // SLot Ocupado
                                         OccupiedSlotCard(sessao: sessao, paciente: paciente) {
-                                            // Dispara a navegação
+                                            self.sessaoParaAcao = sessao
                                             self.pacienteSelecionado = paciente
-                                            self.navegarParaProntuario = true
+                                            self.mostrarAcoesRapidas = true
                                         }
                                     } else {
                                         // Slot Vazio
@@ -186,24 +187,41 @@ struct AgendaView: View {
             .onAppear {
                 viewModel.carregarDados()
             }
-            // Gatilho invisível de roteamento (Clean Navigation)
+            // Gatilho invisível de roteamento
             .navigationDestination(isPresented: $navegarParaProntuario) {
                 if let paciente = pacienteSelecionado {
                     PatientDetailView(paciente: paciente)
                 }
             }
+            // Modal de Nova Sessão Avulsa
             .sheet(isPresented: $mostrarNovaSessao, onDismiss: {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                     viewModel.carregarDados()
                 }
-                
             }) {
                 NewSessionView(
-                    dataSugerida: viewModel.selectedDate, 
+                    dataSugerida: viewModel.selectedDate,
                     horarioSugerido: horarioSugerido
                 )
             }
-            
+            // Modal de Ação Rápida (Bottom Sheet)
+            .sheet(isPresented: $mostrarAcoesRapidas) {
+                if let sessao = sessaoParaAcao, let paciente = pacienteSelecionado {
+                    SessionQuickActionView(
+                        sessao: sessao,
+                        paciente: paciente,
+                        onUpdateStatus: { novoStatus, novaData in
+                            withAnimation {
+                                viewModel.atualizarStatus(da: sessao, para: novoStatus, novaData: novaData)
+                            }
+                        },
+                        onOpenProfile: {
+                            self.navegarParaProntuario = true
+                        }
+                    )
+                }
+            }
+
         }
     }
 }

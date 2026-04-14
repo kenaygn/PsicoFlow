@@ -151,4 +151,23 @@ class AgendaViewModel: ObservableObject {
     func isHoje(_ data: Date) -> Bool {
         return Calendar.current.isDateInToday(data)
     }
+    
+    // MARK: - Ações Rápidas da Sessão
+    func atualizarStatus(da sessao: Session, para novoStatus: SessionStatus, novaData: Date? = nil) {
+        var sessaoAtualizada = sessao
+        sessaoAtualizada.status = novoStatus
+        
+        // Se foi adiada e recebemos uma data nova, atualizamos os valores!
+        if novoStatus == .adiada, let data = novaData {
+            sessaoAtualizada.dataDaSessão = data
+            
+            // Extrai a hora exata da nova data para a string "HH:mm"
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            sessaoAtualizada.horaInicio = formatter.string(from: data)
+        }
+        
+        sessionRepository.atualizarSessao(sessaoAtualizada)
+        carregarDados()
+    }
 }
