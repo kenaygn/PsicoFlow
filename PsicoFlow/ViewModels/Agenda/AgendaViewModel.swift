@@ -121,7 +121,7 @@ class AgendaViewModel: ObservableObject {
     
     func sessaoPara(horario: String) -> Session? {
         return todasSessoes.first { sessao in
-            isMesmoDia(sessao.dataDaSessão, selectedDate) && sessao.horaInicio == horario && sessao.status != .cancelada
+            isMesmoDia(sessao.dataDaSessão, selectedDate) && sessao.horaInicio == horario
         }
     }
     

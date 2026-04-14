@@ -111,9 +111,12 @@ struct HomeView: View {
                                     nomePaciente: paciente?.nome ?? "Paciente Deletado",
                                     iniciaisPaciente: paciente?.iniciais ?? "?",
                                     isNext: isNextSessao,
-                                    onSelectPaciente: {print("Pagina de prontuario do paciente")},
-                                    onUpdateStatus: { novoStatus,novaData in
+                                    onSelectPaciente: { self.navegarParaProntuario = true },
+                                    onUpdateStatus: { novoStatus, novaData in
                                         viewModel.atualizarStatusDaSessao(sessaoID: sessao.id, novoStatus: novoStatus, novaData: novaData)
+                                    },
+                                    fetchAvailableTimes: { dataDesejada, sessaoID in
+                                        viewModel.obterHorariosLivres(para: dataDesejada, ignorandoSessaoID: sessaoID)
                                     }
                                 )
                             }
@@ -139,11 +142,11 @@ struct HomeView: View {
             .navigationTitle("Início")
             .navigationBarTitleDisplayMode(.automatic)
             .navigationDestination(isPresented: $navegarParaProntuario) {
-                            if let paciente = pacienteSelecionado {
-                                // Abrimos a tela limpa e independente que criamos na etapa anterior!
-                                PatientDetailView(paciente: paciente)
-                            }
-                        }
+                if let paciente = pacienteSelecionado {
+                    // Abrimos a tela limpa e independente que criamos na etapa anterior!
+                    PatientDetailView(paciente: paciente)
+                }
+            }
             
         }
     }

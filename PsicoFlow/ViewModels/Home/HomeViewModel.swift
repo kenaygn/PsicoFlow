@@ -213,4 +213,22 @@ class HomeViewModel: ObservableObject {
         }
         return nil
     }
+    
+    // MARK: - Regras de Agendamento
+        private let todosHorarios: [String] = [
+            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
+            "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
+        ]
+        
+        // Calcula os horários disponíveis para um dia específico, ignorando a própria sessão atual
+        func obterHorariosLivres(para data: Date, ignorandoSessaoID sessaoID: String) -> [String] {
+            // Pega as sessões daquele dia específico
+            let sessoesNoMesmoDia = sessionRepository.fetchSessoes().filter {
+                Calendar.current.isDate($0.dataDaSessão, inSameDayAs: data) &&
+                $0.status != .cancelada &&
+                $0.id != sessaoID // Ignora a própria sessão que estamos movendo
+            }
+            let ocupados = sessoesNoMesmoDia.map { $0.horaInicio }
+            return todosHorarios.filter { !ocupados.contains($0) }
+        }
 }

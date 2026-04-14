@@ -123,6 +123,8 @@ struct AgendaView: View {
                             }
                         }
                         .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+
                     }
                     
                     // --- 3. LINHA DO TEMPO (TIMELINE) ---
