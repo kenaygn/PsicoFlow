@@ -43,7 +43,7 @@ struct NewSessionView: View {
                 }
                 
                 // --- SEÇÃO 2: TIPO DE AGENDAMENTO ---
-                Section(header: Text("Agendamento"), footer: Text(viewModel.isFixedSession ? "Gera automaticamente as sessões todos os meses para o paciente no dia da semana e horário escolhidos." : "Cria apenas um evento único no calendário.")) {
+                Section(header: Text("Agendamento"), footer: Text(viewModel.isFixedSession ? "Cria as sessões automaticamente toda semana neste mesmo dia e horário." : "Cria apenas um evento único no calendário.")) {
                     
                     Toggle("Terapia Semanal (Fixa)", isOn: $viewModel.isFixedSession.animation())
                         .tint(.teal)
@@ -81,7 +81,7 @@ struct NewSessionView: View {
                 
                 
             }
-            .navigationTitle("Novo Agendamento")
+            .navigationTitle("Agendamento")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 // Lado Esquerdo (Cancelar)
