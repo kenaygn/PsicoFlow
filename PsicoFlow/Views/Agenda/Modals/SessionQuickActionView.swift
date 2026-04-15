@@ -14,7 +14,6 @@ struct SessionQuickActionView: View {
     
     @Environment(\.dismiss) var dismiss
     
-    // 👇 Nossa ViewModel assumiu o controle dos dados
     @StateObject private var viewModel: SessionQuickActionViewModel
     
     // Controles apenas visuais (Animações de UI)

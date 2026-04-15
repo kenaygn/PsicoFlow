@@ -116,7 +116,7 @@ struct MockData {
                 psicologoID: "user_dev_01",
                 pacienteID: "p3",
                 diaDaSemana: 4, // Quarta-feira
-                horaInicio: "16:30",
+                horaInicio: "16:00",
                 modalidade: .online
             )
         ]

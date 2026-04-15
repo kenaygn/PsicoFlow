@@ -12,27 +12,40 @@ import Combine
 class PatientDetailViewModel: ObservableObject {
     @Published var paciente: Patient
     @Published var evolucoes: [Evolution] = []
-    
     @Published var pagamentos: [MonthlyPayment] = []
+    @Published var sessoesFixas: [FixedSession] = []
+    @Published var sessoesAvulsasFuturas: [Session] = []
     
     // Repositórios
     private let patientRepository: PatientRepositoryProtocol
     private let evolutionRepository: EvolutionRepositoryProtocol
     private let paymentRepository: PaymentRepositoryProtocol
+    private let fixedSessionRepository: FixedSessionRepositoryProtocol
+    private let sessionRepository: SessionRepositoryProtocol
     
     init(
         paciente: Patient,
         patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
         evolutionRepository: EvolutionRepositoryProtocol = MockEvolutionRepository(),
-        paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository()
+        paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository(),
+        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository(),
+        sessionRepository: SessionRepositoryProtocol = MockSessionRepository()
     ) {
         self.paciente = paciente
         self.patientRepository = patientRepository
         self.evolutionRepository = evolutionRepository
         self.paymentRepository = paymentRepository
+        self.fixedSessionRepository = fixedSessionRepository
+        self.sessionRepository = sessionRepository
         
+        carregarDadosCompletos()
+    }
+    
+    // MARK: - Carregamento de Dados
+    func carregarDadosCompletos() {
         carregarEvolucoes()
         carregarPagamentos()
+        carregarSessoesConfiguradas()
     }
     
     func carregarEvolucoes() {
@@ -41,24 +54,33 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarPagamentos() {
         self.pagamentos = paymentRepository.fetchPagamentos(paraPacienteID: paciente.id)
-        
         self.pagamentos.sort { $0.mesReferencia > $1.mesReferencia }
     }
+    
+    func carregarSessoesConfiguradas() {
+        // 1. Busca os contratos fixos (Recorrentes) do paciente
+        self.sessoesFixas = fixedSessionRepository.fetchSessoesFixas().filter { $0.pacienteID == paciente.id }
+        
+        // 2. Busca as sessões avulsas (que não têm sessaoFixaID) e aplica as regras de negócio
+        let hoje = Calendar.current.startOfDay(for: Date())
+        
+        self.sessoesAvulsasFuturas = sessionRepository.fetchSessoes().filter { sessao in
+            sessao.pacienteID == paciente.id &&
+            sessao.sessaoFixaID == nil && // Pega apenas as Avulsas
+            (sessao.status == .agendada || sessao.status == .adiada) && // Ignora canceladas e realizadas
+            Calendar.current.startOfDay(for: sessao.dataDaSessão) >= hoje // REGRA: Apenas datas >= hoje
+        }
+        .sorted { $0.dataDaSessão < $1.dataDaSessão } // Ordena da mais próxima pra mais distante
+    }
+    
+    // MARK: - Ações e Formatações
     
     func togglePagamento(pagamentoID: String) {
         if let index = pagamentos.firstIndex(where: { $0.id == pagamentoID }) {
             var pagamentoAtualizado = pagamentos[index]
-            
-            // Inverte o boolean
             pagamentoAtualizado.pago.toggle()
-            
-            // Se marcou como pago, registra a data de hoje. Se desfez, tira a data.
             pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
-            
-            // 1. Manda pro banco de dados salvar
             paymentRepository.atualizarPagamento(pagamentoAtualizado)
-            
-            // 2. Atualiza a tela (com animação que faremos na View)
             pagamentos[index] = pagamentoAtualizado
         }
     }
@@ -71,5 +93,19 @@ class PatientDetailViewModel: ObservableObject {
     
     func salvarAlteracoesDoPaciente() {
         patientRepository.atualizarPaciente(paciente)
+    }
+    
+    // Helper para converter Dia 2 em "Segunda-feira"
+    func nomeDoDiaDaSemana(_ dia: Int) -> String {
+        let diasEmPortugues = [
+            "Domingo", "Segunda-feira", "Terça-feira",
+            "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"
+        ]
+        
+        if dia >= 1 && dia <= 7 {
+            // dia 1 = Domingo (índice 0)
+            return diasEmPortugues[dia - 1]
+        }
+        return "Dia Indefinido"
     }
 }

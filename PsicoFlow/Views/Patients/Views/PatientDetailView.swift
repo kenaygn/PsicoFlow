@@ -64,6 +64,7 @@ struct PatientDetailView: View {
                 Picker("Abas", selection: $abaSelecionada) {
                     Text("Evolução").tag(0)
                     Text("Faturação").tag(1)
+                    Text("Sessões").tag(2)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 20)
@@ -71,23 +72,33 @@ struct PatientDetailView: View {
                 // --- 3. CONTEÚDO DAS ABAS ---
                 VStack {
                     if abaSelecionada == 0 {
-                        
                         EvolutionTabView(
                             evolucoes: viewModel.evolucoes,
                             adicionarEvolucao: { textoDigitado in
-                                // A View avisa a ViewModel para fazer o trabalho pesado
                                 viewModel.adicionarEvolucao(texto: textoDigitado)
                             }
                         )
-                        
                     } else if abaSelecionada == 1 {
                         BillingTabView(
                             pagamentos: viewModel.pagamentos,
                             onTogglePagamento: { idPagamento in
-                                // Colocamos o withAnimation para o cartão atualizar suavemente
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     viewModel.togglePagamento(pagamentoID: idPagamento)
                                 }
+                            }
+                        )
+                    } else if abaSelecionada == 2 {
+                        SessionsTabView(
+                            sessoesFixas: viewModel.sessoesFixas,
+                            sessoesAvulsas: viewModel.sessoesAvulsasFuturas,
+                            converterDia: { dia in viewModel.nomeDoDiaDaSemana(dia) },
+                            onEditFixed: { fixa in
+                                print("Abrir modal de edição com a regra fixa: \(fixa.horaInicio)")
+                                // Aqui você vai disparar a variável @State para abrir sua NewSessionView em modo edição
+                            },
+                            onEditAvulsa: { avulsa in
+                                print("Abrir modal de edição para sessão avulsa de \(avulsa.horaInicio)")
+                                // Idem para sessão avulsa
                             }
                         )
                     }
