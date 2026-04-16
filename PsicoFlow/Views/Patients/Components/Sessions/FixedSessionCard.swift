@@ -57,23 +57,3 @@ struct FixedSessionCard: View {
     }
 }
 
-// Micro Componente para mostrar os textinhos de Título/Valor com Ícone
-struct InfoItemView: View {
-    let icon: String
-    let title: String
-    let value: String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: icon).foregroundColor(.secondary)
-                Text(title).foregroundColor(.secondary)
-            }
-            .font(.system(size: 12, weight: .medium))
-            
-            Text(value)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(Color(.darkText))
-        }
-    }
-}

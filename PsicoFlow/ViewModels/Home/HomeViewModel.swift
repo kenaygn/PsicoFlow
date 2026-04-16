@@ -134,6 +134,8 @@ class HomeViewModel: ObservableObject {
                     
                     if let novaData = novaData, novoStatus == .adiada {
                         sessaoAtualizada.dataDaSessão = novaData
+                        sessaoAtualizada.sessaoFixaID = nil
+                        
                         let formatter = DateFormatter()
                         formatter.dateFormat = "HH:mm"
                         sessaoAtualizada.horaInicio = formatter.string(from: novaData)

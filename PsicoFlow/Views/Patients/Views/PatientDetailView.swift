@@ -106,6 +106,9 @@ struct PatientDetailView: View {
             }
             .padding(.bottom, 40)
         }
+        .onAppear{
+            viewModel.carregarDadosCompletos()
+        }
         .onTapGesture {
             esconderTeclado()
         }

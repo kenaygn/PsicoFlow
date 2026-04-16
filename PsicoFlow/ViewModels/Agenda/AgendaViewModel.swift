@@ -160,6 +160,7 @@ class AgendaViewModel: ObservableObject {
         // Se foi adiada e recebemos uma data nova, atualizamos os valores!
         if novoStatus == .adiada, let data = novaData {
             sessaoAtualizada.dataDaSessão = data
+            sessaoAtualizada.sessaoFixaID = nil
             
             // Extrai a hora exata da nova data para a string "HH:mm"
             let formatter = DateFormatter()

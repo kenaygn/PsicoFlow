@@ -20,36 +20,54 @@ struct SingleSessionCard: View {
     }
     
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(dataFormatada)
-                    .font(.system(size: 16, weight: .bold))
-                
-                HStack(spacing: 8) {
-                    Label(avulsa.horaInicio, systemImage: "clock")
-                    Text("•")
-                    Label(avulsa.status.rawValue.capitalized, systemImage: "circle.fill")
-                        .foregroundColor(avulsa.status == .adiada ? .orange : .teal)
+        VStack(spacing: 16) {
+            
+            // --- TOPO DO CARTÃO ---
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        // O ícone e a cor mudam dinamicamente se for adiada
+                        Image(systemName: avulsa.status == .adiada ? "calendar.badge.clock" : "calendar.circle.fill")
+                            .foregroundColor(avulsa.status == .adiada ? .orange : .teal)
+                        
+                        Text(avulsa.status == .adiada ? "Sessão Adiada" : "Sessão Avulsa")
+                            .font(.system(size: 17, weight: .bold))
+                    }
+                    
+                    // Colocamos a data formatada como o subtítulo
+                    Text(dataFormatada)
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
                 }
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.secondary)
+                Spacer()
+                
+                // Botão padronizado (Cápsula)
+                Button("Editar", action: onEdit)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.teal)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.teal.opacity(0.1))
+                    .clipShape(Capsule())
             }
             
-            Spacer()
+            Divider()
             
-            Button(action: onEdit) {
-                Image(systemName: "pencil")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.teal)
-                    .frame(width: 40, height: 40)
-                    .background(Color(.systemGray6))
-                    .clipShape(Circle())
+            // --- BASE DO CARTÃO (INFORMAÇÕES) ---
+            HStack {
+                // Reaproveitando o InfoItemView que você já criou!
+                InfoItemView(icon: "circle.fill", title: "Status", value: avulsa.status.rawValue.capitalized)
+                Spacer()
+                InfoItemView(icon: "clock", title: "Horário", value: avulsa.horaInicio)
+                Spacer()
+                InfoItemView(icon: "video", title: "Formato", value: avulsa.modalidade.rawValue.capitalized)
             }
         }
         .padding(16)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.gray.opacity(0.1), lineWidth: 1))
+        .shadow(color: .black.opacity(0.02), radius: 5, y: 2)
         .padding(.horizontal, 20)
     }
 }
