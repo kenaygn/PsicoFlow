@@ -23,7 +23,6 @@ struct HomeView: View {
                             session: proxima,
                             nomeDaPaciente: viewModel.nomePacienteProximaSessao,
                             onAbrirProntuario: {
-                                // 👇 A MÁGICA ACONTECE AQUI:
                                 // Pegamos o paciente daquela sessão e acionamos o gatilho!
                                 self.pacienteSelecionado = viewModel.paciente(for: proxima)
                                 self.navegarParaProntuario = true

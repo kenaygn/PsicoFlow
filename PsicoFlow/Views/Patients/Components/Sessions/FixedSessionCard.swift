@@ -12,48 +12,65 @@ struct FixedSessionCard: View {
     let diaDaSemanaTexto: String
     let onEdit: () -> Void
     
+    // Um Rosa/Magenta Premium e sofisticado
+//    var corFundoRosa : LinearGradient {
+//        LinearGradient(
+//            colors: [
+//                Color(red: 1, green: 0, blue: 0.49),
+//                Color(red: 1, green: 0.26, blue: 0.62)
+//            ],
+//            startPoint: .topLeading,
+//            endPoint: .bottomTrailing
+//        )
+//    }
+    
+    var corFundoRosa = Color(red: 0.96, green: 0.39, blue: 0.45)
+    
     var body: some View {
         VStack(spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 8) {
                         Image(systemName: "repeat.circle.fill")
-                            .foregroundColor(.teal)
+                            .foregroundColor(.white)
                         Text("Sessão Semanal")
                             .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(.white) // Texto Branco
                     }
                     
                     Text("Cria as sessões automaticamente toda semana neste mesmo dia e horário.")
                         .font(.system(size: 13))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.85)) // Branco levemente transparente para leitura suave
                 }
                 Spacer()
                 
                 Button("Editar", action: onEdit)
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.teal)
+                    .foregroundColor(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.teal.opacity(0.1))
+                    // Fundo do botão translúcido sobre o rosa
+                    .background(Color.white.opacity(0.25))
                     .clipShape(Capsule())
             }
             
             Divider()
+                .background(Color.white)
             
             HStack {
-                InfoItemView(icon: "calendar", title: "Dia", value: diaDaSemanaTexto)
+                InfoItemView(icon: "calendar", title: "Dia", value: diaDaSemanaTexto, isDark: true)
                 Spacer()
-                InfoItemView(icon: "clock", title: "Horário", value: fixa.horaInicio)
+                InfoItemView(icon: "clock", title: "Horário", value: fixa.horaInicio, isDark: true)
                 Spacer()
-                InfoItemView(icon: "video", title: "Formato", value: fixa.modalidade.rawValue.capitalized)
+                InfoItemView(icon: "video", title: "Formato", value: fixa.modalidade.rawValue.capitalized, isDark: true)
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(corFundoRosa)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.gray.opacity(0.1), lineWidth: 1))
-        .shadow(color: .black.opacity(0.02), radius: 5, y: 2)
+        .shadow(color: Color.black.opacity(0.12), radius: 8, y: 4)
         .padding(.horizontal, 20)
     }
 }
+
 

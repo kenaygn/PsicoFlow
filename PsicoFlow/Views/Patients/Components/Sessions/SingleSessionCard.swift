@@ -27,8 +27,8 @@ struct SingleSessionCard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 8) {
                         // O ícone e a cor mudam dinamicamente se for adiada
-                        Image(systemName: avulsa.status == .adiada ? "calendar.badge.clock" : "calendar.circle.fill")
-                            .foregroundColor(avulsa.status == .adiada ? .orange : .teal)
+                        Image(systemName:"calendar.badge.clock")
+                            .foregroundColor(.orange)
                         
                         Text(avulsa.status == .adiada ? "Sessão Adiada" : "Sessão Avulsa")
                             .font(.system(size: 17, weight: .bold))
@@ -44,10 +44,10 @@ struct SingleSessionCard: View {
                 // Botão padronizado (Cápsula)
                 Button("Editar", action: onEdit)
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.teal)
+                    .foregroundColor(.orange)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.teal.opacity(0.1))
+                    .background(Color.orange.opacity(0.1))
                     .clipShape(Capsule())
             }
             
@@ -56,11 +56,11 @@ struct SingleSessionCard: View {
             // --- BASE DO CARTÃO (INFORMAÇÕES) ---
             HStack {
                 // Reaproveitando o InfoItemView que você já criou!
-                InfoItemView(icon: "circle.fill", title: "Status", value: avulsa.status.rawValue.capitalized)
+                InfoItemView(icon: "circle.fill", title: "Status", value: avulsa.status.rawValue.capitalized, isDark: false)
                 Spacer()
-                InfoItemView(icon: "clock", title: "Horário", value: avulsa.horaInicio)
+                InfoItemView(icon: "clock", title: "Horário", value: avulsa.horaInicio, isDark: false)
                 Spacer()
-                InfoItemView(icon: "video", title: "Formato", value: avulsa.modalidade.rawValue.capitalized)
+                InfoItemView(icon: "video", title: "Formato", value: avulsa.modalidade.rawValue.capitalized, isDark: false)
             }
         }
         .padding(16)
