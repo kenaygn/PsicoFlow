@@ -9,14 +9,16 @@ import Foundation
 import SwiftUI
 import Combine
 
+/// ViewModel responsável por agregar e gerenciar todas as informações do prontuário
+/// de um paciente específico (Detalhes, Evoluções, Pagamentos e Agendamentos).
 class PatientDetailViewModel: ObservableObject {
+        
     @Published var paciente: Patient
     @Published var evolucoes: [Evolution] = []
     @Published var pagamentos: [MonthlyPayment] = []
     @Published var sessoesFixas: [FixedSession] = []
     @Published var sessoesAvulsasFuturas: [Session] = []
-    
-    // Repositórios
+        
     private let patientRepository: PatientRepositoryProtocol
     private let evolutionRepository: EvolutionRepositoryProtocol
     private let paymentRepository: PaymentRepositoryProtocol
@@ -24,7 +26,7 @@ class PatientDetailViewModel: ObservableObject {
     private let sessionRepository: SessionRepositoryProtocol
     
     private let generatorService = SessionGeneratorService()
-    
+        
     init(
         paciente: Patient,
         patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
@@ -42,8 +44,8 @@ class PatientDetailViewModel: ObservableObject {
         
         carregarDadosCompletos()
     }
-    
-    // MARK: - Carregamento de Dados
+        
+    /// Orquestra o carregamento de todos os módulos de dados atrelados ao paciente.
     func carregarDadosCompletos() {
         carregarEvolucoes()
         carregarPagamentos()
@@ -59,56 +61,67 @@ class PatientDetailViewModel: ObservableObject {
         self.pagamentos.sort { $0.mesReferencia > $1.mesReferencia }
     }
     
+    /// Busca contratos recorrentes e sessões únicas futuras, aplicando as regras de filtragem visual.
     func carregarSessoesConfiguradas() {
-        // 1. Busca os contratos fixos (Recorrentes) do paciente
+        // Contratos fixos (Recorrentes)
         self.sessoesFixas = fixedSessionRepository.fetchSessoesFixas().filter { $0.pacienteID == paciente.id }
         
-        // 2. Busca as sessões avulsas (que não têm sessaoFixaID) e aplica as regras de negócio
+        // Sessões avulsas futuras
         let hoje = Calendar.current.startOfDay(for: Date())
         
         self.sessoesAvulsasFuturas = sessionRepository.fetchSessoes().filter { sessao in
             sessao.pacienteID == paciente.id &&
-            sessao.sessaoFixaID == nil && // Pega apenas as Avulsas
-            (sessao.status == .agendada || sessao.status == .adiada) && // Ignora canceladas e realizadas
-            Calendar.current.startOfDay(for: sessao.dataDaSessão) >= hoje // REGRA: Apenas datas >= hoje
+            sessao.sessaoFixaID == nil &&
+            (sessao.status == .agendada || sessao.status == .adiada) &&
+            Calendar.current.startOfDay(for: sessao.dataDaSessão) >= hoje
         }
-        .sorted { $0.dataDaSessão < $1.dataDaSessão } // Ordena da mais próxima pra mais distante
+        .sorted { $0.dataDaSessão < $1.dataDaSessão }
     }
-    
-    // MARK: - Ações e Formatações
-    
+        
+    /// Alterna o status de pagamento de uma mensalidade e persiste a alteração.
     func togglePagamento(pagamentoID: String) {
         if let index = pagamentos.firstIndex(where: { $0.id == pagamentoID }) {
             var pagamentoAtualizado = pagamentos[index]
             pagamentoAtualizado.pago.toggle()
             pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
+            
             paymentRepository.atualizarPagamento(pagamentoAtualizado)
             pagamentos[index] = pagamentoAtualizado
         }
     }
     
+    /// Cria e persiste uma nova evolução clínica para o paciente.
     func adicionarEvolucao(texto: String) {
-        let novaEvolucao = Evolution(id: UUID().uuidString, psicologoID: "user_dev_01", pacienteID: paciente.id, data: Date(), conteudo: texto)
+        // Note: O 'psicologoID' ("user_dev_01") está fixo. Em produção, este valor
+        // deve ser injetado através do serviço de Autenticação/Sessão do usuário.
+        let novaEvolucao = Evolution(
+            id: UUID().uuidString,
+            psicologoID: "user_dev_01",
+            pacienteID: paciente.id,
+            data: Date(),
+            conteudo: texto
+        )
+        
         evolutionRepository.salvarEvolucao(novaEvolucao)
         evolucoes.insert(novaEvolucao, at: 0)
     }
     
+    /// Salva as edições feitas no perfil do paciente e sincroniza o impacto dessas
+    /// mudanças na agenda (ex: inativação do paciente cancela sessões futuras).
     func salvarAlteracoesDoPaciente() {
-            // 1. Salva o paciente no banco de dados (mock)
-            patientRepository.atualizarPaciente(paciente)
-            
-            // 2. Dispara a inteligência de negócios para ajustar a agenda
-            generatorService.sincronizarSessoesPorStatus(
-                do: paciente,
-                regrasFixas: fixedSessionRepository.fetchSessoesFixas(),
-                sessionRepository: sessionRepository
-            )
-            
-            // 3. Força a ViewModel a recarregar as listas da tela para mostrar o novo cenário
-            carregarSessoesConfiguradas()
-        }
-    
-    // Helper para converter Dia 2 em "Segunda-feira"
+        patientRepository.atualizarPaciente(paciente)
+        
+        // Sincroniza o estado da agenda com o novo status do paciente
+        generatorService.sincronizarSessoesPorStatus(
+            do: paciente,
+            regrasFixas: fixedSessionRepository.fetchSessoesFixas(),
+            sessionRepository: sessionRepository
+        )
+        
+        carregarSessoesConfiguradas()
+    }
+        
+    /// Converte o index inteiro de um dia da semana para sua representação nominal em português.
     func nomeDoDiaDaSemana(_ dia: Int) -> String {
         let diasEmPortugues = [
             "Domingo", "Segunda-feira", "Terça-feira",
@@ -116,7 +129,6 @@ class PatientDetailViewModel: ObservableObject {
         ]
         
         if dia >= 1 && dia <= 7 {
-            // dia 1 = Domingo (índice 0)
             return diasEmPortugues[dia - 1]
         }
         return "Dia Indefinido"

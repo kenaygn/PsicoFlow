@@ -8,7 +8,11 @@
 import Foundation
 import Combine
 
+/// ViewModel responsável pelo controle de estado e validação do formulário de pacientes.
+/// Suporta o reaproveitamento de interface (UI) operando em dois modos dinâmicos:
+/// Criação (paciente == nil) e Edição (paciente != nil).
 class PatientFormViewModel: ObservableObject {
+        
     @Published var nome: String = ""
     @Published var email: String = ""
     @Published var telefone: String = ""
@@ -16,12 +20,10 @@ class PatientFormViewModel: ObservableObject {
     @Published var valorTexto: String = ""
     @Published var status: PatientStatus = .ativo
     @Published var observacoes: String = ""
-    
-    // Guardamos o paciente original para não perder o ID nem a data de criação na hora de salvar
+        
+    /// Armazena o estado original para preservar identificadores imutáveis (ID e data de criação) durante atualizações.
     private var pacienteOriginal: Patient?
-    
-    // 👇 O SEGREDO DA REUTILIZAÇÃO:
-    // Se passarmos um paciente, ele preenche os dados. Se não passarmos, ele cria vazio!
+        
     init(paciente: Patient? = nil) {
         self.pacienteOriginal = paciente
         
@@ -33,24 +35,31 @@ class PatientFormViewModel: ObservableObject {
             self.status = paciente.status
             self.observacoes = paciente.observacoes ?? ""
             
-            // Formata o Double de volta para texto (ex: 150.0 -> "150,00")
+            // Note: Para formatação monetária robusta e escalável, considere migrar
+            // para um NumberFormatter com o estilo '.currency' no futuro.
+            // A substituição direta de caracteres atende bem a MVPs focados no Brasil (pt_BR).
             let valorString = String(format: "%.2f", paciente.valor).replacingOccurrences(of: ".", with: ",")
             self.valorTexto = valorString
         }
     }
-    
+        
+    /// Retorna verdadeiro se os campos obrigatórios atenderem às regras de negócio e tipagem.
     var isFormValid: Bool {
         let nomePreenchido = !nome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let valorValido = Double(valorTexto.replacingOccurrences(of: ",", with: ".")) != nil
+        
         return nomePreenchido && valorValido
     }
     
-    // Essa função agora serve tanto para criar um novo quanto para devolver o editado
+    /// Constrói e retorna uma instância de `Patient` com os dados atuais do formulário.
+    /// Preserva automaticamente o `id` e a data de criação caso seja uma operação de edição.
     func obterPacienteAtualizado() -> Patient {
         let valorConvertido = Double(valorTexto.replacingOccurrences(of: ",", with: ".")) ?? 0.0
         
+        // Note: O 'psicologoID' está hardcoded temporariamente.
+        // Em um ambiente de produção (Firebase/Supabase), este valor deve ser extraído
+        // do gerenciador de sessão (ex: AuthService.shared.currentUserId).
         return Patient(
-            // Mantém o ID original se for edição, ou cria um novo se for adição
             id: pacienteOriginal?.id ?? UUID().uuidString,
             psicologoID: pacienteOriginal?.psicologoID ?? "mock_psicologo_123",
             nome: nome,
@@ -60,7 +69,6 @@ class PatientFormViewModel: ObservableObject {
             observacoes: observacoes.isEmpty ? nil : observacoes,
             status: status,
             valor: valorConvertido,
-            // Mantém a data original se for edição, ou pega a data de hoje se for novo
             criadoEm: pacienteOriginal?.criadoEm ?? Date()
         )
     }

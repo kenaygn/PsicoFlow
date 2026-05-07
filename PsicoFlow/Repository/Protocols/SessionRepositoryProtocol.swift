@@ -7,7 +7,6 @@
 
 import Foundation
 
-// O Contrato para Sessões
 protocol SessionRepositoryProtocol {
     func fetchSessoes() -> [Session]
     func atualizarSessao(_ sessao: Session)
