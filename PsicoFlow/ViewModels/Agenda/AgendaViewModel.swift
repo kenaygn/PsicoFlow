@@ -8,27 +8,31 @@
 import Foundation
 import Combine
 
+/// ViewModel responsável pelo controle de estado e navegação temporal da tela de Agenda.
+/// Gerencia a projeção de dias da semana, a montagem da linha do tempo (timeline)
+/// e o cruzamento de sessões com os horários de expediente.
 class AgendaViewModel: ObservableObject {
-    // Estado da Tela
+        
     @Published var selectedDate: Date = Date()
     @Published var weekDays: [Date] = []
     
+    /// Data âncora utilizada para calcular o intervalo da semana atualmente visível na tela.
     @Published private var dataBaseDaSemana: Date = Date()
-    
-    // Dados Brutos
+        
     @Published private var todasSessoes: [Session] = []
     @Published private var pacientes: [Patient] = []
-    
-    // Horários fixos da clínica (07:00 às 22:00)
+        
+    // Note: Assim como nas demais ViewModels, a matriz de horários de expediente
+    // está fixada no MVP. Em produção, isso deve ser dinâmico e refletir
+    // a configuração de "Horário de Trabalho" do próprio profissional.
     let timeSlots: [String] = [
         "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
         "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
     ]
-    
-    // Repositórios
+        
     private let sessionRepository: SessionRepositoryProtocol
     private let patientRepository: PatientRepositoryProtocol
-    
+        
     init(
         sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
         patientRepository: PatientRepositoryProtocol = MockPatientRepository()
@@ -39,14 +43,12 @@ class AgendaViewModel: ObservableObject {
         gerarDiasDaSemana()
         carregarDados()
     }
-    
+        
     func carregarDados() {
         self.todasSessoes = sessionRepository.fetchSessoes()
         self.pacientes = patientRepository.fetchPacientes()
     }
-    
-    // MARK: - Lógica de Navegação de Semanas
-    
+        
     func avancarSemana() {
         if let proxima = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: dataBaseDaSemana) {
             dataBaseDaSemana = proxima
@@ -67,14 +69,12 @@ class AgendaViewModel: ObservableObject {
         formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: selectedDate).capitalized
     }
-    
-    // MARK: - Lógica de Calendário
-    
-    // Gera os 7 dias baseados na "dataBaseDaSemana" em vez de ser fixo no hoje
+        
+    /// Calcula e projeta os 7 dias da semana com base na `dataBaseDaSemana` atual.
     private func gerarDiasDaSemana() {
         let calendar = Calendar.current
         
-        // Encontra o domingo da semana base
+        // Encontra o domingo correspondente à semana base
         guard let inicioDaSemana = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: dataBaseDaSemana)) else { return }
         
         var dias: [Date] = []
@@ -85,12 +85,13 @@ class AgendaViewModel: ObservableObject {
         }
         self.weekDays = dias
         
-        // Se a semana gerada for a semana atual, seleciona o dia de hoje.
-        // Se for uma semana do futuro/passado, seleciona a segunda-feira (índice 1).
+        // Regra de Seleção Automática:
+        // - Se a semana visível contiver o dia de hoje, foca no hoje.
+        // - Se for uma semana no passado/futuro, foca na segunda-feira (índice 1).
         if dias.contains(where: { calendar.isDate($0, inSameDayAs: Date()) }) {
             self.selectedDate = Date()
         } else {
-            self.selectedDate = dias[1] // Segunda-feira
+            self.selectedDate = dias[1]
         }
     }
     
@@ -98,73 +99,67 @@ class AgendaViewModel: ObservableObject {
         self.selectedDate = data
     }
     
-    // MARK: - Formatadores para a View
-    
-    func nomeCurtoDoDia(_ data: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "pt_BR")
-        formatter.dateFormat = "EEE" // Ex: "Dom", "Seg"
-        return formatter.string(from: data).capitalized
-    }
-    
-    func numeroDoDia(_ data: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd" // Ex: "29", "30"
-        return formatter.string(from: data)
-    }
-    
-    func isMesmoDia(_ data1: Date, _ data2: Date) -> Bool {
-        return Calendar.current.isDate(data1, inSameDayAs: data2)
-    }
-    
-    // MARK: - Lógica de Timeline
-    
-    func sessoesPara(horario: String) -> [Session] {
-        return todasSessoes.filter { sessao in
-            isMesmoDia(sessao.dataDaSessão, selectedDate) &&
-            sessao.horaInicio == horario &&
-            sessao.status != .cancelada // Sessões canceladas não geram conflito na tela!
-        }
-    }
-    
-    func pacientePara(sessao: Session) -> Patient? {
-        return pacientes.first { $0.id == sessao.pacienteID }
-    }
-    
-    // Pula direto para a data de Hoje
     func irParaHoje() {
         dataBaseDaSemana = Date()
         gerarDiasDaSemana()
     }
     
-    // Pula para qualquer data selecionada no calendário
     func pularParaData(_ data: Date) {
         dataBaseDaSemana = data
         gerarDiasDaSemana()
         selecionarData(data)
     }
     
-    // Verifica se o dia selecionado na tela é o dia de hoje
+    // MARK: - View Formatters & Helpers
+    
     var isHojeSelecionado: Bool {
         return Calendar.current.isDateInToday(selectedDate)
     }
     
-    // Verifica se uma data específica da fileira é o dia de hoje
     func isHoje(_ data: Date) -> Bool {
         return Calendar.current.isDateInToday(data)
     }
     
-    // MARK: - Ações Rápidas da Sessão
+    func isMesmoDia(_ data1: Date, _ data2: Date) -> Bool {
+        return Calendar.current.isDate(data1, inSameDayAs: data2)
+    }
+    
+    func nomeCurtoDoDia(_ data: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: data).capitalized
+    }
+    
+    func numeroDoDia(_ data: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd"
+        return formatter.string(from: data)
+    }
+        
+    /// Retorna as sessões mapeadas para um slot de tempo específico no dia atualmente selecionado.
+    func sessoesPara(horario: String) -> [Session] {
+        return todasSessoes.filter { sessao in
+            isMesmoDia(sessao.dataDaSessão, selectedDate) &&
+            sessao.horaInicio == horario &&
+            sessao.status != .cancelada // Exclui sessões canceladas da linha do tempo visual
+        }
+    }
+    
+    func pacientePara(sessao: Session) -> Patient? {
+        return pacientes.first { $0.id == sessao.pacienteID }
+    }
+        
+    /// Processa a mutação de estado de uma sessão a partir do atalho da UI.
     func atualizarStatus(da sessao: Session, para novoStatus: SessionStatus, novaData: Date? = nil) {
         var sessaoAtualizada = sessao
         sessaoAtualizada.status = novoStatus
         
-        // Se foi adiada e recebemos uma data nova, atualizamos os valores!
+        // Tratamento especial para reagendamentos
         if novoStatus == .adiada, let data = novaData {
             sessaoAtualizada.dataDaSessão = data
-            sessaoAtualizada.sessaoFixaID = nil
+            sessaoAtualizada.sessaoFixaID = nil // Desvincula o evento avulso do contrato matriz
             
-            // Extrai a hora exata da nova data para a string "HH:mm"
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
             sessaoAtualizada.horaInicio = formatter.string(from: data)

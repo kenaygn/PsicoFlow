@@ -61,7 +61,6 @@ struct QuickStatCard: View {
             
         }
         .background(Color.white)
-        // MARK: - Elementos Decorativos
         .overlay(alignment: .bottomTrailing) {
             Circle()
                 .fill(style.color.opacity(0.05))
