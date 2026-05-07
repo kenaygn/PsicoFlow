@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+/// Tela principal de gestão financeira do psicólogo.
+/// Exibe o resumo de recebimentos e pendências, permitindo alternar entre visões mensais e anuais.
 struct FinancesView: View {
     
     @StateObject private var viewModel = FinanceViewModel()
@@ -16,7 +18,7 @@ struct FinancesView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
                     
-                    // --- 1. SELETOR MENSAL / ANUAL ---
+                    // MARK: - Filtro de Visualização
                     Picker("Modo de Visualização", selection: $viewModel.viewMode) {
                         Text("Mensal").tag(FinanceViewMode.mensal)
                         Text("Anual").tag(FinanceViewMode.anual)
@@ -24,12 +26,10 @@ struct FinancesView: View {
                     .pickerStyle(.segmented)
                     .padding(.top, 8)
                     
-                    // --- 2. NAVEGADOR DE PERÍODO ---
+                    // MARK: - Navegação de Período
                     HStack {
                         Button(action: {
-                            
                             viewModel.voltarPeriodo()
-                            
                         }) {
                             Image(systemName: "chevron.left")
                                 .padding(12)
@@ -46,7 +46,9 @@ struct FinancesView: View {
                         
                         Spacer()
                         
-                        Button(action: { viewModel.avancarPeriodo() }) {
+                        Button(action: {
+                            viewModel.avancarPeriodo()
+                        }) {
                             Image(systemName: "chevron.right")
                                 .padding(12)
                                 .background(Color(.systemGray6))
@@ -55,7 +57,7 @@ struct FinancesView: View {
                         }
                     }
                     
-                    // --- 3. CARDS DE RESUMO ---
+                    // MARK: - Resumo Financeiro
                     HStack(spacing: 16) {
                         FinanceStatCard(
                             titulo: "Recebido",
@@ -72,7 +74,7 @@ struct FinancesView: View {
                         )
                     }
                     
-                    // --- 4. LISTA: FALTA PAGAR ---
+                    // MARK: - Pagamentos Pendentes
                     VStack(alignment: .leading, spacing: 16) {
                         HStack(spacing: 8) {
                             Circle().fill(Color.red).frame(width: 8, height: 8)
@@ -98,14 +100,16 @@ struct FinancesView: View {
                                     iniciais: paciente?.iniciais ?? "?",
                                     mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
                                     onPagar: {
-                                        withAnimation(Animation.spring(response: 0.4, dampingFraction: 0.7)) { viewModel.togglePagamento(pagamentoID: pagamento.id) }
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                            viewModel.togglePagamento(pagamentoID: pagamento.id)
+                                        }
                                     }
                                 )
                             }
                         }
                     }
                     
-                    // --- 5. LISTA: JÁ PAGARAM ---
+                    // MARK: - Pagamentos Realizados
                     VStack(alignment: .leading, spacing: 16) {
                         HStack(spacing: 8) {
                             Circle().fill(Color.teal).frame(width: 8, height: 8)
@@ -130,23 +134,25 @@ struct FinancesView: View {
                                     nomePaciente: paciente?.nome ?? "Desconhecido",
                                     mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
                                     onDesfazer: {
-                                        withAnimation(Animation.spring(response: 0.4, dampingFraction: 0.7)) { viewModel.togglePagamento(pagamentoID: pagamento.id) }
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                            viewModel.togglePagamento(pagamentoID: pagamento.id)
+                                        }
                                     }
                                 )
                             }
                         }
                     }
+                    // Note: Padding essencial para evitar que o último item seja ocultado pela TabBar do iOS.
                     .padding(.bottom, 100)
                     
                 }
                 .padding(.horizontal, 20)
-
             }
-            .navigationBarTitle("Finanças")
+            .navigationTitle("Finanças")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                            viewModel.carregarDados()
-                        }
+                viewModel.carregarDados()
+            }
         }
     }
 }

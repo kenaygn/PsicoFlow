@@ -7,7 +7,9 @@
 
 import SwiftUI
 
+/// Card visual projetado para alertar sobre uma mensalidade pendente.
 struct PendingPaymentCard: View {
+        
     var pagamento: MonthlyPayment
     var nomePaciente: String
     var iniciais: String
@@ -16,6 +18,8 @@ struct PendingPaymentCard: View {
     
     var body: some View {
         VStack(spacing: 16) {
+            
+            // MARK: - Informações do Paciente e Valor
             HStack(alignment: .top) {
                 HStack(spacing: 12) {
                     Text(iniciais)
@@ -29,17 +33,23 @@ struct PendingPaymentCard: View {
                         Text(nomePaciente)
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(Color(.darkText))
+                        
                         Text("Mensalidade • \(mesFormatado)")
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
                     }
                 }
+                
                 Spacer()
+                
+                // Note: Formatação de string C-style. Para projetos focados em iOS 15+,
+                // considere usar a API nativa: pagamento.valor.formatted(.currency(code: "BRL"))
                 Text(String(format: "R$ %.0f", pagamento.valor))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(.red)
             }
             
+            // MARK: - Ações
             Button(action: onPagar) {
                 Text("Registrar Pagamento")
                     .font(.system(size: 15, weight: .semibold))

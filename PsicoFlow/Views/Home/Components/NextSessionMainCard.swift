@@ -8,7 +8,6 @@
 import SwiftUI
 
 /// Card de destaque principal (Hero) que exibe a sessão imediata do psicólogo.
-/// Utiliza um indicador visual pulsante para chamar a atenção para o próximo atendimento.
 struct NextSessionMainCard: View {
         
     var session: Session
@@ -105,8 +104,6 @@ struct NextSessionMainCard: View {
         .shadow(color: Color.black.opacity(0.15), radius: 15, x: 0, y: 8)
     }
 }
-
-// MARK: - Preview
 
 #Preview {
     NextSessionMainCard(

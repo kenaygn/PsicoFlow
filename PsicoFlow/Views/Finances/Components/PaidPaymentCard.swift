@@ -7,14 +7,18 @@
 
 import SwiftUI
 
+/// Card visual compacto que exibe uma mensalidade já quitada.
 struct PaidPaymentCard: View {
+        
     var pagamento: MonthlyPayment
     var nomePaciente: String
     var mesFormatado: String
     var onDesfazer: () -> Void
-    
+        
     var body: some View {
         HStack(alignment: .center) {
+            
+            // MARK: - Status e Paciente
             HStack(spacing: 12) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 24))
@@ -24,6 +28,7 @@ struct PaidPaymentCard: View {
                     Text(nomePaciente)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(.darkText))
+                    
                     Text("Pago ref. \(mesFormatado)")
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
@@ -32,7 +37,11 @@ struct PaidPaymentCard: View {
             
             Spacer()
             
+            // MARK: - Valor e Ação
             VStack(alignment: .trailing, spacing: 4) {
+                
+                // Note: Para projetos focados em iOS 15+, considere substituir
+                // a formatação C-style nativa por: pagamento.valor.formatted(.currency(code: "BRL"))
                 Text(String(format: "R$ %.0f", pagamento.valor))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(.teal)

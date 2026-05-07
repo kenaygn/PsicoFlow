@@ -21,7 +21,6 @@ enum StatCardStyle {
 }
 
 /// Card de estatística rápida utilizado no painel principal (Dashboard).
-/// Ideal para exibir métricas-chave (KPIs) de forma isolada, com suporte a estilos semânticos.
 struct QuickStatCard: View {
         
     var title: String

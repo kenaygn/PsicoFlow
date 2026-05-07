@@ -8,8 +8,6 @@
 import SwiftUI
 
 /// Card comemorativo exibido quando o psicólogo não possui mais sessões pendentes no dia.
-/// Utiliza técnicas de gamificação visual (cores quentes e ícone de "streak"/fogo)
-/// para reforçar o engajamento e a sensação de dever cumprido.
 struct WeeklySummaryCard: View {
         
     var atendimentosNaSemana: Int
