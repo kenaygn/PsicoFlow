@@ -7,7 +7,11 @@
 
 import SwiftUI
 
+/// Card interativo que exibe uma sessão agendada para o dia atual.
+/// Adapta seu estilo visual para destacar a sessão imediata (`isNext`) e
+/// permite ações rápidas de status (Realizada, Adiada, Cancelada) e reagendamento inline.
 struct TodaySessionCard: View {
+        
     var session: Session
     var nomePaciente: String
     var iniciaisPaciente: String
@@ -15,23 +19,20 @@ struct TodaySessionCard: View {
     
     var onSelectPaciente: () -> Void
     var onUpdateStatus: (SessionStatus, Date?) -> Void
-    
-
     var fetchAvailableTimes: (Date, String) -> [String]
     
     @State private var mostrandoAdiar = false
     @State private var novaData = Date()
     @State private var novaHoraStr = ""
     
-    // Variável computada que roda a função recebida da Home
-    var horariosLivres: [String] {
+    private var horariosLivres: [String] {
         fetchAvailableTimes(novaData, session.id)
     }
-    
+        
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             
-            // 1. TOPO: Relógio, Horário e Tag "A seguir"
+            // MARK: - Cabeçalho
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
@@ -55,7 +56,7 @@ struct TodaySessionCard: View {
                 }
             }
             
-            // 2. MEIO: Avatar, Nome e Status
+            // MARK: - Informações do Paciente
             HStack(spacing: 12) {
                 Circle()
                     .fill(isNext ? Color.white : Color.gray.opacity(0.1))
@@ -78,30 +79,26 @@ struct TodaySessionCard: View {
                 Spacer()
             }
             
-            // 3. BASE: Botões de Ação
+            // MARK: - Controles de Ação
             if session.status == .agendada {
                 Divider()
                     .background(isNext ? Color.gray.opacity(0.3) : Color.gray.opacity(0.1))
                     .padding(.top, 4)
                 
                 if mostrandoAdiar {
-                    // --- MODO: REAGENDAR ---
+                    
+                    // MARK: Modo Reagendamento
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Reagendar para:")
                             .font(.caption.bold())
                             .foregroundColor(isNext ? .gray : .secondary)
                         
-                        // 👇 HORÁRIO E DATA SEPARADOS
                         HStack {
-                            // Picker de Data
                             DatePicker("", selection: $novaData, displayedComponents: .date)
                                 .labelsHidden()
                                 .environment(\.locale, Locale(identifier: "pt_BR"))
                                 .environment(\.colorScheme, isNext ? .dark : .light)
                             
-                            
-                            
-                            // Picker Inteligente de Horas
                             Picker("Horário", selection: $novaHoraStr) {
                                 if horariosLivres.isEmpty {
                                     Text("Lotado").tag("")
@@ -114,7 +111,6 @@ struct TodaySessionCard: View {
                             .pickerStyle(.menu)
                             .padding(.horizontal, 2)
                             .padding(.vertical, 1)
-                            // Se for escuro (A Seguir), usa fundo translúcido
                             .background(isNext ? Color.white.opacity(0.1) : Color(.systemGray6))
                             .foregroundColor(isNext ? .white : .primary)
                             .clipShape(RoundedRectangle(cornerRadius: 80, style: .continuous))
@@ -152,7 +148,8 @@ struct TodaySessionCard: View {
                     .padding(.top, 4)
                     
                 } else {
-                    // --- MODO: BOTÕES PADRÃO ---
+                    
+                    // MARK: Botões Padrão
                     HStack(spacing: 8) {
                         actionButton(title: "Realizada", icon: "checkmark.circle", isNext: isNext, color: .green) {
                             onUpdateStatus(.realizada, nil)
@@ -172,7 +169,7 @@ struct TodaySessionCard: View {
         }
         .padding(16)
         .overlay(alignment: .topTrailing) {
-            if isNext{
+            if isNext {
                 Circle()
                     .fill(.white.opacity(0.05))
                     .frame(width: 130, height: 130)
@@ -190,15 +187,16 @@ struct TodaySessionCard: View {
                 .stroke(isNext ? Color.clear : Color.gray.opacity(0.1), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(isNext ? 0.15 : 0.03), radius: 8, x: 0, y: 4)
-        // 👇 Trava de segurança: ajusta a hora se mudar de dia e ficar lotado
         .onChange(of: novaData) { _ in
+            // Note: Previne que o sistema mantenha uma hora selecionada que não
+            // está disponível no novo dia selecionado pelo usuário.
             if !horariosLivres.contains(novaHoraStr) {
                 novaHoraStr = horariosLivres.first ?? ""
             }
         }
     }
     
-    // MARK: - Funções Auxiliares
+    // MARK: - Helpers
     
     @ViewBuilder
     private func actionButton(title: String, icon: String, isNext: Bool, color: Color, action: @escaping () -> Void) -> some View {

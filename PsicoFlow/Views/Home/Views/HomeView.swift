@@ -7,73 +7,75 @@
 
 import SwiftUI
 
+/// Tela principal do aplicativo (Dashboard).
+/// Exibe o resumo financeiro e de agenda do dia, com atalhos dinâmicos para a próxima sessão.
 struct HomeView: View {
+    
     @StateObject private var viewModel = HomeViewModel()
     
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
-    
+        
     var body: some View {
         NavigationStack {
-            ScrollView (showsIndicators: false) {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
-                    // Renderiza o card APENAS se a ViewModel achar uma próxima sessão baseada na hora atual
+                    
+                    // MARK: - Destaque Principal
+                    // Alterna entre a próxima sessão imediata ou o resumo geral da semana.
                     if let proxima = viewModel.proximaSessao {
                         NextSessionMainCard(
                             session: proxima,
                             nomeDaPaciente: viewModel.nomePacienteProximaSessao,
                             onAbrirProntuario: {
-                                // Pegamos o paciente daquela sessão e acionamos o gatilho!
                                 self.pacienteSelecionado = viewModel.paciente(for: proxima)
                                 self.navegarParaProntuario = true
                             }
                         )
                         .padding(.top, 16)
-                        
-                    }else{
+                    } else {
                         WeeklySummaryCard(atendimentosNaSemana: viewModel.atendimentosRealizadosNaSemana)
                     }
                     
-                    HStack() {
-                        // Card de Sessões
+                    // MARK: - Métricas Rápidas
+                    HStack {
                         QuickStatCard(
                             title: "Sessões Hoje",
-                            value: viewModel.totalSessoesHojeText, // Dado mastigado
+                            value: viewModel.totalSessoesHojeText,
                             icon: "calendar",
                             style: .primary
                         )
                         
                         Spacer()
                         
-                        // Card Financeiro
                         QuickStatCard(
                             title: "A Receber",
-                            value: viewModel.valoresPendentesText, // Dado mastigado
+                            value: viewModel.valoresPendentesText,
                             icon: "exclamationmark.circle",
                             style: .danger
                         )
                     }
                     
-                    HStack(){
+                    // MARK: - Agenda do Dia
+                    HStack {
                         Text("Acontecendo Hoje")
                             .font(.title2.bold())
+                        
                         Spacer()
                         
-                        Button("Ver tudo"){
+                        // TODO: Implementar fluxo para a tela completa do calendário/agenda geral
+                        Button("Ver tudo") {
                             print("Ir para tela de sessões")
                         }
                         .foregroundStyle(Color(.teal))
                         .font(.headline.bold())
-                        
                     }
-                    
                     
                     VStack(spacing: 16) {
                         if viewModel.sessoesHoje.isEmpty {
                             
-                            // --- ESTADO VAZIO (EMPTY STATE) ---
+                            // Estado Vazio
                             VStack(spacing: 12) {
-                                // Ícone de xícara de café ou sol, passando ideia de pausa/descanso
                                 Image(systemName: "cup.and.saucer.fill")
                                     .font(.system(size: 40))
                                     .foregroundColor(.brown.opacity(0.6))
@@ -100,7 +102,7 @@ struct HomeView: View {
                             
                         } else {
                             
-                            // --- LISTA DE SESSÕES ---
+                            // Lista de Sessões
                             ForEach(viewModel.sessoesHoje) { sessao in
                                 let paciente = viewModel.paciente(for: sessao)
                                 let isNextSessao = (sessao.id == viewModel.proximaSessao?.id)
@@ -121,11 +123,10 @@ struct HomeView: View {
                             }
                         }
                     }
-                    
-                    
-                    
                 }
                 .padding(.horizontal, 20)
+                
+                // MARK: - Alertas
                 .alert(isPresented: $viewModel.mostrarAlertaConflito) {
                     Alert(
                         title: Text("Conflito de Horário"),
@@ -133,20 +134,19 @@ struct HomeView: View {
                         dismissButton: .default(Text("Entendi"))
                     )
                 }
-                
             }
             .onAppear {
                 viewModel.carregarDados()
             }
             .navigationTitle("Início")
             .navigationBarTitleDisplayMode(.automatic)
+            
+            // Note: A navegação ocorre de forma reativa ouvindo o estado `navegarParaProntuario`
             .navigationDestination(isPresented: $navegarParaProntuario) {
                 if let paciente = pacienteSelecionado {
-                    // Abrimos a tela limpa e independente que criamos na etapa anterior!
                     PatientDetailView(paciente: paciente)
                 }
             }
-            
         }
     }
 }

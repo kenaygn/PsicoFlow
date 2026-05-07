@@ -7,32 +7,33 @@
 
 import SwiftUI
 
-// O Enum que define a paleta de cores permitida para este card
+/// Define a paleta de cores para os cards de estatísticas rápidas.
 enum StatCardStyle {
-    case primary  // Para as sessões (Teal)
-    case danger   // Para o dinheiro a receber (Rose/Red)
+    case primary
+    case danger
     
     var color: Color {
         switch self {
         case .primary: return .teal
-        case .danger: return .red // Se criou as cores no Assets, use .statusDanger
+        case .danger: return .red
         }
     }
 }
 
+/// Card de estatística rápida utilizado no painel principal (Dashboard).
+/// Ideal para exibir métricas-chave (KPIs) de forma isolada, com suporte a estilos semânticos.
 struct QuickStatCard: View {
+        
     var title: String
     var value: String
     var icon: String
     var style: StatCardStyle
-    
+        
     var body: some View {
-        // Envolvemos em ZStack para colocar a bolinha decorativa no fundo
         ZStack(alignment: .bottomTrailing) {
             
-            // CONTEÚDO PRINCIPAL
+            // MARK: - Conteúdo Principal
             VStack(alignment: .leading, spacing: 0) {
-                // Ícone com fundo arredondado
                 Image(systemName: icon)
                     .font(.title3)
                     .fontWeight(.semibold)
@@ -43,12 +44,11 @@ struct QuickStatCard: View {
                 
                 Spacer(minLength: 16)
                 
-                // Textos
                 VStack(alignment: .leading, spacing: 2) {
                     Text(value)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(.primary)
-                        .tracking(-0.5) // Deixa o número mais imponente
+                        .tracking(-0.5)
                     
                     Text(title)
                         .font(.subheadline)
@@ -58,16 +58,16 @@ struct QuickStatCard: View {
             }
             .padding(16)
             .frame(width: 160, height: 130, alignment: .leading)
-            .zIndex(1) // Mantém o texto sempre na frente
+            .zIndex(1)
             
         }
         .background(Color.white)
-        // BOLA DECORATIVA NO CANTO INFERIOR DIREITO
+        // MARK: - Elementos Decorativos
         .overlay(alignment: .bottomTrailing) {
             Circle()
                 .fill(style.color.opacity(0.05))
                 .frame(width: 90, height: 90)
-                .offset(x: 20, y: 20) // Empurra pra fora do card
+                .offset(x: 20, y: 20)
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
@@ -78,12 +78,10 @@ struct QuickStatCard: View {
     }
 }
 
-// MARK: - Preview
 #Preview {
     HStack {
         QuickStatCard(title: "Sessões Hoje", value: "3", icon: "calendar", style: .primary)
         QuickStatCard(title: "A Receber", value: "R$ 450", icon: "exclamationmark.circle", style: .danger)
     }
     .padding()
-
 }
