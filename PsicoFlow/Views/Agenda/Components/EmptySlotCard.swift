@@ -7,9 +7,11 @@
 
 import SwiftUI
 
+/// Componente visual de *placeholder* que representa um horário livre na agenda.
 struct EmptySlotCard: View {
+        
     var onAdd: () -> Void
-    
+        
     var body: some View {
         Button(action: onAdd) {
             HStack {
@@ -26,7 +28,9 @@ struct EmptySlotCard: View {
                     .background(Color.white)
                     .clipShape(Circle())
                     .shadow(color: Color.black.opacity(0.05), radius: 3)
-                    .overlay(Circle().stroke(Color(.systemGray5), lineWidth: 1))
+                    .overlay(
+                        Circle().stroke(Color(.systemGray5), lineWidth: 1)
+                    )
             }
             .frame(height: 64)
             .padding(.horizontal, 16)

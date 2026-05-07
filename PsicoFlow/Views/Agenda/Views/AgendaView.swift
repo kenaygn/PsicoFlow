@@ -7,40 +7,37 @@
 
 import SwiftUI
 
+/// Tela principal de Agenda de tempo do psicólogo.
 struct AgendaView: View {
+        
     @StateObject private var viewModel = AgendaViewModel()
     
-    // Gatilhos de Navegação Programática
+    // MARK: Estados de Navegação Programática
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
+    
+    // MARK: Estados de Modais
     @State private var mostrarNovaSessao = false
     @State private var horarioSugerido: String = "08:00"
-    
-    // Gatilhos da Modal de Ação Rápida
     @State private var sessaoParaAcao: Session? = nil
     @State private var mostrarAcoesRapidas: Bool = false
-    
     @State private var mostrarEdicaoDeSessao: Bool = false
     @State private var sessaoParaEditar: Session? = nil
-    
-    
+        
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
-                    // --- 1. CABEÇALHO DA AGENDA (CONTROLES DE TEMPO) ---
+                    
+                    // MARK: - Controles do Calendário
                     HStack {
-                        
                         Text(viewModel.mesAnoAtual)
                             .font(.system(size: 22, weight: .bold))
                             .foregroundColor(Color(.darkText))
                         
                         Spacer()
                         
-                        // Lado Direito: Botão Hoje e Setas de Navegação
                         HStack(spacing: 12) {
-                            
-                            // Botão Hoje
                             Button(action: {
                                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                                     viewModel.irParaHoje()
@@ -56,7 +53,6 @@ struct AgendaView: View {
                             }
                             .disabled(viewModel.isHojeSelecionado)
                             
-                            // Setinhas de Navegação
                             HStack(spacing: 8) {
                                 Button(action: {
                                     withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -90,7 +86,7 @@ struct AgendaView: View {
                     .padding(.top, 8)
                     .padding(.bottom, -12)
                     
-                    // --- 2. SELETOR DE DIAS DA SEMANA ---
+                    // MARK: - Seletor de Dias da Semana
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(viewModel.weekDays, id: \.self) { date in
@@ -124,40 +120,36 @@ struct AgendaView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
-                        
                     }
                     
-                    // --- 3. LINHA DO TEMPO (TIMELINE) ---
+                    // MARK: - Linha do Tempo (Timeline)
                     ZStack(alignment: .topLeading) {
                         
-                        // A Linha Vertical Decorativa (Fica no fundo)
+                        // Eixo Y (Linha Decorativa)
                         Rectangle()
                             .fill(Color(.systemGray5))
                             .frame(width: 2)
                             .padding(.leading, 63)
                             .padding(.top, 24)
                         
-                        // Os Horários e os Cartões
+                        // Slots de Horário
                         VStack(spacing: 24) {
                             ForEach(viewModel.timeSlots, id: \.self) { time in
                                 
-                                // 👇 1. Pega TODAS as sessões deste horário
                                 let sessoesNoHorario = viewModel.sessoesPara(horario: time)
                                 let isOccupied = !sessoesNoHorario.isEmpty
-                                let isConflict = sessoesNoHorario.count > 1 // Tem mais de 1? É conflito!
+                                let isConflict = sessoesNoHorario.count > 1
                                 
                                 HStack(alignment: .top, spacing: 16) {
                                     
-                                    // Coluna da Esquerda: Horário e Pontinho
+                                    // Indicador de Hora
                                     HStack(spacing: 0) {
                                         Text(time)
                                             .font(.system(size: 13, weight: .semibold))
-                                            .foregroundColor(isConflict ? .red : .secondary) // Hora fica vermelha no conflito
+                                            .foregroundColor(isConflict ? .red : .secondary)
                                             .frame(width: 45, alignment: .trailing)
                                         
-                                        // O Pontinho na linha
                                         Circle()
-                                        // 👇 Se for conflito, pinta de vermelho!
                                             .fill(isConflict ? Color.red : (isOccupied ? Color.teal : Color(.systemGray5)))
                                             .frame(width: 12, height: 12)
                                             .overlay(Circle().stroke(Color(.systemGroupedBackground), lineWidth: 3))
@@ -165,18 +157,15 @@ struct AgendaView: View {
                                             .offset(y: 4)
                                     }
                                     
-                                    // Coluna da Direita: Cartões
+                                    // Cartões de Sessão
                                     if sessoesNoHorario.isEmpty {
-                                        // Slot Vazio
                                         EmptySlotCard {
                                             self.horarioSugerido = time
                                             self.mostrarNovaSessao = true
                                         }
                                     } else {
-                                        // Slot Ocupado (Pode ter 1 ou mais cartões!)
                                         VStack(alignment: .leading, spacing: 8) {
                                             
-                                            // 🚨 ALERTA DE CONFLITO
                                             if isConflict {
                                                 HStack(spacing: 4) {
                                                     Image(systemName: "exclamationmark.triangle.fill")
@@ -187,7 +176,6 @@ struct AgendaView: View {
                                                 .padding(.bottom, 4)
                                             }
                                             
-                                            // Renderiza todos os cartões que estão brigando por este horário
                                             ForEach(sessoesNoHorario) { sessao in
                                                 if let paciente = viewModel.pacientePara(sessao: sessao) {
                                                     OccupiedSlotCard(sessao: sessao, paciente: paciente) {
@@ -195,7 +183,6 @@ struct AgendaView: View {
                                                         self.pacienteSelecionado = paciente
                                                         self.mostrarAcoesRapidas = true
                                                     }
-                                                    // Borda vermelha se estiver em conflito
                                                     .overlay(
                                                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                                                             .stroke(isConflict ? Color.red : Color.clear, lineWidth: 2)
@@ -217,13 +204,15 @@ struct AgendaView: View {
             .onAppear {
                 viewModel.carregarDados()
             }
-            // Gatilho invisível de roteamento
+            
+            // MARK: - Roteamento e Modais
+            
             .navigationDestination(isPresented: $navegarParaProntuario) {
                 if let paciente = pacienteSelecionado {
                     PatientDetailView(paciente: paciente)
                 }
             }
-            // Modal de Nova Sessão Avulsa
+            
             .sheet(isPresented: $mostrarNovaSessao, onDismiss: {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                     viewModel.carregarDados()
@@ -234,7 +223,7 @@ struct AgendaView: View {
                     horarioSugerido: horarioSugerido
                 )
             }
-            // Modal de Ação Rápida (Bottom Sheet)
+            
             .sheet(isPresented: $mostrarAcoesRapidas) {
                 if let sessao = sessaoParaAcao, let paciente = pacienteSelecionado {
                     SessionQuickActionView(
@@ -251,7 +240,6 @@ struct AgendaView: View {
                     )
                 }
             }
-            
         }
     }
 }

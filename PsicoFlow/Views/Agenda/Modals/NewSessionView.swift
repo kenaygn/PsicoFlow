@@ -7,14 +7,15 @@
 
 import SwiftUI
 
+/// Formulário de agendamento que permite a criação de sessões avulsas ou contratos recorrentes.
 struct NewSessionView: View {
+    
     @StateObject private var viewModel: NewSessionViewModel
     @Environment(\.dismiss) var dismiss
     
     init(dataSugerida: Date = Date(), horarioSugerido: String = "08:00") {
-        // Inicializa o StateObject passando as sugestões
         _viewModel = StateObject(wrappedValue: NewSessionViewModel(
-            dataSugerida: dataSugerida, 
+            dataSugerida: dataSugerida,
             horarioSugerido: horarioSugerido
         ))
     }
@@ -23,7 +24,7 @@ struct NewSessionView: View {
         NavigationStack {
             Form {
                 
-                // --- SEÇÃO 1: PACIENTE ---
+                // MARK: - Seleção de Paciente
                 Section(header: Text("Informações do Paciente")) {
                     if viewModel.pacientesDisponiveis.isEmpty {
                         Text("Nenhum paciente ativo cadastrado.")
@@ -42,14 +43,18 @@ struct NewSessionView: View {
                     }
                 }
                 
-                // --- SEÇÃO 2: TIPO DE AGENDAMENTO ---
-                Section(header: Text("Agendamento"), footer: Text(viewModel.isFixedSession ? "Cria as sessões automaticamente toda semana neste mesmo dia e horário." : "Cria apenas um evento único no calendário.")) {
+                // MARK: - Configuração de Horário
+                Section(
+                    header: Text("Agendamento"),
+                    footer: Text(viewModel.isFixedSession ? "Cria as sessões automaticamente toda semana neste mesmo dia e horário." : "Cria apenas um evento único no calendário.")
+                ) {
                     
                     Toggle("Terapia Semanal (Fixa)", isOn: $viewModel.isFixedSession.animation())
                         .tint(.teal)
                     
+                    // Note: A alternância entre Picker de semana e DatePicker garante a integridade dos dados
+                    // dependendo se a sessão é um contrato (Fixed) ou um evento único (Single).
                     if viewModel.isFixedSession {
-                        // Mostra seletor de DIA DA SEMANA
                         Picker("Dia da Semana", selection: $viewModel.selectedWeekday) {
                             Text("Domingo").tag(1)
                             Text("Segunda-feira").tag(2)
@@ -60,13 +65,10 @@ struct NewSessionView: View {
                             Text("Sábado").tag(7)
                         }
                     } else {
-                        // Mostra seletor de DATA EXATA
                         DatePicker("Data da Sessão", selection: $viewModel.selectedDate, displayedComponents: .date)
                             .environment(\.locale, Locale(identifier: "pt_BR"))
                     }
                     
-                    
-                    // Picker Inteligente de Horário
                     Picker("Horário", selection: $viewModel.selectedTime) {
                         if viewModel.horariosLivres.isEmpty {
                             Text("Agenda Lotada").tag("")
@@ -78,13 +80,12 @@ struct NewSessionView: View {
                     }
                     .disabled(viewModel.horariosLivres.isEmpty)
                 }
-                
-                
             }
             .navigationTitle("Agendamento")
             .navigationBarTitleDisplayMode(.inline)
+            
+            // MARK: - Toolbar
             .toolbar {
-                // Lado Esquerdo (Cancelar)
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") {
                         dismiss()
@@ -92,17 +93,18 @@ struct NewSessionView: View {
                     .foregroundColor(.teal)
                 }
                 
-                // Lado Direito (Ação Principal)
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Agendar"){
+                    Button("Agendar") {
                         viewModel.salvarSessao()
                         dismiss()
                     }
                     .foregroundColor(.teal)
-                    // Desativa o botão se não houver paciente para salvar
                     .disabled(viewModel.pacientesDisponiveis.isEmpty)
                 }
             }
+            
+            // MARK: - Reatividade
+            // Recalcula a disponibilidade da agenda sempre que houver alteração nos parâmetros de tempo.
             .onAppear {
                 viewModel.atualizarSelecaoDeHorario()
             }

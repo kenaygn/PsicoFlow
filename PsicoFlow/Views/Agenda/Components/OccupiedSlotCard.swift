@@ -7,15 +7,20 @@
 
 import SwiftUI
 
-// O cartão que aparece quando tem paciente marcado
+/// Card interativo que representa um slot de tempo ocupado na timeline da agenda.
+/// Exibe os detalhes rápidos da sessão (paciente, status, duração e valor) e aciona
+/// o modal de ações rápidas ao ser tocado.
 struct OccupiedSlotCard: View {
+        
     var sessao: Session
     var paciente: Patient
     var onSelect: () -> Void
-    
+        
     var body: some View {
         Button(action: onSelect) {
             VStack(alignment: .leading, spacing: 12) {
+                
+                // MARK: - Identificação e Status
                 HStack(alignment: .top) {
                     Text(paciente.nome)
                         .font(.system(size: 17, weight: .semibold))
@@ -24,7 +29,6 @@ struct OccupiedSlotCard: View {
                     
                     Spacer()
                     
-                    // Badge de Status
                     Text(sessao.status.rawValue.capitalized)
                         .font(.system(size: 10, weight: .bold))
                         .textCase(.uppercase)
@@ -35,9 +39,13 @@ struct OccupiedSlotCard: View {
                         .clipShape(Capsule())
                 }
                 
+                // MARK: - Detalhes Operacionais
                 HStack(spacing: 16) {
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
+                        
+                        // Note: O valor "50 min" está fixado. Para escalabilidade, considere
+                        // trazer a duração diretamente do modelo `Session` ou do cadastro do `Patient`.
                         Text("50 min")
                     }
                     
@@ -61,6 +69,8 @@ struct OccupiedSlotCard: View {
         .buttonStyle(PlainButtonStyle())
     }
     
+    // MARK: - Helpers
+    
     private func corBadge(status: SessionStatus) -> Color {
         switch status {
         case .realizada: return .gray
@@ -70,4 +80,3 @@ struct OccupiedSlotCard: View {
         }
     }
 }
-

@@ -7,20 +7,19 @@
 
 import SwiftUI
 
+/// Modal de acesso rápido (Bottom Sheet) para gerenciamento de status de uma sessão.
 struct SessionQuickActionView: View {
+        
     let paciente: Patient
     let onUpdateStatus: (SessionStatus, Date?) -> Void
     let onOpenProfile: () -> Void
     
     @Environment(\.dismiss) var dismiss
-    
     @StateObject private var viewModel: SessionQuickActionViewModel
     
-    // Controles apenas visuais (Animações de UI)
     @State private var mostrandoAdiar = false
     @State private var alturaModal: PresentationDetent = .height(360)
-    
-    // O Init injeta a sessão diretamente na ViewModel
+        
     init(
         sessao: Session,
         paciente: Patient,
@@ -30,15 +29,13 @@ struct SessionQuickActionView: View {
         self.paciente = paciente
         self.onUpdateStatus = onUpdateStatus
         self.onOpenProfile = onOpenProfile
-        
-        // Cria a ViewModel no nascimento da tela
         _viewModel = StateObject(wrappedValue: SessionQuickActionViewModel(sessao: sessao))
     }
-    
+        
     var body: some View {
         VStack(spacing: 24) {
             
-            // --- CABEÇALHO ---
+            // MARK: - Cabeçalho do Paciente
             VStack(spacing: 8) {
                 Text(String(paciente.nome.prefix(1)))
                     .font(.system(size: 28, weight: .bold))
@@ -62,10 +59,11 @@ struct SessionQuickActionView: View {
             }
             .padding(.top, 24)
             
-            // --- ÁREA DE AÇÃO ANIMADA ---
+            // MARK: - Controles de Status (Animados)
             ZStack {
                 if mostrandoAdiar {
-                    // MODO: REAGENDAMENTO
+                    
+                    // MARK: Modo Reagendamento
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Reagendar para:")
                             .font(.system(size: 14, weight: .bold))
@@ -127,21 +125,22 @@ struct SessionQuickActionView: View {
                     .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
                     
                 } else {
-                    // MODO: BOTÕES PADRÃO
+                    
+                    // MARK: Botões Padrão de Status
                     HStack(spacing: 12) {
-                        ActionButton(title: "Realizada", icon: "checkmark.circle.fill", color: .green) {
+                        actionButton(title: "Realizada", icon: "checkmark.circle.fill", color: .green) {
                             onUpdateStatus(.realizada, nil)
                             dismiss()
                         }
                         
-                        ActionButton(title: "Adiada", icon: "calendar.badge.clock", color: .blue) {
+                        actionButton(title: "Adiada", icon: "calendar.badge.clock", color: .blue) {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
                                 mostrandoAdiar = true
                                 alturaModal = .height(420)
                             }
                         }
                         
-                        ActionButton(title: "Cancelada", icon: "xmark.circle.fill", color: .red) {
+                        actionButton(title: "Cancelada", icon: "xmark.circle.fill", color: .red) {
                             onUpdateStatus(.cancelada, nil)
                             dismiss()
                         }
@@ -154,6 +153,7 @@ struct SessionQuickActionView: View {
             Divider()
                 .padding(.horizontal, 20)
             
+            // MARK: - Acesso ao Prontuário
             Button(action: {
                 dismiss()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -175,16 +175,20 @@ struct SessionQuickActionView: View {
             
             Spacer()
         }
+        
+        // Note: A alternância dinâmica de detents expande a bottom sheet suavemente
+        // apenas quando o formulário de reagendamento exige mais espaço vertical.
         .presentationDetents([.height(360), .height(420)], selection: $alturaModal)
         .presentationDragIndicator(.visible)
         .onChange(of: viewModel.novaData) { _ in
-            viewModel.ajustarHorarioSeNecessario() // Chama a verificação
+            viewModel.ajustarHorarioSeNecessario()
         }
     }
     
-    // MARK: - Funções de UI
+    // MARK: - Helpers
     
-    private func ActionButton(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+    @ViewBuilder
+    private func actionButton(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: icon)
