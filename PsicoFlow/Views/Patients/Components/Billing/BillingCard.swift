@@ -7,14 +7,21 @@
 
 import SwiftUI
 
-// O Cartão Individual da Fatura
+/// Componente visual que exibe o resumo financeiro mensal de um paciente.
+/// Inclui a formatação de valores e um atalho de ação rápida para baixar ou estornar o pagamento.
 struct BillingCard: View {
+    
+    // MARK: - Properties
+    
     var pagamento: MonthlyPayment
     var onToggle: () -> Void
     
+    // MARK: - Body
+    
     var body: some View {
         VStack(spacing: 16) {
-            // Linha Superior: Mês e Valor
+            
+            // MARK: - Cabeçalho (Mês e Valor)
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(formatarMesReferencia(pagamento.mesReferencia))
@@ -28,6 +35,8 @@ struct BillingCard: View {
                 
                 Spacer()
                 
+                // Note: A substituição do ponto por vírgula atende rapidamente ao padrão BRL.
+                // Para escalar a aplicação para outras moedas no futuro, o ideal será migrar para um NumberFormatter.
                 Text(String(format: "R$ %.2f", pagamento.valor).replacingOccurrences(of: ".", with: ","))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(Color(.darkText))
@@ -35,9 +44,8 @@ struct BillingCard: View {
             
             Divider()
             
-            // Linha Inferior: Status e Botão
+            // MARK: - Status e Ações
             HStack {
-                // Badge de Status
                 HStack(spacing: 4) {
                     Image(systemName: pagamento.pago ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                     Text(pagamento.statusCobranca)
@@ -51,7 +59,6 @@ struct BillingCard: View {
                 
                 Spacer()
                 
-                // Botão de Ação Dinâmico
                 Button(action: onToggle) {
                     Text(pagamento.pago ? "Desfazer" : "Registrar Pagamento")
                         .font(.system(size: 13, weight: .semibold))
@@ -66,7 +73,6 @@ struct BillingCard: View {
         .padding(16)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        // Bordinha sutil igual ao Tailwind (border-slate-100 shadow-sm)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(Color(.systemGray6), lineWidth: 1)
@@ -74,7 +80,9 @@ struct BillingCard: View {
         .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
     }
     
-    // Função auxiliar para deixar "2026/03" mais bonito: "Março 2026"
+    // MARK: - Helpers
+    
+    /// Converte a string de referência "YYYY/MM" para uma leitura amigável (ex: "Março 2026").
     private func formatarMesReferencia(_ mesAno: String) -> String {
         let partes = mesAno.split(separator: "/")
         guard partes.count == 2, let mesStr = partes.last, let mesInt = Int(mesStr) else { return mesAno }

@@ -7,10 +7,11 @@
 
 import SwiftUI
 
+/// Formulário para cadastro de um novo paciente.
+/// Utiliza a closure `onSave` para delegar a responsabilidade de persistência à View pai.
 struct AddPatientView: View {
-    @Environment(\.dismiss) var dismiss
     
-    // 1. Instanciamos a nossa ViewModel descartável
+    @Environment(\.dismiss) var dismiss
     @StateObject private var viewModel = PatientFormViewModel()
     
     var onSave: (Patient) -> Void
@@ -18,8 +19,9 @@ struct AddPatientView: View {
     var body: some View {
         NavigationStack {
             Form {
+                
+                // MARK: - Informações Pessoais
                 Section(header: Text("Informações Pessoais")) {
-                    // Trocamos os $nome soltos por $viewModel.nome
                     TextField("Nome completo", text: $viewModel.nome)
                         .textInputAutocapitalization(.words)
                     
@@ -35,6 +37,7 @@ struct AddPatientView: View {
                         .keyboardType(.phonePad)
                 }
                 
+                // MARK: - Sessão e Contrato
                 Section(header: Text("Sessão e Contrato")) {
                     Picker("Status do Paciente", selection: $viewModel.status) {
                         ForEach(PatientStatus.allCases, id: \.self) { statusItem in
@@ -49,14 +52,17 @@ struct AddPatientView: View {
                     }
                 }
                 
-                Section(header: Text("Observações Iniciais"), footer: Text("Informações de triagem ou diagnóstico inicial.")) {
+                // MARK: - Observações
+                Section(
+                    header: Text("Observações Iniciais"),
+                    footer: Text("Informações de triagem ou diagnóstico inicial.")
+                ) {
                     TextEditor(text: $viewModel.observacoes)
                         .frame(minHeight: 80)
                 }
             }
             .navigationTitle("Novo Paciente")
             .navigationBarTitleDisplayMode(.inline)
-            
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancelar") { dismiss() }
@@ -65,13 +71,11 @@ struct AddPatientView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
-                        // 2. Pedimos o paciente pronto para a ViewModel e passamos para cima!
                         let novoPaciente = viewModel.obterPacienteAtualizado()
                         onSave(novoPaciente)
                         dismiss()
                     }
                     .fontWeight(.bold)
-                    // 3. A View só pergunta para a ViewModel se está tudo válido
                     .foregroundColor(viewModel.isFormValid ? .teal : .gray)
                     .disabled(!viewModel.isFormValid)
                 }

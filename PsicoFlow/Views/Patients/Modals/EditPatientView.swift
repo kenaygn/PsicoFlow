@@ -1,24 +1,30 @@
+//
+//  EditPatientView.swift
+//  PsicoFlow
+//
+//  Created by Kenay on 04/04/26.
+//
+
 import SwiftUI
 
+/// Formulário de edição de dados cadastrais.
+/// Sincroniza as alterações diretamente com a View pai através do Binding `pacienteAtual`.
 struct EditPatientView: View {
+    
     @Environment(\.dismiss) var dismiss
-    
-    // Recebe o paciente original como Binding para alterar direto na tela anterior
     @Binding var pacienteAtual: Patient
-    
-    // A nossa ViewModel reaproveitada
     @StateObject private var viewModel: PatientFormViewModel
     
-    // Injetamos o paciente na ViewModel assim que a tela abre
     init(pacienteAtual: Binding<Patient>) {
         self._pacienteAtual = pacienteAtual
-        // Instancia a ViewModel já passando o paciente que precisa ser editado
         self._viewModel = StateObject(wrappedValue: PatientFormViewModel(paciente: pacienteAtual.wrappedValue))
     }
     
     var body: some View {
         NavigationStack {
             Form {
+                
+                // MARK: - Informações Pessoais
                 Section(header: Text("Informações Pessoais")) {
                     TextField("Nome completo", text: $viewModel.nome)
                         .textInputAutocapitalization(.words)
@@ -35,6 +41,7 @@ struct EditPatientView: View {
                         .keyboardType(.phonePad)
                 }
                 
+                // MARK: - Sessão e Contrato
                 Section(header: Text("Sessão e Contrato")) {
                     Picker("Status do Paciente", selection: $viewModel.status) {
                         ForEach(PatientStatus.allCases, id: \.self) { statusItem in
@@ -49,14 +56,17 @@ struct EditPatientView: View {
                     }
                 }
                 
-                Section(header: Text("Observações Iniciais"), footer: Text("Informações de triagem ou diagnóstico inicial.")) {
+                // MARK: - Observações
+                Section(
+                    header: Text("Observações Iniciais"),
+                    footer: Text("Informações de triagem ou diagnóstico inicial.")
+                ) {
                     TextEditor(text: $viewModel.observacoes)
                         .frame(minHeight: 80)
                 }
             }
             .navigationTitle("Editar Paciente")
             .navigationBarTitleDisplayMode(.inline)
-            
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancelar") { dismiss() }
@@ -65,7 +75,6 @@ struct EditPatientView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
-                        // A ViewModel entrega o paciente pronto e mastigado, e a View apenas atualiza o Binding
                         pacienteAtual = viewModel.obterPacienteAtualizado()
                         dismiss()
                     }

@@ -16,13 +16,12 @@ struct MainTabView: View {
             // 1. ABA: INÍCIO
             HomeView()
                 .tabItem {
-                    // Truque HIG: Ícone muda de vazado para preenchido quando clicado
                     Image(systemName: "house.fill")
                     Text("Início")
                 }
                 .tag(0)
             
-            // 2. ABA: AGENDA (Placeholder)
+            // 2. ABA: AGENDA
             AgendaView()
                 .tabItem {
                     Image(systemName: "calendar")
@@ -38,7 +37,7 @@ struct MainTabView: View {
                 }
                 .tag(2)
             
-            // 4. ABA: FINANÇAS (Placeholder)
+            // 4. ABA: FINANÇAS
             FinancesView()
                 .tabItem {
                     Image(systemName: "dollarsign.circle")
@@ -56,7 +55,6 @@ struct MainTabView: View {
                 }
                 .tag(4)
         }
-        // Pinta o ícone ativo com a cor principal do seu app
         .tint(.teal)
     }
 }

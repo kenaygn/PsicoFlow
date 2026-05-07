@@ -1,5 +1,5 @@
 //
-//  EvolutionCard.swift
+//  EvolutionCardView.swift
 //  PsicoFlow
 //
 //  Created by Kenay on 04/04/26.
@@ -7,27 +7,37 @@
 
 import SwiftUI
 
-// MARK: - 1. O Componente do Cartão Individual
+/// Componente visual que exibe um registro individual do prontuário ou evolução clínica.
 struct EvolutionCardView: View {
+        
     let evolucao: Evolution
     
+    /// - Note: Para listas com milhares de evoluções, considere mover este
+    ///         DateFormatter para uma constante estática para evitar recriação.
+    private var dataFormatada: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy"
+        return formatter.string(from: evolucao.data)
+    }
+        
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header: Ícone de Calendário e Data
+            
+            // MARK: - Cabeçalho
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "calendar")
                         .font(.system(size: 14))
                         .foregroundColor(.teal)
                     
-                    Text(formatarData(evolucao.data))
+                    Text(dataFormatada)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Color(.darkGray))
                 }
                 
                 Spacer()
                 
-                // Se no futuro você adicionar tipos (como o áudio do React), o Badge entraria aqui
+                // TODO: Tornar este Badge dinâmico para suportar futuras mídias (ex: Áudio, Anexos).
                 Text("TEXTO")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.teal)
@@ -37,11 +47,11 @@ struct EvolutionCardView: View {
                     .clipShape(Capsule())
             }
             
-            // Corpo da Nota Clínica
+            // MARK: - Conteúdo Clínico
             Text(evolucao.conteudo)
                 .font(.system(size: 15))
                 .foregroundColor(Color(.darkGray))
-                .lineSpacing(4) // Dá um respiro melhor para textos longos
+                .lineSpacing(4)
         }
         .padding(20)
         .background(Color.white)
@@ -51,12 +61,5 @@ struct EvolutionCardView: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(Color.gray.opacity(0.1), lineWidth: 1)
         )
-    }
-    
-    // Função auxiliar para formatar a data estilo iOS (ex: 22/03/2026)
-    private func formatarData(_ data: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd/MM/yyyy"
-        return formatter.string(from: data)
     }
 }

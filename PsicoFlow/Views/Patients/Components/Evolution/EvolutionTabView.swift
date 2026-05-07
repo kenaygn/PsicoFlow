@@ -7,40 +7,37 @@
 
 import SwiftUI
 
-// MARK: - 2. A Aba Completa (Lista + Formulário)
+/// Aba responsável pela exibição do histórico clínico do paciente
+/// e pela inserção rápida de novas evoluções através de um formulário inline.
 struct EvolutionTabView: View {
-    // Aqui nós recebemos as evoluções filtradas daquele paciente
+        
     var evolucoes: [Evolution]
     var adicionarEvolucao: ((String) -> Void)
     
-    // Estados para o formulário de Nova Evolução
     @State private var isAddingNova = false
     @State private var novaEvolucaoTexto = ""
     
     var body: some View {
         VStack(spacing: 16) {
             
-            // Cabeçalho da Seção
+            // MARK: - Cabeçalho
             HStack {
                 Text("Histórico Clínico")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
+                
                 Spacer()
-                //                Button("Buscar") {
-                //                    print("Abrir barra de busca das evoluções")
-                //                }
-                //                .font(.system(size: 15, weight: .semibold))
-                //                .foregroundColor(.teal)
+                
+                // TODO: Implementar busca no histórico de evoluções
             }
             .padding(.bottom, 4)
             
-            // --- FORMULÁRIO INLINE DE NOVA EVOLUÇÃO ---
+            // MARK: - Formulário Inline
             if isAddingNova {
                 VStack(spacing: 16) {
                     TextEditor(text: $novaEvolucaoTexto)
                         .frame(minHeight: 120)
                         .padding(12)
-                    // Fundo cinza clarinho para destacar a área de digitação
                         .background(Color(.systemGray6))
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .overlay(
@@ -63,9 +60,7 @@ struct EvolutionTabView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         
                         Button("Guardar") {
-                            
                             adicionarEvolucao(novaEvolucaoTexto)
-                            
                             withAnimation(.spring()) {
                                 isAddingNova = false
                                 novaEvolucaoTexto = ""
@@ -83,10 +78,10 @@ struct EvolutionTabView: View {
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
-                .transition(.opacity.combined(with: .scale(scale: 0.95))) // Animação de entrada
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
             
-            // --- BOTÃO ADICIONAR (Quando formulário está fechado) ---
+            // MARK: - Ações
             if !isAddingNova {
                 Button(action: {
                     withAnimation(.spring()) {
@@ -107,11 +102,8 @@ struct EvolutionTabView: View {
                 }
             }
             
-            // --- LISTA DE CARDS ---
-            // Ordenamos da data mais recente para a mais antiga
-            // --- LISTA DE CARDS OU ESTADO VAZIO ---
+            // MARK: - Lista de Evoluções e Estado Vazio
             if evolucoes.isEmpty && !isAddingNova {
-                // Empty State: O que aparece quando o paciente é novo
                 VStack(spacing: 12) {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.system(size: 40))
@@ -130,7 +122,9 @@ struct EvolutionTabView: View {
                 }
                 .padding(.bottom, 60)
             } else {
-                // Lista normal renderizada
+                // Note: A ordenação ocorre a cada renderização da View.
+                //       Considere ordenar o array `evolucoes` diretamente na ViewModel
+                //       para melhorar a performance caso o histórico clínico seja muito longo.
                 ForEach(evolucoes.sorted(by: { $0.data > $1.data })) { evolucao in
                     EvolutionCardView(evolucao: evolucao)
                 }

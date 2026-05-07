@@ -7,7 +7,10 @@
 
 import SwiftUI
 
+/// Modal de edição que adapta dinamicamente sua interface dependendo
+/// se o usuário está alterando uma sessão avulsa ou um contrato de recorrência (fixa).
 struct EditSessionView: View {
+    
     @StateObject private var viewModel: EditSessionViewModel
     @Environment(\.dismiss) var dismiss
     
@@ -18,7 +21,8 @@ struct EditSessionView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // --- PACIENTE ---
+                
+                // MARK: - Informações do Paciente
                 Section(header: Text("Paciente")) {
                     HStack {
                         Text("Nome")
@@ -28,9 +32,10 @@ struct EditSessionView: View {
                     }
                 }
                 
-                // --- DADOS DA SESSÃO ---
+                // MARK: - Dados da Sessão
                 Section(
                     header: Text(viewModel.isFixa ? "Regras do Contrato" : "Dados da Sessão"),
+                    // Importante: Alerta visual para evitar que o usuário altere uma regra fixa sem querer
                     footer: Text(viewModel.isFixa ? "Alterar essas regras afetará as próximas sessões geradas para este paciente." : "Alterar esta sessão não afeta o contrato recorrente.")
                 ) {
                     Picker("Modalidade", selection: $viewModel.selectedModalidade) {
@@ -38,7 +43,7 @@ struct EditSessionView: View {
                         Text("Online").tag(Modalidade.online)
                     }
                     
-                    // 👇 A Mágica Visual: Muda o componente conforme o tipo!
+                    // Alterna o controle de entrada: Contratos dependem do dia da semana, sessões avulsas de uma data exata
                     if viewModel.isFixa {
                         Picker("Dia da Semana", selection: $viewModel.selectedWeekday) {
                             Text("Domingo").tag(1)
@@ -77,6 +82,7 @@ struct EditSessionView: View {
                     .foregroundColor(.teal)
                 }
             }
+            // Recalcula a lista de horários livres sempre que a data ou o dia da semana mudam
             .onAppear {
                 viewModel.atualizarSelecaoDeHorario()
             }
@@ -86,7 +92,6 @@ struct EditSessionView: View {
             .onChange(of: viewModel.selectedWeekday) { _ in
                 viewModel.atualizarSelecaoDeHorario()
             }
-            
         }
     }
 }

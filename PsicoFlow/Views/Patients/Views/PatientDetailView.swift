@@ -7,18 +7,15 @@
 
 import SwiftUI
 
+/// Exibe o perfil completo do paciente e gerencia a navegação entre suas evoluções, finanças e sessões.
 struct PatientDetailView: View {
-    // 1. Instanciamos a ViewModel correta para esta tela
+    
     @StateObject private var viewModel: PatientDetailViewModel
     
-    // Controles visuais (que são da View mesmo)
     @State private var abaSelecionada = 0
     @State private var mostrarModalEdicao = false
-    
     @State private var itemSessaoParaEditar: EditSessionItem? = nil
     
-    
-    // 2. O Init limpo: Recebe o paciente da lista e passa direto para a ViewModel
     init(paciente: Patient) {
         self._viewModel = StateObject(wrappedValue: PatientDetailViewModel(paciente: paciente))
     }
@@ -27,7 +24,7 @@ struct PatientDetailView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
                 
-                // --- 1. CABEÇALHO DO PERFIL ---
+                // MARK: - Cabeçalho do Perfil
                 VStack(spacing: 12) {
                     Text(viewModel.paciente.iniciais)
                         .font(.system(size: 32, weight: .bold))
@@ -62,7 +59,7 @@ struct PatientDetailView: View {
                 }
                 .padding(.top, 24)
                 
-                // --- 2. CONTROLE DE ABAS ---
+                // MARK: - Controle de Abas
                 Picker("Abas", selection: $abaSelecionada) {
                     Text("Evolução").tag(0)
                     Text("Faturação").tag(1)
@@ -71,7 +68,7 @@ struct PatientDetailView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 20)
                 
-                // --- 3. CONTEÚDO DAS ABAS ---
+                // MARK: - Conteúdo da Aba
                 VStack {
                     if abaSelecionada == 0 {
                         EvolutionTabView(
@@ -106,7 +103,7 @@ struct PatientDetailView: View {
             }
             .padding(.bottom, 40)
         }
-        .onAppear{
+        .onAppear {
             viewModel.carregarDadosCompletos()
         }
         .onTapGesture {
@@ -126,22 +123,23 @@ struct PatientDetailView: View {
             }
         }
         .sheet(isPresented: $mostrarModalEdicao) {
-            // 4. Passamos a referência (Binding) do paciente que está na ViewModel
+            // Note: O Binding com a viewModel garante que a UI reflita a edição imediatamente
             EditPatientView(pacienteAtual: $viewModel.paciente)
                 .onDisappear {
-                    // Quando fechar, avisamos a tela de trás (a lista)
-                    viewModel.salvarAlteracoesDoPaciente()                }
-        }
-        
-        .sheet(item: $itemSessaoParaEditar, onDismiss: {
-                    viewModel.carregarDadosCompletos()
-                }) { itemParaEdit in
-                    EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.nome)
+                    viewModel.salvarAlteracoesDoPaciente()
                 }
+        }
+        .sheet(item: $itemSessaoParaEditar, onDismiss: {
+            viewModel.carregarDadosCompletos()
+        }) { itemParaEdit in
+            EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.nome)
+        }
     }
 }
 
-// Essa extensão permite usar o esconderTeclado() em qualquer lugar do app!
+// MARK: - Extensions
+
+/// Oculta o teclado globalmente no app ao tocar fora dos campos de texto.
 extension View {
     func esconderTeclado() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -162,4 +160,3 @@ extension View {
         )
     )
 }
-

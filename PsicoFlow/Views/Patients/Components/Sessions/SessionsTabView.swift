@@ -7,17 +7,25 @@
 
 import SwiftUI
 
+/// Aba responsável por listar a agenda específica de um paciente.
+///
+/// - Note: Esta é uma "Stateless View". Toda a lógica de negócio, conversão de datas
+///         e gerenciamento de estado é injetada via propriedades e closures pela View Pai.
 struct SessionsTabView: View {
+        
     let sessoesFixas: [FixedSession]
     let sessoesAvulsas: [Session]
+    
+    /// Closure para delegar a conversão do número do dia (1-7) para texto localizado.
     let converterDia: (Int) -> String
     
     let onEditFixed: (FixedSession) -> Void
     let onEditAvulsa: (Session) -> Void
-    
+        
     var body: some View {
         VStack(spacing: 32) {
-            //Sessões Recorrentes
+            
+            // MARK: - Sessões Recorrentes
             VStack(alignment: .leading, spacing: 16) {
                 Text("Sessões Recorrentes")
                     .font(.system(size: 14, weight: .bold))
@@ -40,7 +48,8 @@ struct SessionsTabView: View {
                     }
                 }
             }
-            //Sessões Avulsas
+            
+            // MARK: - Sessões Avulsas e Adiadas
             VStack(alignment: .leading, spacing: 16) {
                 Text("Sessões Avulsas e Adiadas")
                     .font(.system(size: 14, weight: .bold))
@@ -53,7 +62,6 @@ struct SessionsTabView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 20)
-                    
                 } else {
                     ForEach(sessoesAvulsas, id: \.id) { avulsa in
                         SingleSessionCard(
@@ -66,8 +74,4 @@ struct SessionsTabView: View {
         }
         .padding(.vertical, 16)
     }
-    
 }
-
-
-

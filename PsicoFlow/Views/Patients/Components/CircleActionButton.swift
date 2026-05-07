@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-// Sub-componente para os botões redondos de ação
+/// Botão de ação circular padronizado para atalhos rápidos (ex: Ligações, WhatsApp, E-mail).
 struct CircleActionButton: View {
+    
     let icon: String
     let color: Color
     let action: () -> Void
@@ -24,6 +25,5 @@ struct CircleActionButton: View {
                 .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
                 .overlay(Circle().stroke(Color.gray.opacity(0.1), lineWidth: 1))
         }
-        
     }
 }

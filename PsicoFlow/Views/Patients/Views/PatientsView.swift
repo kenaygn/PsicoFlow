@@ -7,21 +7,19 @@
 
 import SwiftUI
 
-
+/// Tela principal de listagem e busca de pacientes.
 struct PatientsView: View {
+    
     @StateObject private var viewModel = PatientsViewModel()
-    
-    
     @State private var mostrarModalAdicionar = false
     
     var body: some View {
-        NavigationStack{
-            ScrollView(showsIndicators: false){
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
-                    // --- LISTA DE PACIENTES ---
                     VStack(spacing: 12) {
                         
-                        // Estado Vazio: Quando a busca não encontra ninguém
+                        // Estado Vazio: Exibido quando a lista real está vazia ou a busca não acha ninguém
                         if viewModel.pacientesFiltrados.isEmpty {
                             VStack {
                                 Image(systemName: "person.crop.circle.badge.questionmark")
@@ -35,54 +33,44 @@ struct PatientsView: View {
                             .padding(.top, 60)
                             
                         } else {
-                            // Lista renderizada com animação suave de reordenação
+                            // Lista de Pacientes
                             ForEach(viewModel.pacientesFiltrados) { paciente in
-                                
                                 NavigationLink(destination: PatientDetailView(paciente: paciente)) {
                                     PatientCardView(paciente: paciente)
                                 }
-                                
                             }
                         }
                     }
+                    // Importante: Espaçamento para garantir que o último item não fique escondido sob a TabBar
                     .padding(.bottom, 100)
-                    
-                    
                 }
                 .padding(.horizontal, 20)
-                
             }
             .onAppear {
-                        viewModel.carregarPacientes()
-                    }
+                // Garante que a lista esteja sempre atualizada ao voltar de outras telas
+                viewModel.carregarPacientes()
+            }
             .navigationTitle("Pacientes")
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), )
-            
-            // Botão de "+" no topo para adicionar novo paciente
+            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always))
             .toolbar {
-                ToolbarItem() {
-                    Button(action: { mostrarModalAdicionar.toggle()}) {
+                ToolbarItem {
+                    Button(action: { mostrarModalAdicionar.toggle() }) {
                         Image(systemName: "plus")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.teal)
                     }
                 }
             }
-            
+            // Fluxo de criação de novo paciente
             .sheet(isPresented: $mostrarModalAdicionar) {
                 AddPatientView { novoPaciente in
                     viewModel.adicionarPaciente(novoPaciente)
                 }
             }
-            
         }
-        
     }
 }
-
-
-
 
 #Preview {
     PatientsView()
