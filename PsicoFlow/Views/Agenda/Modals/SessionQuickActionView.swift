@@ -75,12 +75,12 @@ struct SessionQuickActionView: View {
                             DatePicker("Data", selection: $viewModel.novaData, displayedComponents: .date)
                                 .labelsHidden()
                                 .environment(\.locale, Locale(identifier: "pt_BR"))
-                                                        
+                            
                             Picker("Horário", selection: $viewModel.novaHoraStr) {
                                 if viewModel.horariosLivres.isEmpty {
                                     Text("Lotado").tag("")
                                 } else {
-                                    ForEach(viewModel.horariosLivres, id: \.self) { horario in
+                                    ForEach(viewModel.horariosParaOPicker, id: \.self) { horario in
                                         Text(horario).tag(horario)
                                     }
                                 }

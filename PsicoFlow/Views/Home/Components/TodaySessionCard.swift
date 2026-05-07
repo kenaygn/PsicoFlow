@@ -16,12 +16,12 @@ struct TodaySessionCard: View {
     var onSelectPaciente: () -> Void
     var onUpdateStatus: (SessionStatus, Date?) -> Void
     
-    // 👇 NOVO: O cartão recebe a inteligência de fora
+
     var fetchAvailableTimes: (Date, String) -> [String]
     
     @State private var mostrandoAdiar = false
     @State private var novaData = Date()
-    @State private var novaHoraStr = "" // 👇 Estado do novo Picker de horas
+    @State private var novaHoraStr = ""
     
     // Variável computada que roda a função recebida da Home
     var horariosLivres: [String] {

@@ -57,4 +57,48 @@ class SessionGeneratorService {
         }
         return fimDoMesQueVem
     }
+    
+        func sincronizarSessoesPorStatus(
+            do paciente: Patient,
+            regrasFixas: [FixedSession],
+            sessionRepository: SessionRepositoryProtocol
+        ) {
+            let hoje = Calendar.current.startOfDay(for: Date())
+            let todasSessoes = sessionRepository.fetchSessoes()
+            
+            if paciente.status == .inativo {
+                // 1. O paciente foi DESATIVADO: Varre a agenda e cancela sessões futuras
+                for sessao in todasSessoes where sessao.pacienteID == paciente.id {
+                    // Pega apenas as sessões de hoje pra frente que ainda não foram realizadas
+                    if sessao.dataDaSessão >= hoje && sessao.status == .agendada {
+                        var sessaoCancelada = sessao
+                        sessaoCancelada.status = .cancelada
+                        sessionRepository.atualizarSessao(sessaoCancelada)
+                    }
+                }
+                print("🚫 Paciente inativado. Sessões futuras foram canceladas na agenda.")
+                
+            } else if paciente.status == .ativo {
+                // 2. O paciente foi ATIVADO: Gera as sessões que estão faltando
+                let dataFim = ultimoDiaDoProximoMes(aPartirDe: hoje)
+                
+                // Procura as regras fixas (contratos) deste paciente
+                for regra in regrasFixas where regra.pacienteID == paciente.id {
+                    let sessoesParaGerar = gerarSessoes(para: regra, dataInicio: hoje, dataFim: dataFim)
+                    
+                    for novaSessao in sessoesParaGerar {
+                        // Evita criar duplicatas caso a sessão já exista naquele dia
+                        let jaExiste = todasSessoes.contains {
+                            $0.sessaoFixaID == regra.id &&
+                            Calendar.current.isDate($0.dataDaSessão, inSameDayAs: novaSessao.dataDaSessão)
+                        }
+                        
+                        if !jaExiste {
+                            sessionRepository.salvarSessao(novaSessao)
+                        }
+                    }
+                }
+                print("✅ Paciente ativado. Novas sessões geradas para a agenda!")
+            }
+        }
 }

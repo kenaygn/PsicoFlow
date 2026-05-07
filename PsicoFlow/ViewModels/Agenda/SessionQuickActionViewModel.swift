@@ -45,6 +45,17 @@ class SessionQuickActionViewModel: ObservableObject {
         return todosHorarios.filter { !ocupados.contains($0) }
     }
     
+    var horariosParaOPicker: [String] {
+        var listaSegura = horariosLivres
+        
+        if !novaHoraStr.isEmpty && !listaSegura.contains(novaHoraStr) {
+            listaSegura.append(novaHoraStr)
+            listaSegura.sort() // Reordena para o horário voltar para a posição correta (ex: 14:00 depois de 13:00)
+        }
+        
+        return listaSegura
+    }
+    
     // Trava de segurança para atualizar a seleção caso o dia mude
     func ajustarHorarioSeNecessario() {
         if !horariosLivres.contains(novaHoraStr) {

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct MainTabView: View {
-    // Controla qual aba está ativa no momento
     @State private var abaSelecionada = 0
     
     var body: some View {

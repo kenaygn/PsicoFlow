@@ -9,6 +9,11 @@ import SwiftUI
 
 @main
 struct PsicoFlowApp: App {
+    
+    init() {
+        MockData.carregarSessoesFixasMockadas()
+    }
+    
     var body: some Scene {
         WindowGroup {
             MainTabView()

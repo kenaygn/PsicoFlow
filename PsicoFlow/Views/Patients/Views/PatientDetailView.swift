@@ -15,6 +15,8 @@ struct PatientDetailView: View {
     @State private var abaSelecionada = 0
     @State private var mostrarModalEdicao = false
     
+    @State private var itemSessaoParaEditar: EditSessionItem? = nil
+    
     
     // 2. O Init limpo: Recebe o paciente da lista e passa direto para a ViewModel
     init(paciente: Patient) {
@@ -93,12 +95,10 @@ struct PatientDetailView: View {
                             sessoesAvulsas: viewModel.sessoesAvulsasFuturas,
                             converterDia: { dia in viewModel.nomeDoDiaDaSemana(dia) },
                             onEditFixed: { fixa in
-                                print("Abrir modal de edição com a regra fixa: \(fixa.horaInicio)")
-                                // Aqui você vai disparar a variável @State para abrir sua NewSessionView em modo edição
+                                self.itemSessaoParaEditar = .fixa(fixa)
                             },
                             onEditAvulsa: { avulsa in
-                                print("Abrir modal de edição para sessão avulsa de \(avulsa.horaInicio)")
-                                // Idem para sessão avulsa
+                                self.itemSessaoParaEditar = .avulsa(avulsa)
                             }
                         )
                     }
@@ -132,6 +132,12 @@ struct PatientDetailView: View {
                     // Quando fechar, avisamos a tela de trás (a lista)
                     viewModel.salvarAlteracoesDoPaciente()                }
         }
+        
+        .sheet(item: $itemSessaoParaEditar, onDismiss: {
+                    viewModel.carregarDadosCompletos()
+                }) { itemParaEdit in
+                    EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.nome)
+                }
     }
 }
 

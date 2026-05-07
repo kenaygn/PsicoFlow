@@ -23,6 +23,8 @@ class PatientDetailViewModel: ObservableObject {
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
     
+    private let generatorService = SessionGeneratorService()
+    
     init(
         paciente: Patient,
         patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
@@ -92,8 +94,19 @@ class PatientDetailViewModel: ObservableObject {
     }
     
     func salvarAlteracoesDoPaciente() {
-        patientRepository.atualizarPaciente(paciente)
-    }
+            // 1. Salva o paciente no banco de dados (mock)
+            patientRepository.atualizarPaciente(paciente)
+            
+            // 2. Dispara a inteligência de negócios para ajustar a agenda
+            generatorService.sincronizarSessoesPorStatus(
+                do: paciente,
+                regrasFixas: fixedSessionRepository.fetchSessoesFixas(),
+                sessionRepository: sessionRepository
+            )
+            
+            // 3. Força a ViewModel a recarregar as listas da tela para mostrar o novo cenário
+            carregarSessoesConfiguradas()
+        }
     
     // Helper para converter Dia 2 em "Segunda-feira"
     func nomeDoDiaDaSemana(_ dia: Int) -> String {

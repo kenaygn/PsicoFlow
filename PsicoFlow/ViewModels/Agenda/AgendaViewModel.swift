@@ -119,9 +119,11 @@ class AgendaViewModel: ObservableObject {
     
     // MARK: - Lógica de Timeline
     
-    func sessaoPara(horario: String) -> Session? {
-        return todasSessoes.first { sessao in
-            isMesmoDia(sessao.dataDaSessão, selectedDate) && sessao.horaInicio == horario
+    func sessoesPara(horario: String) -> [Session] {
+        return todasSessoes.filter { sessao in
+            isMesmoDia(sessao.dataDaSessão, selectedDate) &&
+            sessao.horaInicio == horario &&
+            sessao.status != .cancelada // Sessões canceladas não geram conflito na tela!
         }
     }
     

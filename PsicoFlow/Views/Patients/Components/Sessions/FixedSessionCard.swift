@@ -12,18 +12,6 @@ struct FixedSessionCard: View {
     let diaDaSemanaTexto: String
     let onEdit: () -> Void
     
-    // Um Rosa/Magenta Premium e sofisticado
-//    var corFundoRosa : LinearGradient {
-//        LinearGradient(
-//            colors: [
-//                Color(red: 1, green: 0, blue: 0.49),
-//                Color(red: 1, green: 0.26, blue: 0.62)
-//            ],
-//            startPoint: .topLeading,
-//            endPoint: .bottomTrailing
-//        )
-//    }
-    
     var corFundoRosa = Color(red: 0.96, green: 0.39, blue: 0.45)
     
     var body: some View {
@@ -49,7 +37,6 @@ struct FixedSessionCard: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    // Fundo do botão translúcido sobre o rosa
                     .background(Color.white.opacity(0.25))
                     .clipShape(Capsule())
             }

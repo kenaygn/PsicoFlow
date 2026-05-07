@@ -15,4 +15,10 @@ class MockFixedSessionRepository: FixedSessionRepositoryProtocol {
     func salvarSessaoFixa(_ sessaoFixa: FixedSession) {
         MockData.sessoesFixasExemplo.append(sessaoFixa)
     }
+    
+    func atualizarSessaoFixa(_ sessaoFixa: FixedSession) {
+        if let index = MockData.sessoesFixasExemplo.firstIndex(where: { $0.id == sessaoFixa.id }) {
+            MockData.sessoesFixasExemplo[index] = sessaoFixa
+        }
+    }
 }

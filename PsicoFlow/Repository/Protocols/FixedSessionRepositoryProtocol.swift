@@ -10,4 +10,5 @@ import Foundation
 protocol FixedSessionRepositoryProtocol {
     func fetchSessoesFixas() -> [FixedSession]
     func salvarSessaoFixa(_ sessaoFixa: FixedSession)
+    func atualizarSessaoFixa(_ sessaoFixa: FixedSession)
 }

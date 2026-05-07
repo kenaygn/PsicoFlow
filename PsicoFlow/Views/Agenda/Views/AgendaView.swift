@@ -124,7 +124,7 @@ struct AgendaView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
-
+                        
                     }
                     
                     // --- 3. LINHA DO TEMPO (TIMELINE) ---
@@ -140,8 +140,11 @@ struct AgendaView: View {
                         // Os Horários e os Cartões
                         VStack(spacing: 24) {
                             ForEach(viewModel.timeSlots, id: \.self) { time in
-                                let sessao = viewModel.sessaoPara(horario: time)
-                                let isOccupied = sessao != nil
+                                
+                                // 👇 1. Pega TODAS as sessões deste horário
+                                let sessoesNoHorario = viewModel.sessoesPara(horario: time)
+                                let isOccupied = !sessoesNoHorario.isEmpty
+                                let isConflict = sessoesNoHorario.count > 1 // Tem mais de 1? É conflito!
                                 
                                 HStack(alignment: .top, spacing: 16) {
                                     
@@ -149,12 +152,13 @@ struct AgendaView: View {
                                     HStack(spacing: 0) {
                                         Text(time)
                                             .font(.system(size: 13, weight: .semibold))
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(isConflict ? .red : .secondary) // Hora fica vermelha no conflito
                                             .frame(width: 45, alignment: .trailing)
                                         
                                         // O Pontinho na linha
                                         Circle()
-                                            .fill(isOccupied ? Color.teal : Color(.systemGray5))
+                                        // 👇 Se for conflito, pinta de vermelho!
+                                            .fill(isConflict ? Color.red : (isOccupied ? Color.teal : Color(.systemGray5)))
                                             .frame(width: 12, height: 12)
                                             .overlay(Circle().stroke(Color(.systemGroupedBackground), lineWidth: 3))
                                             .padding(.leading, 10)
@@ -162,18 +166,42 @@ struct AgendaView: View {
                                     }
                                     
                                     // Coluna da Direita: Cartões
-                                    if let sessao = sessao, let paciente = viewModel.pacientePara(sessao: sessao) {
-                                        // SLot Ocupado
-                                        OccupiedSlotCard(sessao: sessao, paciente: paciente) {
-                                            self.sessaoParaAcao = sessao
-                                            self.pacienteSelecionado = paciente
-                                            self.mostrarAcoesRapidas = true
-                                        }
-                                    } else {
+                                    if sessoesNoHorario.isEmpty {
                                         // Slot Vazio
                                         EmptySlotCard {
                                             self.horarioSugerido = time
                                             self.mostrarNovaSessao = true
+                                        }
+                                    } else {
+                                        // Slot Ocupado (Pode ter 1 ou mais cartões!)
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            
+                                            // 🚨 ALERTA DE CONFLITO
+                                            if isConflict {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "exclamationmark.triangle.fill")
+                                                    Text("Conflito de Horário")
+                                                }
+                                                .font(.system(size: 12, weight: .bold))
+                                                .foregroundColor(.red)
+                                                .padding(.bottom, 4)
+                                            }
+                                            
+                                            // Renderiza todos os cartões que estão brigando por este horário
+                                            ForEach(sessoesNoHorario) { sessao in
+                                                if let paciente = viewModel.pacientePara(sessao: sessao) {
+                                                    OccupiedSlotCard(sessao: sessao, paciente: paciente) {
+                                                        self.sessaoParaAcao = sessao
+                                                        self.pacienteSelecionado = paciente
+                                                        self.mostrarAcoesRapidas = true
+                                                    }
+                                                    // Borda vermelha se estiver em conflito
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                            .stroke(isConflict ? Color.red : Color.clear, lineWidth: 2)
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -223,7 +251,7 @@ struct AgendaView: View {
                     )
                 }
             }
-
+            
         }
     }
 }
