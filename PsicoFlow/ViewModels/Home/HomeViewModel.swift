@@ -13,7 +13,12 @@ import Combine
 /// Orquestra a busca e o cruzamento de dados de pacientes, sessões do dia e estado financeiro,
 /// alimentando os resumos estatísticos e controlando o fluxo de reagendamento da tela inicial.
 class HomeViewModel: ObservableObject {
-        
+    
+    // Cards que aparecem no slide da home
+    enum HomeSlide: Hashable {
+        case conflito, proximaSessao, resumo
+    }
+    
     @Published var sessoesHoje: [Session] = []
     @Published var pacientes: [Patient] = []
     
@@ -22,11 +27,11 @@ class HomeViewModel: ObservableObject {
     // Alertas e Conflitos
     @Published var mensagemConflito: String = ""
     @Published var mostrarAlertaConflito: Bool = false
-        
+    
     private let patientRepository: PatientRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
     private let paymentRepository: PaymentRepositoryProtocol
-        
+    
     init(
         patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
         sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
@@ -38,7 +43,44 @@ class HomeViewModel: ObservableObject {
         
         carregarDados()
     }
+    
+    // Note: Esta é a mesma matriz de horários utilizada na `EditSessionViewModel`.
+    // Futuramente, externalize essa lista para uma estrutura unificada (`AppConfig`)
+    // ou busque diretamente dos limites operacionais configurados pelo psicólogo no banco de dados.
+    private let todosHorarios: [String] = [
+        "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
+        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
+    ]
+    
+    /// Procura se existe algum conflito de agendamento em toda a base de sessões ativas
+    var primeiraDataComConflito: Date? {
+        // Usa o repositório para buscar todas as sessões que não estão canceladas
+        let sessoesAtivas = sessionRepository.fetchSessoes().filter { $0.status != .cancelada }
         
+        var agrupamento: [String: [Session]] = [:]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        for sessao in sessoesAtivas {
+            let chaveDeTempo = formatter.string(from: sessao.dataDaSessão) + "-" + sessao.horaInicio
+            agrupamento[chaveDeTempo, default: []].append(sessao)
+        }
+        
+        // Se houver mais de 1 sessão no mesmo dia e horário, temos um conflito
+        let gruposComConflito = agrupamento.values.filter { $0.count > 1 }
+        let datasComConflito = gruposComConflito.compactMap { $0.first?.dataDaSessão }
+        
+        return datasComConflito.sorted().first
+    }
+    
+    /// Verifica quais os cards que estao ativos para aprecerem na Home
+    var slidesAtivos: [HomeSlide] {
+        var slides: [HomeSlide] = []
+        if proximaSessao != nil { slides.append(.proximaSessao) } else { slides.append(.resumo) }
+        if primeiraDataComConflito != nil { slides.append(.conflito) }
+        return slides
+    }
+    
     /// Busca e sincroniza os dados globais necessários para a visualização da tela inicial.
     func carregarDados() {
         self.pacientes = patientRepository.fetchPacientes()
@@ -72,7 +114,7 @@ class HomeViewModel: ObservableObject {
             .filter { !$0.pago && $0.mesReferencia <= mesAtualStr }
             .reduce(0) { $0 + $1.valor }
     }
-        
+    
     /// Identifica qual é o atendimento imediatamente a seguir baseado no horário atual.
     var proximaSessao: Session? {
         let formatter = DateFormatter()
@@ -95,7 +137,7 @@ class HomeViewModel: ObservableObject {
         }
         return paciente.nome
     }
-        
+    
     var totalSessoesHojeText: String {
         return "\(sessoesHoje.count)"
     }
@@ -103,7 +145,7 @@ class HomeViewModel: ObservableObject {
     var valoresPendentesText: String {
         return String(format: "R$ %.0f", valoresPendentes)
     }
-        
+    
     /// Calcula o volume de atendimentos concluídos na semana corrente.
     var atendimentosRealizadosNaSemana: Int {
         let calendar = Calendar.current
@@ -123,7 +165,7 @@ class HomeViewModel: ObservableObject {
         
         return realizadasPassadas + realizadasHoje
     }
-        
+    
     func paciente(for session: Session) -> Patient? {
         return pacientes.first(where: { $0.id == session.pacienteID })
     }
@@ -172,7 +214,7 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
-        
+    
     private func converterParaMinutos(_ hora: String) -> Int {
         let partes = hora.split(separator: ":")
         if partes.count == 2, let h = Int(partes[0]), let m = Int(partes[1]) {
@@ -213,14 +255,6 @@ class HomeViewModel: ObservableObject {
         return nil
     }
     
-    // Note: Esta é a mesma matriz de horários utilizada na `EditSessionViewModel`.
-    // Futuramente, externalize essa lista para uma estrutura unificada (`AppConfig`)
-    // ou busque diretamente dos limites operacionais configurados pelo psicólogo no banco de dados.
-    private let todosHorarios: [String] = [
-        "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
-    ]
-    
     /// Calcula a intersecção de horários configurados subtraindo os já ocupados no dia alvo.
     func obterHorariosLivres(para data: Date, ignorandoSessaoID sessaoID: String) -> [String] {
         let sessoesNoMesmoDia = sessionRepository.fetchSessoes().filter {
@@ -232,4 +266,5 @@ class HomeViewModel: ObservableObject {
         let ocupados = sessoesNoMesmoDia.map { $0.horaInicio }
         return todosHorarios.filter { !ocupados.contains($0) }
     }
+    
 }

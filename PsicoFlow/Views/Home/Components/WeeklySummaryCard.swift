@@ -73,6 +73,7 @@ struct WeeklySummaryCard: View {
             .padding(20)
             .foregroundColor(.white)
         }
+        .frame(height: 152)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color(red: 249/255, green: 115/255, blue: 22/255).opacity(0.3), radius: 15, x: 0, y: 8)
     }

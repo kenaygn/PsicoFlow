@@ -75,7 +75,7 @@ struct ConflictAlertCard: View {
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
-                        + Text(". Toque para resolver.")
+                        + Text(". Toque para ver.")
                             .font(.subheadline)
                             .foregroundColor(Color.white.opacity(0.9))
                     }
@@ -84,6 +84,7 @@ struct ConflictAlertCard: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(height: 152)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .shadow(color: Color(red: 220/255, green: 38/255, blue: 38/255).opacity(0.3), radius: 10, x: 0, y: 5)
         }

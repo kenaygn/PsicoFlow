@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 /// Tela principal do aplicativo (Dashboard).
 /// Exibe o resumo financeiro e de agenda do dia, com atalhos dinâmicos para a próxima sessão.
@@ -15,27 +16,53 @@ struct HomeView: View {
     
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
-        
+    
+    @State private var slideAtual: HomeViewModel.HomeSlide = .proximaSessao
+    let timer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+    
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
                     
-                    // MARK: - Destaque Principal
-                    // Alterna entre a próxima sessão imediata ou o resumo geral da semana.
-                    if let proxima = viewModel.proximaSessao {
-                        NextSessionMainCard(
-                            session: proxima,
-                            nomeDaPaciente: viewModel.nomePacienteProximaSessao,
-                            onAbrirProntuario: {
-                                self.pacienteSelecionado = viewModel.paciente(for: proxima)
-                                self.navegarParaProntuario = true
+                    // MARK: - Destaque Principal (Carrossel)
+                    // O TabView permite o "swipe" horizontal entre os cartões
+                    TabView(selection: $slideAtual) {
+                        ForEach(viewModel.slidesAtivos, id: \.self) { slide in
+                            switch slide {
+                            case .conflito:
+                                
+                                if let dataDoProblema = viewModel.primeiraDataComConflito {
+                                    ConflictAlertCard(dataDoConflito: dataDoProblema) {
+                                        // TODO: Integrar navegação para a aba de Agenda futuramente
+                                        print("Ir para a agenda resolver o conflito do dia \(dataDoProblema)")
+                                    }
+                                    .padding(.horizontal, 20)
+                                }
+                                
+                            case .proximaSessao:
+                                if let proxima = viewModel.proximaSessao {
+                                    NextSessionMainCard(
+                                        session: proxima,
+                                        nomeDaPaciente: viewModel.nomePacienteProximaSessao,
+                                        onAbrirProntuario: {
+                                            self.pacienteSelecionado = viewModel.paciente(for: proxima)
+                                            self.navegarParaProntuario = true
+                                        }
+                                    )
+                                    .padding(.horizontal, 20)
+                                }
+                            case .resumo:
+                                WeeklySummaryCard(atendimentosNaSemana: viewModel.atendimentosRealizadosNaSemana)
+                                    .padding(.horizontal, 20)
                             }
-                        )
-                        .padding(.top, 16)
-                    } else {
-                        WeeklySummaryCard(atendimentosNaSemana: viewModel.atendimentosRealizadosNaSemana)
+                        }
                     }
+                    .tabViewStyle(.page(indexDisplayMode: viewModel.slidesAtivos.count == 1 ? .never : .automatic))
+                    .indexViewStyle(.page(backgroundDisplayMode: .always))
+                    .frame(height: 208)
+                    .padding(.vertical, -20)
+                    .padding(.horizontal, -20)
                     
                     // MARK: - Métricas Rápidas
                     HStack {
@@ -137,6 +164,19 @@ struct HomeView: View {
             }
             .onAppear {
                 viewModel.carregarDados()
+                if let primeiro = viewModel.slidesAtivos.first {
+                    slideAtual = primeiro
+                }
+            }
+            .onReceive(timer) { _ in
+                guard viewModel.slidesAtivos.count > 1 else { return }
+                
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    if let indiceAtual = viewModel.slidesAtivos.firstIndex(of: slideAtual) {
+                        let proximoIndice = (indiceAtual + 1) % viewModel.slidesAtivos.count
+                        slideAtual = viewModel.slidesAtivos[proximoIndice]
+                    }
+                }
             }
             .navigationTitle("Início")
             .navigationBarTitleDisplayMode(.automatic)

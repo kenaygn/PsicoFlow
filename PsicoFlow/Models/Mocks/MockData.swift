@@ -62,16 +62,6 @@ struct MockData {
             modalidade: .online,
             horaInicio: "14:00"
         ),
-        Session(
-            id: "sess_005",
-            psicologoID: "user_dev_01",
-            pacienteID: "p2", // Marcos Vinícius
-            sessaoFixaID: nil,
-            dataDaSessão: Date(),
-            status: .agendada,
-            modalidade: .online,
-            horaInicio: "09:00"
-        ),
         
         // 3. Sessão Adiada (Para amanhã)
         Session(
@@ -85,6 +75,10 @@ struct MockData {
             horaInicio: "11:00"
         ),
         
+
+        
+        // MARK: - CONFLITOS
+        
         Session(
             id: "sess_006",
             psicologoID: "user_dev_01",
@@ -95,6 +89,20 @@ struct MockData {
             modalidade: .online,
             horaInicio: "11:00"
         ),
+        
+        Session(
+            id: "sess_005",
+            psicologoID: "user_dev_01",
+            pacienteID: "p2", // Marcos Vinícius
+            sessaoFixaID: nil,
+            dataDaSessão: Date(),
+            status: .agendada,
+            modalidade: .online,
+            horaInicio: "09:00"
+        ),
+        
+        
+        // ------
         
         // 4. Sessão Cancelada (Semana passada)
         Session(

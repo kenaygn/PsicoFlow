@@ -93,7 +93,6 @@ struct NextSessionMainCard: View {
         }
         .padding(20)
         .background(.backgroundDark)
-        
         .overlay {
             Circle()
                 .fill(Color.white.opacity(0.05))
@@ -101,7 +100,7 @@ struct NextSessionMainCard: View {
                 .offset(x: 140, y: -60)
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.black.opacity(0.15), radius: 15, x: 0, y: 8)
+        .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 

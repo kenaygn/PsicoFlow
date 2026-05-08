@@ -10,6 +10,8 @@ import SwiftUI
 struct MainTabView: View {
     @State private var abaSelecionada = 0
     
+    //EnviromentObjetc do login para dar acesso a todas as views a quem ta logado.
+    
     var body: some View {
         TabView(selection: $abaSelecionada) {
             
