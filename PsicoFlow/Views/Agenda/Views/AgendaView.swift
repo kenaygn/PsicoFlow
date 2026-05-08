@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Tela principal de Agenda de tempo do psicólogo.
 struct AgendaView: View {
-        
+    
     @StateObject private var viewModel = AgendaViewModel()
     
     // MARK: Estados de Navegação Programática
@@ -23,11 +23,21 @@ struct AgendaView: View {
     @State private var mostrarAcoesRapidas: Bool = false
     @State private var mostrarEdicaoDeSessao: Bool = false
     @State private var sessaoParaEditar: Session? = nil
-        
+    
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
+                    
+                    if let dataDoProblema = viewModel.primeiraDataComConflito {
+                        ConflictAlertCard(dataDoConflito: dataDoProblema) {
+                            withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                                viewModel.pularParaData(dataDoProblema)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+                    }
                     
                     // MARK: - Controles do Calendário
                     HStack {

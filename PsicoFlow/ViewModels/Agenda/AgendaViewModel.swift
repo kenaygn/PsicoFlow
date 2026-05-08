@@ -12,16 +12,16 @@ import Combine
 /// Gerencia a projeção de dias da semana, a montagem da linha do tempo (timeline)
 /// e o cruzamento de sessões com os horários de expediente.
 class AgendaViewModel: ObservableObject {
-        
+    
     @Published var selectedDate: Date = Date()
     @Published var weekDays: [Date] = []
     
     /// Data âncora utilizada para calcular o intervalo da semana atualmente visível na tela.
     @Published private var dataBaseDaSemana: Date = Date()
-        
+    
     @Published private var todasSessoes: [Session] = []
     @Published private var pacientes: [Patient] = []
-        
+    
     // Note: Assim como nas demais ViewModels, a matriz de horários de expediente
     // está fixada no MVP. Em produção, isso deve ser dinâmico e refletir
     // a configuração de "Horário de Trabalho" do próprio profissional.
@@ -29,10 +29,10 @@ class AgendaViewModel: ObservableObject {
         "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
         "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
     ]
-        
+    
     private let sessionRepository: SessionRepositoryProtocol
     private let patientRepository: PatientRepositoryProtocol
-        
+    
     init(
         sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
         patientRepository: PatientRepositoryProtocol = MockPatientRepository()
@@ -43,12 +43,12 @@ class AgendaViewModel: ObservableObject {
         gerarDiasDaSemana()
         carregarDados()
     }
-        
+    
     func carregarDados() {
         self.todasSessoes = sessionRepository.fetchSessoes()
         self.pacientes = patientRepository.fetchPacientes()
     }
-        
+    
     func avancarSemana() {
         if let proxima = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: dataBaseDaSemana) {
             dataBaseDaSemana = proxima
@@ -69,7 +69,7 @@ class AgendaViewModel: ObservableObject {
         formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: selectedDate).capitalized
     }
-        
+    
     /// Calcula e projeta os 7 dias da semana com base na `dataBaseDaSemana` atual.
     private func gerarDiasDaSemana() {
         let calendar = Calendar.current
@@ -110,8 +110,6 @@ class AgendaViewModel: ObservableObject {
         selecionarData(data)
     }
     
-    // MARK: - View Formatters & Helpers
-    
     var isHojeSelecionado: Bool {
         return Calendar.current.isDateInToday(selectedDate)
     }
@@ -136,7 +134,7 @@ class AgendaViewModel: ObservableObject {
         formatter.dateFormat = "dd"
         return formatter.string(from: data)
     }
-        
+    
     /// Retorna as sessões mapeadas para um slot de tempo específico no dia atualmente selecionado.
     func sessoesPara(horario: String) -> [Session] {
         return todasSessoes.filter { sessao in
@@ -149,7 +147,7 @@ class AgendaViewModel: ObservableObject {
     func pacientePara(sessao: Session) -> Patient? {
         return pacientes.first { $0.id == sessao.pacienteID }
     }
-        
+    
     /// Processa a mutação de estado de uma sessão a partir do atalho da UI.
     func atualizarStatus(da sessao: Session, para novoStatus: SessionStatus, novaData: Date? = nil) {
         var sessaoAtualizada = sessao
@@ -167,5 +165,30 @@ class AgendaViewModel: ObservableObject {
         
         sessionRepository.atualizarSessao(sessaoAtualizada)
         carregarDados()
+    }
+    
+    /// Procura em toda a base de dados a data do primeiro conflito existente na agenda
+    var primeiraDataComConflito: Date? {
+        let sessoesAtivas = todasSessoes.filter { $0.status != .cancelada }
+        
+        // Vamos agrupar as sessões por "Data + Hora". Ex: "2026-05-24-14:00"
+        var agrupamento: [String: [Session]] = [:]
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        for sessao in sessoesAtivas {
+            let chaveDeTempo = formatter.string(from: sessao.dataDaSessão) + "-" + sessao.horaInicio
+            agrupamento[chaveDeTempo, default: []].append(sessao)
+        }
+        
+        // Filtra os grupos que têm mais de 1 sessão no mesmo slot
+        let gruposComConflito = agrupamento.values.filter { $0.count > 1 }
+        
+        // Pega a data exata da primeira sessão de cada grupo conflitante
+        let datasComConflito = gruposComConflito.compactMap { $0.first?.dataDaSessão }
+        
+        // Retorna a data mais próxima de hoje (ou a primeira da lista)
+        return datasComConflito.sorted().first
     }
 }

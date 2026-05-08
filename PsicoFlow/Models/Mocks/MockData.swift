@@ -85,6 +85,17 @@ struct MockData {
             horaInicio: "11:00"
         ),
         
+        Session(
+            id: "sess_006",
+            psicologoID: "user_dev_01",
+            pacienteID: "p2", // Marcos Vinícius
+            sessaoFixaID: nil,
+            dataDaSessão: Calendar.current.date(byAdding: .day, value: 1, to: Date())!,
+            status: .agendada,
+            modalidade: .online,
+            horaInicio: "11:00"
+        ),
+        
         // 4. Sessão Cancelada (Semana passada)
         Session(
             id: "sess_004",

@@ -77,3 +77,7 @@ struct WeeklySummaryCard: View {
         .shadow(color: Color(red: 249/255, green: 115/255, blue: 22/255).opacity(0.3), radius: 15, x: 0, y: 8)
     }
 }
+
+#Preview {
+    WeeklySummaryCard(atendimentosNaSemana: 20)
+}
