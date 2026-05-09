@@ -10,6 +10,8 @@ import SwiftUI
 /// Tela principal de Agenda de tempo do psicólogo.
 struct AgendaView: View {
     
+    @EnvironmentObject var router: AppRouter
+    
     @StateObject private var viewModel = AgendaViewModel()
     
     // MARK: Estados de Navegação Programática
@@ -213,6 +215,9 @@ struct AgendaView: View {
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 viewModel.carregarDados()
+                if let conflictDay = router.conflictDay {
+                    viewModel.pularParaData(conflictDay)
+                }
             }
             
             // MARK: - Roteamento e Modais

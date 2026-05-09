@@ -17,7 +17,7 @@ struct NextSessionMainCard: View {
     @State private var isPulsing = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 16) {
             
             // MARK: - Cabeçalho e Indicador de Status
             HStack {
@@ -39,7 +39,7 @@ struct NextSessionMainCard: View {
                     }
                     
                     Text("PRÓXIMA SESSÃO")
-                        .font(.headline)
+                        .font(.subheadline)
                         .fontWeight(.bold)
                         .foregroundColor(.teal)
                         .tracking(0.5)
@@ -48,7 +48,7 @@ struct NextSessionMainCard: View {
                 Spacer()
                 
                 Text(session.horaInicio)
-                    .font(.headline)
+                    .font(.subheadline)
                     .fontWeight(.bold)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
@@ -62,7 +62,7 @@ struct NextSessionMainCard: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-                .padding(.top, -16)
+                .padding(.top, -8)
             
             // MARK: - Ações
             HStack(spacing: 12) {
@@ -99,6 +99,7 @@ struct NextSessionMainCard: View {
                 .frame(width: 140, height: 140)
                 .offset(x: 140, y: -60)
         }
+        .frame(height: 152)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
     }

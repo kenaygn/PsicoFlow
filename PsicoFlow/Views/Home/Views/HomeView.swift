@@ -12,13 +12,19 @@ import Combine
 /// Exibe o resumo financeiro e de agenda do dia, com atalhos dinâmicos para a próxima sessão.
 struct HomeView: View {
     
+    @EnvironmentObject var router: AppRouter
+    
     @StateObject private var viewModel = HomeViewModel()
     
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
+    @State private var navegarParaDiaComConflito: Bool = false
+
     
     @State private var slideAtual: HomeViewModel.HomeSlide = .proximaSessao
-    let timer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 7, on: .main, in: .common).autoconnect()
+    
+    
     
     var body: some View {
         NavigationStack {
@@ -34,8 +40,7 @@ struct HomeView: View {
                                 
                                 if let dataDoProblema = viewModel.primeiraDataComConflito {
                                     ConflictAlertCard(dataDoConflito: dataDoProblema) {
-                                        // TODO: Integrar navegação para a aba de Agenda futuramente
-                                        print("Ir para a agenda resolver o conflito do dia \(dataDoProblema)")
+                                        router.goToAgendaConflict(day: dataDoProblema)
                                     }
                                     .padding(.horizontal, 20)
                                 }

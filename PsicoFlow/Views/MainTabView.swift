@@ -8,12 +8,13 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var abaSelecionada = 0
+    
+    @StateObject private var router = AppRouter()
     
     //EnviromentObjetc do login para dar acesso a todas as views a quem ta logado.
     
     var body: some View {
-        TabView(selection: $abaSelecionada) {
+        TabView(selection: $router.selectedTab) {
             
             // 1. ABA: INÍCIO
             HomeView()
@@ -21,7 +22,7 @@ struct MainTabView: View {
                     Image(systemName: "house.fill")
                     Text("Início")
                 }
-                .tag(0)
+                .tag(AppRouter.Tab.home)
             
             // 2. ABA: AGENDA
             AgendaView()
@@ -29,7 +30,7 @@ struct MainTabView: View {
                     Image(systemName: "calendar")
                     Text("Agenda")
                 }
-                .tag(1)
+                .tag(AppRouter.Tab.agenda)
             
             // 3. ABA: PACIENTES
             PatientsView()
@@ -37,7 +38,7 @@ struct MainTabView: View {
                     Image(systemName: "person.2")
                     Text("Pacientes")
                 }
-                .tag(2)
+                .tag(AppRouter.Tab.patients)
             
             // 4. ABA: FINANÇAS
             FinancesView()
@@ -45,7 +46,7 @@ struct MainTabView: View {
                     Image(systemName: "dollarsign.circle")
                     Text("Finanças")
                 }
-                .tag(3)
+                .tag(AppRouter.Tab.finances)
             
             // 5. ABA: AJUSTES (Placeholder)
             Text("Tela de Ajustes em construção ⚙️")
@@ -55,9 +56,10 @@ struct MainTabView: View {
                     Image(systemName: "gearshape")
                     Text("Ajustes")
                 }
-                .tag(4)
+                .tag(AppRouter.Tab.settings)
         }
         .tint(.teal)
+        .environmentObject(router)
     }
 }
 
