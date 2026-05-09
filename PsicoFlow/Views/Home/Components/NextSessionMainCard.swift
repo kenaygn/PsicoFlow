@@ -17,101 +17,117 @@ struct NextSessionMainCard: View {
     @State private var isPulsing = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            
-            // MARK: - Cabeçalho e Indicador de Status
-            HStack {
-                HStack(spacing: 8) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.teal)
-                            .frame(width: 10, height: 10)
-                            .scaleEffect(isPulsing ? 1.8 : 1.0)
-                            .opacity(isPulsing ? 0.0 : 0.8)
-                            .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false), value: isPulsing)
+        Button(action: onAbrirProntuario) {
+            ZStack {
+                
+//                Gradiente interessante para algum outro lugar
+//                LinearGradient(
+//                    colors: [
+//                        Color(red: 20/255, green: 184/255, blue: 166/255), // Teal 500
+//                        Color(red: 15/255, green: 118/255, blue: 110/255)  // Teal 700
+//                    ],
+//                    startPoint: .topLeading,
+//                    endPoint: .bottomTrailing
+//                )
+                
+                // MARK: - Background Gradient (Dark Slate / Foco)
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 30/255, green: 41/255, blue: 59/255),
+                                        Color(red: 15/255, green: 23/255, blue: 42/255)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                
+                // MARK: - Elementos Decorativos (Padrão Global)
+                GeometryReader { geo in
+                    Circle()
+                        .fill(Color.white.opacity(0.15))
+                        .frame(width: 120, height: 120)
+                        .blur(radius: 20)
+                        .position(x: geo.size.width + 10, y: -10)
+                    
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 140))
+                        .foregroundColor(Color.white.opacity(0.1))
+                        .position(x: geo.size.width - 20, y: geo.size.height / 2 + 10)
+                }
+                .clipped()
+                
+                // MARK: - Conteúdo Principal
+                VStack(alignment: .leading, spacing: 12) {
+                    
+                    // Header com a Tag e o Horário
+                    HStack {
+                        HStack(spacing: 6) {
+                            // Ponto pulsante integrado à tag
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 6, height: 6)
+                                    .scaleEffect(isPulsing ? 2.0 : 1.0)
+                                    .opacity(isPulsing ? 0.0 : 0.8)
+                                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false), value: isPulsing)
+                                
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 4, height: 4)
+                            }
+                            .onAppear { isPulsing = true }
+                            
+                            Text("PRÓXIMA SESSÃO")
+                                .font(.system(size: 10, weight: .bold))
+                                .tracking(1)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.white.opacity(0.25))
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         
-                        Circle()
-                            .fill(Color.teal)
-                            .frame(width: 8, height: 8)
-                    }
-                    .onAppear {
-                        isPulsing = true
+                        Spacer()
+                        
+                        // Tag de Horário no topo direito
+                        Text(session.horaInicio)
+                            .font(.system(size: 12, weight: .bold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.white.opacity(0.2))
+                            .clipShape(Capsule())
                     }
                     
-                    Text("PRÓXIMA SESSÃO")
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .foregroundColor(.teal)
-                        .tracking(0.5)
+                    // Corpo do Texto
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(nomeDaPaciente)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                        
+                        Text("Tudo pronto para o atendimento. ")
+                            .font(.subheadline)
+                            .foregroundColor(Color.white.opacity(0.9))
+                        + Text("Toque para abrir o prontuário completo.")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color.white.opacity(0.9))
+                    }
                 }
-                
-                Spacer()
-                
-                Text(session.horaInicio)
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.white.opacity(0.15))
-                    .foregroundColor(.white)
-                    .clipShape(Capsule())
-            }
-            
-            // MARK: - Informações do Paciente
-            Text(nomeDaPaciente)
-                .font(.title2)
-                .fontWeight(.bold)
+                .padding(20)
                 .foregroundColor(.white)
-                .padding(.top, -8)
-            
-            // MARK: - Ações
-            HStack(spacing: 12) {
-                Button(action: onAbrirProntuario) {
-                    Text("Abrir Prontuário")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.white)
-                        .foregroundColor(.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                
-                // TODO: Definir ação ou navegação para a visualização de detalhes do agendamento
-                Button(action: {
-                    
-                }) {
-                    Image(systemName: "clock")
-                        .font(.title3)
-                        .fontWeight(.medium)
-                        .frame(width: 48, height: 48)
-                        .background(Color.white.opacity(0.15))
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(height: 152)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .shadow(color: Color(red: 15/255, green: 118/255, blue: 110/255).opacity(0.3), radius: 10, x: 0, y: 5)
         }
-        .padding(20)
-        .background(.backgroundDark)
-        .overlay {
-            Circle()
-                .fill(Color.white.opacity(0.05))
-                .frame(width: 140, height: 140)
-                .offset(x: 140, y: -60)
-        }
-        .frame(height: 152)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
 #Preview {
     NextSessionMainCard(
         session: MockData.sessoesExemplo.first!,
-        nomeDaPaciente: MockData.listaPacientes.first!.nome,
-        onAbrirProntuario: {
-            print("Navegar para o prontuário")
-        }
+        nomeDaPaciente: "Sarah Connor",
+        onAbrirProntuario: { print("Navegar") }
     )
     .padding()
 }
