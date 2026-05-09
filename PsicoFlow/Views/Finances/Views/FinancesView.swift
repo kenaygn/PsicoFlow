@@ -30,8 +30,8 @@ struct FinancesView: View {
                         }
                     } else {
                         FinancesSuccessCard()
-                            //Animação muito top
-                            //.transition(.move(edge: .).combined(with: .opacity))
+                        // Animacao top
+                        //  .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                     
                     
@@ -44,33 +44,57 @@ struct FinancesView: View {
                     .padding(.top, 8)
                     
                     // MARK: - Navegação de Período
+                    
                     HStack {
-                        Button(action: {
-                            viewModel.voltarPeriodo()
-                        }) {
-                            Image(systemName: "chevron.left")
-                                .padding(12)
-                                .background(Color(.systemGray6))
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .foregroundColor(.gray)
-                        }
-                        
-                        Spacer()
-                        
                         Text(viewModel.labelPeriodo)
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 22, weight: .bold))
                             .foregroundColor(Color(.darkText))
                         
                         Spacer()
                         
-                        Button(action: {
-                            viewModel.avancarPeriodo()
-                        }) {
-                            Image(systemName: "chevron.right")
-                                .padding(12)
-                                .background(Color(.systemGray6))
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .foregroundColor(.gray)
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                    viewModel.irParaPeriodoAtual()
+                                }
+                            }) {
+                                Text(viewModel.viewMode == .mensal ? "Mês Atual" : "Ano Atual")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(viewModel.isPeriodoAtual ? Color(.gray) : Color(.teal))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(viewModel.isPeriodoAtual ? Color(.systemGray6) : Color.teal.opacity(0.15))
+                                    .clipShape(Capsule())
+                            }
+                            .disabled(viewModel.isPeriodoAtual)
+                            
+                            HStack(spacing: 8) {
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                        viewModel.voltarPeriodo()
+                                    }
+                                }) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.gray)
+                                        .frame(width: 32, height: 32)
+                                        .background(Color(.systemGray6))
+                                        .clipShape(Circle())
+                                }
+                                
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                        viewModel.avancarPeriodo()
+                                    }
+                                }) {
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.gray)
+                                        .frame(width: 32, height: 32)
+                                        .background(Color(.systemGray6))
+                                        .clipShape(Circle())
+                                }
+                            }
                         }
                     }
                     

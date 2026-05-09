@@ -80,6 +80,26 @@ class FinanceViewModel: ObservableObject {
         
         return formatter.string(from: currentDate).capitalized
     }
+    
+    /// Redefine a navegação para o dia de hoje, focando no Mês/Ano atual real.
+        func irParaPeriodoAtual() {
+            currentDate = Date()
+        }
+        
+        /// Verifica se a visualização atual já está focada no mês ou ano corrente.
+        /// Utilizado para desabilitar o botão de "voltar para hoje" na interface.
+        var isPeriodoAtual: Bool {
+            let calendar = Calendar.current
+            let hoje = Date()
+            
+            if viewMode == .mensal {
+                // Verifica se estão no mesmo Mês e Ano
+                return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .month)
+            } else {
+                // Verifica se estão apenas no mesmo Ano
+                return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .year)
+            }
+        }
         
     /// Chave de filtragem baseada na ISO string adaptada para comparação rápida (ex: "2026/04").
     private var filtroReferencia: String {
