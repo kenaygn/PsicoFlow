@@ -28,6 +28,10 @@ struct FinancesView: View {
                                 viewModel.viewMode = .mensal
                             }
                         }
+                    } else {
+                        FinancesSuccessCard()
+                            //Animação muito top
+                            //.transition(.move(edge: .).combined(with: .opacity))
                     }
                     
                     
