@@ -11,12 +11,25 @@ import SwiftUI
 /// Exibe o resumo de recebimentos e pendências, permitindo alternar entre visões mensais e anuais.
 struct FinancesView: View {
     
+    @EnvironmentObject var router: AppRouter
+    
     @StateObject private var viewModel = FinanceViewModel()
     
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
+                    
+                    // MARK: - Cards Sections
+                    if let dataAtraso = viewModel.dataDaPrimeiraPendenciaAtrasada {
+                        PaymentAlertCard(mesReferencia: viewModel.labelPrimeiraPendencia) {
+                            withAnimation {
+                                viewModel.currentDate = dataAtraso
+                                viewModel.viewMode = .mensal
+                            }
+                        }
+                    }
+                    
                     
                     // MARK: - Filtro de Visualização
                     Picker("Modo de Visualização", selection: $viewModel.viewMode) {
@@ -152,6 +165,11 @@ struct FinancesView: View {
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 viewModel.carregarDados()
+                if let monthPending = router.pendingMonth{
+                    viewModel.currentDate = monthPending
+                    viewModel.viewMode = .mensal
+                    router.pendingMonth = nil
+                }
             }
         }
     }

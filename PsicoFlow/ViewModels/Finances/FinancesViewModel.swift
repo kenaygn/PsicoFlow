@@ -23,10 +23,12 @@ class FinanceViewModel: ObservableObject {
     
     @Published var viewMode: FinanceViewMode = .mensal
     @Published var currentDate: Date = Date()
-        
+    
+    private let financeAnalyzer = FinanceAnalyzerService()
+    
     private let paymentRepository: PaymentRepositoryProtocol
     private let patientRepository: PatientRepositoryProtocol
-        
+    
     init(
         paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository(),
         patientRepository: PatientRepositoryProtocol = MockPatientRepository()
@@ -36,6 +38,19 @@ class FinanceViewModel: ObservableObject {
         
         carregarDados()
     }
+    
+    /// Retorna o mes mais antigo com pagamentos atrasados.
+    var dataDaPrimeiraPendenciaAtrasada: Date? {
+            return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: todosPagamentos)
+        }
+    
+    var labelPrimeiraPendencia: String {
+            guard let data = dataDaPrimeiraPendenciaAtrasada else { return "" }
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "pt_BR")
+            formatter.dateFormat = "MMMM/yyyy"
+            return formatter.string(from: data).capitalized
+        }
         
     /// Sincroniza o estado local com a base de dados principal.
     func carregarDados() {

@@ -60,6 +60,13 @@ struct HomeView: View {
                             case .resumo:
                                 WeeklySummaryCard(atendimentosNaSemana: viewModel.atendimentosRealizadosNaSemana)
                                     .padding(.horizontal, 20)
+                            
+                            case .pendencias:
+                                PaymentAlertCard(mesReferencia: viewModel.labelPendenciaFinanceira){
+                                    router.goToFinancePendingMonth(month: viewModel.primeiraPendenciaAtrasada!)
+                                }
+                                    .padding(.horizontal, 20)
+
                             }
                         }
                     }

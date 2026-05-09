@@ -16,7 +16,7 @@ class HomeViewModel: ObservableObject {
     
     // Cards que aparecem no slide da home
     enum HomeSlide: Hashable {
-        case conflito, proximaSessao, resumo
+        case conflito, proximaSessao, resumo, pendencias
     }
     
     @Published var sessoesHoje: [Session] = []
@@ -27,6 +27,8 @@ class HomeViewModel: ObservableObject {
     // Alertas e Conflitos
     @Published var mensagemConflito: String = ""
     @Published var mostrarAlertaConflito: Bool = false
+    
+    private var financeAnalyzer = FinanceAnalyzerService()
     
     private let patientRepository: PatientRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
@@ -78,7 +80,21 @@ class HomeViewModel: ObservableObject {
         var slides: [HomeSlide] = []
         if proximaSessao != nil { slides.append(.proximaSessao) } else { slides.append(.resumo) }
         if primeiraDataComConflito != nil { slides.append(.conflito) }
+        if primeiraPendenciaAtrasada != nil { slides.append(.pendencias) }
         return slides
+    }
+    
+    var primeiraPendenciaAtrasada: Date? {
+        // Aqui você passaria a lista de pagamentos vinda do seu repositório
+        return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: paymentRepository.fetchPagamentos())
+    }
+
+    var labelPendenciaFinanceira: String {
+        guard let data = primeiraPendenciaAtrasada else { return "" }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.dateFormat = "MMMM/yyyy"
+        return formatter.string(from: data).capitalized
     }
     
     /// Busca e sincroniza os dados globais necessários para a visualização da tela inicial.

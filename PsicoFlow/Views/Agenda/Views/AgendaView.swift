@@ -217,6 +217,7 @@ struct AgendaView: View {
                 viewModel.carregarDados()
                 if let conflictDay = router.conflictDay {
                     viewModel.pularParaData(conflictDay)
+                    router.conflictDay = nil
                 }
             }
             

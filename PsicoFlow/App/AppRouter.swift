@@ -20,12 +20,17 @@ class AppRouter: ObservableObject {
     
     @Published var selectedTab: Tab = .home
     
-    //Variavel para guardar o dia em que tem conflito
     @Published var conflictDay: Date?
+    @Published var pendingMonth: Date?
     
     func goToAgendaConflict(day: Date){
         self.conflictDay = day
         self.selectedTab = .agenda
+    }
+    
+    func goToFinancePendingMonth(month: Date){
+        self.pendingMonth = month
+        self.selectedTab = .finances
     }
     
     
