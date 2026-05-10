@@ -14,42 +14,75 @@ struct FinanceStatCard: View {
     var valor: String
     var icone: String
     var corTema: Color
+    
+    // MARK: - Lógica de Cores Dinâmicas
+    private var gradientColors: [Color] {
+        if corTema == .teal {
+            return [
+                .teal,
+                Color(red: 0.1, green: 0.64, blue: 0.66)
+            ]
+        } else {
+            return [
+                Color(red: 251/255, green: 113/255, blue: 133/255), 
+                Color(red: 244/255, green: 63/255, blue: 94/255)
+            ]
+        }
+    }
+    
+    private var shadowColor: Color {
+        if corTema == .teal {
+            return Color(red: 0, green: 0.63, blue: 0.62)
+        } else {
+            return Color(red: 244/255, green: 63/255, blue: 94/255)
+        }
+    }
         
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        ZStack(alignment: .bottomTrailing) {
             
-            // MARK: - Cabeçalho
-            HStack(spacing: 6) {
+            // MARK: - Background Gradient
+            LinearGradient(
+                colors: gradientColors,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            
+            // MARK: - Marca d'água (Watermark)
+            GeometryReader { geo in
                 Image(systemName: icone)
-                    .foregroundColor(corTema)
-                
-                Text(titulo)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 90))
+                    .foregroundColor(Color.white.opacity(0.15))
+                    .rotationEffect(.degrees(10))
+                    .position(x: geo.size.width - 20, y: geo.size.height - 20)
             }
+            .clipped()
             
-            // MARK: - Valor Principal
-            Text(valor)
-                .font(.system(size: 26, weight: .bold))
-                .foregroundColor(Color(.darkText))
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
-        
-        .overlay {
-            Circle()
-                .fill(corTema.opacity(0.05))
-                .frame(width: 90, height: 90)
-                .offset(x: 75, y: 30)
+            // MARK: - Conteúdo Principal
+            VStack(alignment: .leading, spacing: 12) {
+                
+                HStack(spacing: 6) {
+                    Image(systemName: icone)
+                        .foregroundColor(.white)
+                        .font(.system(size: 14, weight: .semibold))
+                    
+                    Text(titulo)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Color.white.opacity(0.9))
+                }
+                
+                Text(valor)
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .zIndex(1)
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(corTema.opacity(0.3), lineWidth: 1)
-        )
+        .shadow(color: shadowColor.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 

@@ -13,7 +13,6 @@ enum StatCardStyle {
     case danger
     case financeSuccess
     
-    // Retorna um array de cores para formar o gradiente
     var gradientColors: [Color] {
         switch self {
         case .primary:
@@ -23,9 +22,8 @@ enum StatCardStyle {
             ]
         case .danger:
             return [
-                // Um vermelho muito mais leve (Tom de Rose/Coral) para não agredir os olhos
-                Color(red: 251/255, green: 113/255, blue: 133/255), // Rose 400
-                Color(red: 244/255, green: 63/255, blue: 94/255)    // Rose 500
+                Color(red: 251/255, green: 113/255, blue: 133/255),
+                Color(red: 244/255, green: 63/255, blue: 94/255)
             ]
         case .financeSuccess:
             return [
@@ -35,7 +33,6 @@ enum StatCardStyle {
         }
     }
     
-    // Cor base para a sombra do cartão
     var shadowColor: Color {
         switch self {
         case .primary: return Color(red: 20/255, green: 184/255, blue: 166/255)
@@ -46,7 +43,6 @@ enum StatCardStyle {
 }
 
 /// Card de estatística rápida utilizado no painel principal (Dashboard).
-/// Utiliza gradientes, Glassmorphism e marca d'água para um visual premium.
 struct QuickStatCard: View {
         
     var title: String
@@ -77,7 +73,7 @@ struct QuickStatCard: View {
             // MARK: - Conteúdo Principal
             VStack(alignment: .leading, spacing: 0) {
                 
-                // Caixa do Ícone (Glassmorphism)
+                // Caixa do Ícone
                 Image(systemName: icon)
                     .font(.title2)
                     .fontWeight(.medium)
@@ -112,7 +108,6 @@ struct QuickStatCard: View {
         }
         .frame(width: 160)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        // Sombra agora utiliza a cor base do gradiente para maior naturalidade
         .shadow(color: style.shadowColor.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
