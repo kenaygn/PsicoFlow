@@ -15,7 +15,16 @@ struct FixedSessionCard: View {
     let diaDaSemanaTexto: String
     let onEdit: () -> Void
     
-    private let corFundoRosa = Color(red: 0.96, green: 0.39, blue: 0.45)
+    private var corFundoRosa: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.98, green: 0.45, blue: 0.50), 
+                Color(red: 0.89, green: 0.25, blue: 0.35)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
         
     var body: some View {
         VStack(spacing: 16) {
