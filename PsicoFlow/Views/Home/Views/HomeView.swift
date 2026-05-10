@@ -88,10 +88,10 @@ struct HomeView: View {
                         Spacer()
                         
                         QuickStatCard(
-                            title: "A Receber",
+                            title: viewModel.valoresPendentesText == "R$ 0" ? "Tudo certo" : "A Receber",
                             value: viewModel.valoresPendentesText,
-                            icon: "exclamationmark.circle",
-                            style: .danger
+                            icon: viewModel.valoresPendentesText == "R$ 0" ? "sparkles" : "exclamationmark.circle",
+                            style: viewModel.valoresPendentesText == "R$ 0" ? .financeSuccess : .danger
                         )
                     }
                     

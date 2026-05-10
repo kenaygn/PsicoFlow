@@ -117,7 +117,7 @@ struct NextSessionMainCard: View {
             }
             .frame(height: 152)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .shadow(color: Color(red: 15/255, green: 118/255, blue: 110/255).opacity(0.3), radius: 10, x: 0, y: 5)
+            .shadow(color: Color(red: 15/255, green: 23/255, blue: 42/255).opacity(0.3), radius: 10, x: 0, y: 5)
         }
         .buttonStyle(PlainButtonStyle())
     }
