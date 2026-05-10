@@ -22,10 +22,15 @@ struct FinanceStatCard: View {
                 .teal,
                 Color(red: 0.1, green: 0.64, blue: 0.66)
             ]
-        } else {
+        } else if corTema == .red {
             return [
                 Color(red: 251/255, green: 113/255, blue: 133/255), 
                 Color(red: 244/255, green: 63/255, blue: 94/255)
+            ]
+        } else {
+            return [
+                Color(red: 16/255, green: 185/255, blue: 129/255),
+                Color(red: 5/255, green: 150/255, blue: 105/255)
             ]
         }
     }
@@ -33,8 +38,10 @@ struct FinanceStatCard: View {
     private var shadowColor: Color {
         if corTema == .teal {
             return Color(red: 0, green: 0.63, blue: 0.62)
-        } else {
+        } else if corTema == .red{
             return Color(red: 244/255, green: 63/255, blue: 94/255)
+        } else {
+            return Color(red: 5/255, green: 150/255, blue: 105/255)
         }
     }
         
@@ -78,6 +85,7 @@ struct FinanceStatCard: View {
                     .minimumScaleFactor(0.5)
             }
             .padding(20)
+            .frame(height: 100)
             .frame(maxWidth: .infinity, alignment: .leading)
             .zIndex(1)
         }
@@ -97,7 +105,7 @@ struct FinanceStatCard: View {
         
         FinanceStatCard(
             titulo: "A Receber",
-            valor: "R$ 1.000",
+            valor: "R$ 0",
             icone: "exclamationmark.circle.fill",
             corTema: .red
         )

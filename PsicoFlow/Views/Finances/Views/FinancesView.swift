@@ -107,11 +107,13 @@ struct FinancesView: View {
                             corTema: .teal
                         )
                         
+                        
+                        
                         FinanceStatCard(
-                            titulo: "A Receber",
+                            titulo: viewModel.totalPendenteText == "R$ 0" ? "Tudo Certo" : "A Receber",
                             valor: viewModel.totalPendenteText,
-                            icone: "exclamationmark.circle.fill",
-                            corTema: .red
+                            icone: viewModel.totalPendenteText == "R$ 0" ? "sparkles" : "exclamationmark.circle.fill",
+                            corTema: viewModel.totalPendenteText == "R$ 0" ? .green : .red
                         )
                     }
                     
