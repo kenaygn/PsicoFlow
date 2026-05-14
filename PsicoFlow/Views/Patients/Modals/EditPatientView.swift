@@ -13,6 +13,7 @@ struct EditPatientView: View {
     
     @Environment(\.dismiss) var dismiss
     @Binding var pacienteAtual: Patient
+    
     @StateObject private var viewModel: PatientFormViewModel
     
     init(pacienteAtual: Binding<Patient>) {
@@ -75,6 +76,7 @@ struct EditPatientView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
+                        viewModel.salvar()
                         pacienteAtual = viewModel.obterPacienteAtualizado()
                         dismiss()
                     }

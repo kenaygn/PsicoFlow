@@ -19,6 +19,10 @@ class MockSessionRepository: SessionRepositoryProtocol {
     }
     
     func salvarSessao(_ sessao: Session) {
-            MockData.sessoesExemplo.append(sessao)
-        }
+        MockData.sessoesExemplo.append(sessao)
+    }
+    
+    func deletarSessao(id: String) {
+        MockData.sessoesExemplo.removeAll(where: { $0.id == id })
+    }
 }

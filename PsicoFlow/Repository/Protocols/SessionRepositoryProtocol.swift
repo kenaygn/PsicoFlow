@@ -11,4 +11,5 @@ protocol SessionRepositoryProtocol {
     func fetchSessoes() -> [Session]
     func atualizarSessao(_ sessao: Session)
     func salvarSessao(_ sessao: Session)
+    func deletarSessao(id: String)
 }

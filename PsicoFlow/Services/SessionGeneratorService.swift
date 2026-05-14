@@ -47,56 +47,6 @@ class SessionGeneratorService {
         return sessoesGeradas
     }
         
-    /// Avalia a mudança de status de um paciente e propaga (em cascata) os efeitos para a sua agenda.
-    /// - Inativo: Varre a base e cancela automaticamente projeções futuras não realizadas.
-    /// - Ativo: Inicia a projeção de contratos para repovoar os horários na agenda do psicólogo.
-    func sincronizarSessoesPorStatus(
-        do paciente: Patient,
-        regrasFixas: [FixedSession],
-        sessionRepository: SessionRepositoryProtocol
-    ) {
-        let hoje = Calendar.current.startOfDay(for: Date())
-        let todasSessoes = sessionRepository.fetchSessoes()
-        
-        // Note: Em produção, substitua esses 'prints' de feedback pelo Logger
-        // nativo do sistema (import os) para não sobrecarregar o console em release.
-        
-        if paciente.status == .inativo {
-            // Fluxo de Inativação: Cancelamento em massa
-            for sessao in todasSessoes where sessao.pacienteID == paciente.id {
-                if sessao.dataDaSessão >= hoje && sessao.status == .agendada {
-                    var sessaoCancelada = sessao
-                    sessaoCancelada.status = .cancelada
-                    sessionRepository.atualizarSessao(sessaoCancelada)
-                }
-            }
-            print("🚫 Paciente inativado. Sessões futuras foram canceladas na agenda.")
-            
-        } else if paciente.status == .ativo {
-            // Fluxo de Reativação: Repovoamento de agenda
-            let dataFim = ultimoDiaDoProximoMes(aPartirDe: hoje)
-            
-            for regra in regrasFixas where regra.pacienteID == paciente.id {
-                let sessoesParaGerar = gerarSessoes(para: regra, dataInicio: hoje, dataFim: dataFim)
-                
-                for novaSessao in sessoesParaGerar {
-                    
-                    // Princípio de Idempotência: Garante que a operação não criará sessões duplicadas
-                    // caso a função seja chamada múltiplas vezes inadvertidamente.
-                    let jaExiste = todasSessoes.contains {
-                        $0.sessaoFixaID == regra.id &&
-                        Calendar.current.isDate($0.dataDaSessão, inSameDayAs: novaSessao.dataDaSessão)
-                    }
-                    
-                    if !jaExiste {
-                        sessionRepository.salvarSessao(novaSessao)
-                    }
-                }
-            }
-            print("✅ Paciente ativado. Novas sessões geradas para a agenda!")
-        }
-    }
-        
     /// Calcula o limite temporal padrão do sistema para a geração de lotes contínuos
     /// (O último dia do mês seguinte).
     func ultimoDiaDoProximoMes(aPartirDe data: Date = Date()) -> Date {
