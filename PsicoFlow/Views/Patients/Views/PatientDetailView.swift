@@ -126,7 +126,7 @@ struct PatientDetailView: View {
             // Note: O Binding com a viewModel garante que a UI reflita a edição imediatamente
             EditPatientView(pacienteAtual: $viewModel.paciente)
                 .onDisappear {
-                    viewModel.salvarAlteracoesDoPaciente()
+                    viewModel.carregarDadosCompletos()
                 }
         }
         .sheet(item: $itemSessaoParaEditar, onDismiss: {

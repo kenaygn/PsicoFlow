@@ -24,9 +24,7 @@ class PatientDetailViewModel: ObservableObject {
     private let paymentRepository: PaymentRepositoryProtocol
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
-    
-    private let generatorService = SessionGeneratorService()
-        
+            
     init(
         paciente: Patient,
         patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
@@ -104,21 +102,6 @@ class PatientDetailViewModel: ObservableObject {
         
         evolutionRepository.salvarEvolucao(novaEvolucao)
         evolucoes.insert(novaEvolucao, at: 0)
-    }
-    
-    /// Salva as edições feitas no perfil do paciente e sincroniza o impacto dessas
-    /// mudanças na agenda (ex: inativação do paciente cancela sessões futuras).
-    func salvarAlteracoesDoPaciente() {
-        patientRepository.atualizarPaciente(paciente)
-        
-        // Sincroniza o estado da agenda com o novo status do paciente
-        generatorService.sincronizarSessoesPorStatus(
-            do: paciente,
-            regrasFixas: fixedSessionRepository.fetchSessoesFixas(),
-            sessionRepository: sessionRepository
-        )
-        
-        carregarSessoesConfiguradas()
     }
         
     /// Converte o index inteiro de um dia da semana para sua representação nominal em português.
