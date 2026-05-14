@@ -22,16 +22,32 @@ struct SessionsTabView: View {
     let onEditFixed: (FixedSession) -> Void
     let onEditAvulsa: (Session) -> Void
     
+    let onAddFixed: () -> Void
+    let onAddAvulsa: () -> Void
+    
     var body: some View {
         VStack(spacing: 32) {
             
             // MARK: - Sessões Recorrentes
             VStack(alignment: .leading, spacing: 16) {
-                Text("Sessões Recorrentes")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.secondary)
-                    .textCase(.uppercase)
-                    .padding(.horizontal, 20)
+                HStack {
+                    Text("Sessões Recorrentes")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                    
+                    Spacer()
+                    
+                    Button(action: onAddFixed) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.teal)
+                            .frame(width: 32, height: 32)
+                            .background(.white)
+                            .clipShape(Circle())
+                    }
+                }
+                .padding(.horizontal, 20)
                 
                 if sessoesFixas.isEmpty {
                     VStack(spacing: 12) {
@@ -60,11 +76,24 @@ struct SessionsTabView: View {
             
             // MARK: - Sessões Avulsas e Adiadas
             VStack(alignment: .leading, spacing: 16) {
-                Text("Sessões Avulsas e Adiadas")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.secondary)
-                    .textCase(.uppercase)
-                    .padding(.horizontal, 20)
+                HStack {
+                    Text("Sessões Avulsas e Adiadas")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                    
+                    Spacer()
+                    
+                    Button(action: onAddAvulsa) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.teal)
+                            .frame(width: 32, height: 32)
+                            .background(.white)
+                            .clipShape(Circle())
+                    }
+                }
+                .padding(.horizontal, 20)
                 
                 if sessoesAvulsas.isEmpty {
                     VStack(spacing: 12) {

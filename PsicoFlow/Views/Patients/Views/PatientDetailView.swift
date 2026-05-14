@@ -15,6 +15,7 @@ struct PatientDetailView: View {
     @State private var abaSelecionada = 0
     @State private var mostrarModalEdicao = false
     @State private var itemSessaoParaEditar: EditSessionItem? = nil
+    @State private var mostrarNovoAgendamento = false
     
     init(paciente: Patient) {
         self._viewModel = StateObject(wrappedValue: PatientDetailViewModel(paciente: paciente))
@@ -96,7 +97,9 @@ struct PatientDetailView: View {
                             },
                             onEditAvulsa: { avulsa in
                                 self.itemSessaoParaEditar = .avulsa(avulsa)
-                            }
+                            },
+                            onAddFixed: { mostrarNovoAgendamento = true },
+                            onAddAvulsa: { mostrarNovoAgendamento = true }
                         )
                     }
                 }
@@ -133,6 +136,11 @@ struct PatientDetailView: View {
             viewModel.carregarDadosCompletos()
         }) { itemParaEdit in
             EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.nome)
+        }
+        .sheet(isPresented: $mostrarNovoAgendamento, onDismiss: {
+            viewModel.carregarDadosCompletos()
+        }) {
+            NewSessionView()
         }
     }
 }
