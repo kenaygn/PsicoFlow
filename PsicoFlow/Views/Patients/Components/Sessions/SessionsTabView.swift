@@ -12,7 +12,7 @@ import SwiftUI
 /// - Note: Esta é uma "Stateless View". Toda a lógica de negócio, conversão de datas
 ///         e gerenciamento de estado é injetada via propriedades e closures pela View Pai.
 struct SessionsTabView: View {
-        
+    
     let sessoesFixas: [FixedSession]
     let sessoesAvulsas: [Session]
     
@@ -21,7 +21,7 @@ struct SessionsTabView: View {
     
     let onEditFixed: (FixedSession) -> Void
     let onEditAvulsa: (Session) -> Void
-        
+    
     var body: some View {
         VStack(spacing: 32) {
             
@@ -34,10 +34,19 @@ struct SessionsTabView: View {
                     .padding(.horizontal, 20)
                 
                 if sessoesFixas.isEmpty {
-                    Text("Nenhuma sessão fixa configurada.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 20)
+                    VStack(spacing: 12) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 32))
+                            .foregroundColor(.gray.opacity(0.5))
+                        
+                        Text("Nenhuma sessão fixa configurada.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .background(Color(.systemGray6))
+                    .padding(.horizontal, 20)
                 } else {
                     ForEach(sessoesFixas, id: \.id) { fixa in
                         FixedSessionCard(
@@ -58,10 +67,21 @@ struct SessionsTabView: View {
                     .padding(.horizontal, 20)
                 
                 if sessoesAvulsas.isEmpty {
-                    Text("Nenhuma sessão avulsa programada para o futuro.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 20)
+                    VStack(spacing: 12) {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 32))
+                            .foregroundColor(.gray.opacity(0.5))
+                        
+                        Text("Nenhuma sessão avulsa programada para o futuro.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 16)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .background(Color(.systemGray6))
+                    .padding(.horizontal, 20)
                 } else {
                     ForEach(sessoesAvulsas, id: \.id) { avulsa in
                         SingleSessionCard(
