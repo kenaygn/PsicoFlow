@@ -25,7 +25,7 @@ enum EditSessionItem: Identifiable {
 /// ViewModel responsável pela lógica de negócio e validação na edição de agendamentos.
 /// Gerencia a resolução de conflitos de horários em tempo real, distinguindo regras
 /// para contratos recorrentes (fixas) e eventos pontuais (avulsas).
-class EditSessionViewModel: ObservableObject {
+class PatientEditSessionViewModel: ObservableObject {
     
     // MARK: - Properties
     
@@ -48,7 +48,7 @@ class EditSessionViewModel: ObservableObject {
         "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
         "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
     ]
-        
+    
     init(
         item: EditSessionItem,
         nomePaciente: String,
@@ -72,7 +72,7 @@ class EditSessionViewModel: ObservableObject {
             self.selectedTime = avulsa.horaInicio
         }
     }
-        
+    
     var isFixa: Bool {
         if case .fixa = itemToEdit { return true }
         return false
@@ -115,7 +115,7 @@ class EditSessionViewModel: ObservableObject {
             return todosHorarios.filter { !todosOcupados.contains($0) }
         }
     }
-        
+    
     /// Garante a integridade dos dados selecionados caso o usuário mude o dia/data
     /// e o horário anteriormente selecionado fique indisponível.
     func atualizarSelecaoDeHorario() {
@@ -133,6 +133,7 @@ class EditSessionViewModel: ObservableObject {
             atualizada.diaDaSemana = selectedWeekday
             atualizada.horaInicio = selectedTime
             fixedSessionRepository.atualizarSessaoFixa(atualizada)
+            propagarAlteracoesParaSessoesFuturas(regraAtualizada: atualizada)
             
         case .avulsa(let avulsa):
             var atualizada = avulsa
@@ -145,6 +146,35 @@ class EditSessionViewModel: ObservableObject {
                 atualizada.status = .agendada
             }
             sessionRepository.atualizarSessao(atualizada)
+        }
+    }
+    
+    /// Aplica as alterações de horário, modalidade e dia da semana de um contrato (Sessão Fixa)
+    /// a todas as sessões pontuais vinculadas a ele, garantindo a integridade do histórico passado.
+    private func propagarAlteracoesParaSessoesFuturas(regraAtualizada: FixedSession) {
+        let calendar = Calendar.current
+        let inicioDoDiaAtual = calendar.startOfDay(for: Date())
+        
+        let sessoesFilhasFuturas = sessionRepository.fetchSessoes().filter {
+            $0.sessaoFixaID == regraAtualizada.id &&
+            $0.dataDaSessão >= inicioDoDiaAtual
+        }
+        print(sessoesFilhasFuturas)
+        
+        for sessao in sessoesFilhasFuturas {
+            var sessaoModificada = sessao
+            
+            sessaoModificada.horaInicio = regraAtualizada.horaInicio
+            sessaoModificada.modalidade = regraAtualizada.modalidade
+            
+            var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: sessao.dataDaSessão)
+            components.weekday = regraAtualizada.diaDaSemana
+            
+            if let novaDataCorreta = calendar.date(from: components) {
+                sessaoModificada.dataDaSessão = novaDataCorreta
+            }
+            
+            sessionRepository.atualizarSessao(sessaoModificada)
         }
     }
 }

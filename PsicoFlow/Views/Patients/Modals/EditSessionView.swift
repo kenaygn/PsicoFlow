@@ -11,11 +11,11 @@ import SwiftUI
 /// se o usuário está alterando uma sessão avulsa ou um contrato de recorrência (fixa).
 struct EditSessionView: View {
     
-    @StateObject private var viewModel: EditSessionViewModel
+    @StateObject private var viewModel: PatientEditSessionViewModel
     @Environment(\.dismiss) var dismiss
     
     init(item: EditSessionItem, nomePaciente: String) {
-        _viewModel = StateObject(wrappedValue: EditSessionViewModel(item: item, nomePaciente: nomePaciente))
+        _viewModel = StateObject(wrappedValue: PatientEditSessionViewModel(item: item, nomePaciente: nomePaciente))
     }
     
     var body: some View {
