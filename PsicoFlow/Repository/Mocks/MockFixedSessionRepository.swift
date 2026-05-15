@@ -21,4 +21,8 @@ class MockFixedSessionRepository: FixedSessionRepositoryProtocol {
             MockData.sessoesFixasExemplo[index] = sessaoFixa
         }
     }
+    
+    func deletarSessaoFixa(id: String) {
+        MockData.sessoesFixasExemplo.removeAll(where: { $0.id == id })
+    }
 }

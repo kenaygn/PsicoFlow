@@ -177,4 +177,30 @@ class PatientEditSessionViewModel: ObservableObject {
             sessionRepository.atualizarSessao(sessaoModificada)
         }
     }
+    
+    /// Exclui a sessão selecionada. Se for um contrato (Fixa), exclui também
+    /// as projeções futuras, mantendo o histórico passado intacto.
+    func deletarSessao() {
+        switch itemToEdit {
+        case .fixa(let fixa):
+            // 1. Deleta a regra matriz
+            fixedSessionRepository.deletarSessaoFixa(id: fixa.id)
+            
+            // 2. Busca e deleta as filhas futuras
+            let hoje = Calendar.current.startOfDay(for: Date())
+            let sessoesFuturas = sessionRepository.fetchSessoes().filter {
+                $0.sessaoFixaID == fixa.id && $0.dataDaSessão >= hoje
+            }
+            
+            for sessao in sessoesFuturas {
+                sessionRepository.deletarSessao(id: sessao.id)
+            }
+            print("🗑️ Sessão Fixa e suas projeções futuras foram excluídas.")
+            
+        case .avulsa(let avulsa):
+            // Deleta apenas a sessão única
+            sessionRepository.deletarSessao(id: avulsa.id)
+            print("🗑️ Sessão Avulsa excluída.")
+        }
+    }
 }

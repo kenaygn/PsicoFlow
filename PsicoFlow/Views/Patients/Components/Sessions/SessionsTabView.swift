@@ -63,6 +63,7 @@ struct SessionsTabView: View {
                     .padding(.vertical, 32)
                     .background(Color(.systemGray6))
                     .padding(.horizontal, 20)
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     ForEach(sessoesFixas, id: \.id) { fixa in
                         FixedSessionCard(
@@ -73,6 +74,7 @@ struct SessionsTabView: View {
                     }
                 }
             }
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: sessoesFixas.count)
             
             // MARK: - Sessões Avulsas e Adiadas
             VStack(alignment: .leading, spacing: 16) {
@@ -106,6 +108,7 @@ struct SessionsTabView: View {
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 16)
+                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 32)
@@ -120,7 +123,9 @@ struct SessionsTabView: View {
                     }
                 }
             }
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: sessoesAvulsas.count)
         }
         .padding(.vertical, 16)
     }
 }
+

@@ -14,6 +14,8 @@ struct EditSessionView: View {
     @StateObject private var viewModel: PatientEditSessionViewModel
     @Environment(\.dismiss) var dismiss
     
+    @State private var mostrarAlertaExclusao = false
+    
     init(item: EditSessionItem, nomePaciente: String) {
         _viewModel = StateObject(wrappedValue: PatientEditSessionViewModel(item: item, nomePaciente: nomePaciente))
     }
@@ -65,6 +67,20 @@ struct EditSessionView: View {
                         }
                     }
                 }
+                
+                // MARK: - Zona de Perigo (Exclusão)
+                Section {
+                    Button(role: .destructive) {
+                        mostrarAlertaExclusao = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text(viewModel.isFixa ? "Excluir Contrato Recorrente" : "Excluir Sessão")
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
+                    }
+                }
             }
             .navigationTitle(viewModel.isFixa ? "Sessão Semanal" : "Editar Sessão")
             .navigationBarTitleDisplayMode(.inline)
@@ -82,6 +98,23 @@ struct EditSessionView: View {
                     .foregroundColor(.teal)
                 }
             }
+            
+            // MARK: - Alerta de Confirmação
+            .alert(
+                viewModel.isFixa ? "Excluir Contrato?" : "Excluir Sessão?",
+                isPresented: $mostrarAlertaExclusao
+            ) {
+                Button("Cancelar", role: .cancel) { }
+                Button("Excluir", role: .destructive) {
+                    viewModel.deletarSessao()
+                    dismiss()
+                }
+            } message: {
+                Text(viewModel.isFixa
+                     ? "Tem certeza? Isso apagará a regra e todas as sessões futuras vinculadas a ela. O histórico de sessões passadas será mantido."
+                     : "Tem certeza que deseja excluir esta sessão avulsa permanentemente?")
+            }
+            
             // Recalcula a lista de horários livres sempre que a data ou o dia da semana mudam
             .onAppear {
                 viewModel.atualizarSelecaoDeHorario()
