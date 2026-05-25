@@ -102,9 +102,8 @@ struct HomeView: View {
                         
                         Spacer()
                         
-                        // TODO: Implementar fluxo para a tela completa do calendário/agenda geral
                         Button("Ver tudo") {
-                            print("Ir para tela de sessões")
+                            router.selectedTab = .agenda
                         }
                         .foregroundStyle(Color(.teal))
                         .font(.headline.bold())
@@ -151,7 +150,10 @@ struct HomeView: View {
                                     nomePaciente: paciente?.nome ?? "Paciente Deletado",
                                     iniciaisPaciente: paciente?.iniciais ?? "?",
                                     isNext: isNextSessao,
-                                    onSelectPaciente: { self.navegarParaProntuario = true },
+                                    onSelectPaciente: {
+                                        self.pacienteSelecionado = paciente
+                                        self.navegarParaProntuario = true
+                                    },
                                     onUpdateStatus: { novoStatus, novaData in
                                         viewModel.atualizarStatusDaSessao(sessaoID: sessao.id, novoStatus: novoStatus, novaData: novaData)
                                     },
