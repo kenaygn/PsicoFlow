@@ -22,23 +22,30 @@ class AgendaViewModel: ObservableObject {
     @Published private var todasSessoes: [Session] = []
     @Published private var pacientes: [Patient] = []
     
-    // Note: Assim como nas demais ViewModels, a matriz de horários de expediente
-    // está fixada no MVP. Em produção, isso deve ser dinâmico e refletir
-    // a configuração de "Horário de Trabalho" do próprio profissional.
-    let timeSlots: [String] = [
-        "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
-    ]
+    var timeSlots: [String] {
+        availabilityService.todosHorarios
+    }
     
     private let sessionRepository: SessionRepositoryProtocol
     private let patientRepository: PatientRepositoryProtocol
+    private let fixedSessionRepository: FixedSessionRepositoryProtocol
+    
+    private let availabilityService: AgendaAvailabilityService
     
     init(
         sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
-        patientRepository: PatientRepositoryProtocol = MockPatientRepository()
+        patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
+        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository()
     ) {
         self.sessionRepository = sessionRepository
         self.patientRepository = patientRepository
+        self.fixedSessionRepository = fixedSessionRepository
+        
+        self.availabilityService = AgendaAvailabilityService(
+            fixedSessionRepository: fixedSessionRepository,
+            sessionRepository: sessionRepository
+        )
+        
         
         gerarDiasDaSemana()
         carregarDados()

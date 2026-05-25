@@ -13,19 +13,15 @@ import os // Preparação futura para Logger
 /// Orquestra a seleção de pacientes, detecção de horários livres e delega
 /// a geração em lote de contratos (FixedSession) para o SessionGeneratorService.
 class NewSessionViewModel: ObservableObject {
-        
+    
     private let patientRepository: PatientRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
-    private let generatorService = SessionGeneratorService()
     
-    // Note: Conforme padronizado nas outras ViewModels, idealmente esta matriz
-    // deve vir de uma configuração global do usuário/clínica.
-    private let todosHorarios: [String] = [
-        "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
-    ]
-        
+    private let generatorService = SessionGeneratorService()
+    private let availabilityService: AgendaAvailabilityService
+    
+    
     @Published var pacientesDisponiveis: [Patient] = []
     @Published var pacienteSelecionadoID: String = ""
     @Published var isFixedSession: Bool = false
@@ -33,7 +29,7 @@ class NewSessionViewModel: ObservableObject {
     @Published var selectedWeekday: Int = Calendar.current.component(.weekday, from: Date())
     @Published var selectedTime: String = "08:00"
     @Published var selectedModalidade: Modalidade = .presencial
-        
+    
     init(
         dataSugerida: Date = Date(),
         horarioSugerido: String = "08:00",
@@ -50,39 +46,34 @@ class NewSessionViewModel: ObservableObject {
         self.selectedTime = horarioSugerido
         self.selectedWeekday = Calendar.current.component(.weekday, from: dataSugerida)
         
+        self.availabilityService = AgendaAvailabilityService(
+            fixedSessionRepository: fixedSessionRepository,
+            sessionRepository: sessionRepository
+        )
+        
         carregarPacientes()
     }
-        
+    
     var horaFormatada: String {
         return selectedTime
     }
     
-    /// Calcula os horários disponíveis aplicando regras de exclusão dinâmicas:
-    /// - Se for sessão fixa: Compara com outras regras fixas ativas no mesmo dia da semana.
-    /// - Se for avulsa: Compara com as sessões ativas (não canceladas) no dia exato.
+    /// Delega o cálculo complexo de horários livres para o Serviço de Domínio
     var horariosLivres: [String] {
         if isFixedSession {
-            let regrasNoMesmoDia = fixedSessionRepository.fetchSessoesFixas().filter { $0.diaDaSemana == selectedWeekday }
-            let ocupados = regrasNoMesmoDia.map { $0.horaInicio }
-            return todosHorarios.filter { !ocupados.contains($0) }
-            
+            return availabilityService.horariosLivresParaContrato(diaDaSemana: selectedWeekday)
         } else {
-            let sessoesNoMesmoDia = sessionRepository.fetchSessoes().filter {
-                Calendar.current.isDate($0.dataDaSessão, inSameDayAs: selectedDate) &&
-                $0.status != .cancelada
-            }
-            let ocupados = sessoesNoMesmoDia.map { $0.horaInicio }
-            return todosHorarios.filter { !ocupados.contains($0) }
+            return availabilityService.horariosLivresParaSessaoAvulsa(data: selectedDate)
         }
     }
-        
+    
     private func carregarPacientes() {
         self.pacientesDisponiveis = patientRepository.fetchPacientes().filter { $0.status == .ativo }
         if let primeiro = pacientesDisponiveis.first {
             self.pacienteSelecionadoID = primeiro.id
         }
     }
-        
+    
     /// Garante a integridade da UI selecionando automaticamente o primeiro horário livre
     /// caso o usuário navegue para um dia onde o horário atual esteja ocupado.
     func atualizarSelecaoDeHorario() {

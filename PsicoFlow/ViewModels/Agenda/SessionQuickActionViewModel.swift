@@ -12,37 +12,43 @@ import Combine
 /// Isola a lógica de resolução de conflitos e manipulação de datas para garantir que a View
 /// permaneça focada apenas na renderização da interface e animações.
 class SessionQuickActionViewModel: ObservableObject {
-        
+    
     let sessao: Session
     private let sessionRepository: SessionRepositoryProtocol
+    private let fixedSessionRepository: FixedSessionRepositoryProtocol
     
-    // Note: Assim como na HomeViewModel e EditSessionViewModel, esta matriz de horários deve
-    // ser externalizada para uma configuração global da clínica em fases futuras do projeto.
-    private let todosHorarios: [String] = [
-        "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
-    ]
-        
+    private let availabilityService: AgendaAvailabilityService
+    
     @Published var novaData: Date
     @Published var novaHoraStr: String
-        
-    init(sessao: Session, sessionRepository: SessionRepositoryProtocol = MockSessionRepository()) {
+    
+    init(
+        sessao: Session,
+        sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
+        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository())
+    {
         self.sessao = sessao
         self.sessionRepository = sessionRepository
+        self.fixedSessionRepository = fixedSessionRepository
+        
+        self.availabilityService = AgendaAvailabilityService(
+            fixedSessionRepository: fixedSessionRepository,
+            sessionRepository: sessionRepository
+        )
         
         self._novaData = Published(initialValue: sessao.dataDaSessão)
         self._novaHoraStr = Published(initialValue: sessao.horaInicio)
     }
-        
-    /// Filtra a matriz de horários padrão, removendo os slots já ocupados no dia selecionado.
+    
+    /// Delega o cálculo de horários livres para o serviço centralizado,
+    /// ignorando a própria sessão atual para permitir que o utilizador mantenha o mesmo horário
+    /// caso esteja apenas a mudar a data.
     var horariosLivres: [String] {
-        let sessoesNoMesmoDia = sessionRepository.fetchSessoes().filter {
-            Calendar.current.isDate($0.dataDaSessão, inSameDayAs: novaData) &&
-            $0.status != .cancelada &&
-            $0.id != sessao.id // Ignora a própria sessão durante reagendamentos
-        }
-        let ocupados = sessoesNoMesmoDia.map { $0.horaInicio }
-        return todosHorarios.filter { !ocupados.contains($0) }
+        return availabilityService.horariosLivresParaSessaoAvulsa(
+            data: novaData,
+            ignorandoSessaoID: sessao.id,
+            derivadaDeContratoID: sessao.sessaoFixaID
+        )
     }
     
     /// Retorna a lista de horários disponíveis formatada para exibição segura na UI.
@@ -58,7 +64,7 @@ class SessionQuickActionViewModel: ObservableObject {
         
         return listaSegura
     }
-        
+    
     /// Valida e ajusta automaticamente o horário selecionado caso o usuário altere
     /// a data alvo e o slot anteriormente preenchido fique indisponível.
     func ajustarHorarioSeNecessario() {

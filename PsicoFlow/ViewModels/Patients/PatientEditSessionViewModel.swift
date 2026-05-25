@@ -42,12 +42,7 @@ class PatientEditSessionViewModel: ObservableObject {
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
     
-    // Note: Esta matriz está fixada para o MVP. Em versões futuras, o ideal é
-    // buscar este array das "Configurações de Expediente" do psicólogo logado.
-    let todosHorarios: [String] = [
-        "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
-    ]
+    private let availabilityService: AgendaAvailabilityService
     
     init(
         item: EditSessionItem,
@@ -59,6 +54,11 @@ class PatientEditSessionViewModel: ObservableObject {
         self.nomePaciente = nomePaciente
         self.fixedSessionRepository = fixedSessionRepository
         self.sessionRepository = sessionRepository
+        
+        self.availabilityService = AgendaAvailabilityService(
+            fixedSessionRepository: fixedSessionRepository,
+            sessionRepository: sessionRepository
+        )
         
         // Inicialização condicional baseada no tipo de payload recebido
         switch item {
@@ -78,41 +78,21 @@ class PatientEditSessionViewModel: ObservableObject {
         return false
     }
     
-    /// Algoritmo de detecção de disponibilidade.
-    /// Avalia a matriz de `todosHorarios` contra o repositório, filtrando colisões
-    /// de acordo com a natureza da sessão (recorrente ou única).
+    /// Delega o cálculo de horários livres para o Serviço de Domínio.
     var horariosLivres: [String] {
         switch itemToEdit {
-            
         case .fixa(let fixaAtual):
-            // Regra Contratual: Contratos só competem com outros contratos no mesmo dia da semana.
-            let outrasRegrasNoMesmoDia = fixedSessionRepository.fetchSessoesFixas().filter {
-                $0.diaDaSemana == selectedWeekday &&
-                $0.id != fixaAtual.id // Exclusão do próprio ID para evitar auto-bloqueio
-            }
-            let ocupados = outrasRegrasNoMesmoDia.map { $0.horaInicio }
-            return todosHorarios.filter { !ocupados.contains($0) }
+            return availabilityService.horariosLivresParaContrato(
+                diaDaSemana: selectedWeekday,
+                ignorandoContratoID: fixaAtual.id
+            )
             
         case .avulsa(let avulsaAtual):
-            // Regra Pontual: Eventos únicos competem tanto com contratos estabelecidos quanto com outras avulsas.
-            let weekdayDaData = Calendar.current.component(.weekday, from: selectedDate)
-            
-            let regrasFixas = fixedSessionRepository.fetchSessoesFixas().filter {
-                $0.diaDaSemana == weekdayDaData &&
-                $0.id != avulsaAtual.sessaoFixaID // Ignora a regra matriz caso a sessão derive de um contrato
-            }
-            
-            let outrasAvulsas = sessionRepository.fetchSessoes().filter {
-                Calendar.current.isDate($0.dataDaSessão, inSameDayAs: selectedDate) &&
-                $0.status != .cancelada &&
-                $0.id != avulsaAtual.id // Exclusão do próprio ID
-            }
-            
-            let ocupadosFixas = regrasFixas.map { $0.horaInicio }
-            let ocupadosAvulsas = outrasAvulsas.map { $0.horaInicio }
-            let todosOcupados = ocupadosFixas + ocupadosAvulsas
-            
-            return todosHorarios.filter { !todosOcupados.contains($0) }
+            return availabilityService.horariosLivresParaSessaoAvulsa(
+                data: selectedDate,
+                ignorandoSessaoID: avulsaAtual.id,
+                derivadaDeContratoID: avulsaAtual.sessaoFixaID
+            )
         }
     }
     

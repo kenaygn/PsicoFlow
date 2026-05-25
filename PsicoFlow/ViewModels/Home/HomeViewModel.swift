@@ -29,30 +29,31 @@ class HomeViewModel: ObservableObject {
     @Published var mostrarAlertaConflito: Bool = false
     
     private var financeAnalyzer = FinanceAnalyzerService()
+    private let availabilityService: AgendaAvailabilityService
     
     private let patientRepository: PatientRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
     private let paymentRepository: PaymentRepositoryProtocol
+    private let fixedSessionRepository: FixedSessionRepositoryProtocol
     
     init(
         patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
         sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
-        paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository()
+        paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository(),
+        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository()
     ) {
         self.patientRepository = patientRepository
         self.sessionRepository = sessionRepository
         self.paymentRepository = paymentRepository
+        self.fixedSessionRepository = fixedSessionRepository
+        
+        self.availabilityService = AgendaAvailabilityService(
+            fixedSessionRepository: fixedSessionRepository,
+            sessionRepository: sessionRepository
+        )
         
         carregarDados()
     }
-    
-    // Note: Esta é a mesma matriz de horários utilizada na `EditSessionViewModel`.
-    // Futuramente, externalize essa lista para uma estrutura unificada (`AppConfig`)
-    // ou busque diretamente dos limites operacionais configurados pelo psicólogo no banco de dados.
-    private let todosHorarios: [String] = [
-        "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
-    ]
     
     /// Procura se existe algum conflito de agendamento em toda a base de sessões ativas
     var primeiraDataComConflito: Date? {
@@ -88,7 +89,7 @@ class HomeViewModel: ObservableObject {
         // Aqui você passaria a lista de pagamentos vinda do seu repositório
         return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: paymentRepository.fetchPagamentos())
     }
-
+    
     var labelPendenciaFinanceira: String {
         guard let data = primeiraPendenciaAtrasada else { return "" }
         let formatter = DateFormatter()
@@ -271,16 +272,17 @@ class HomeViewModel: ObservableObject {
         return nil
     }
     
-    /// Calcula a intersecção de horários configurados subtraindo os já ocupados no dia alvo.
+    /// Delega a interseção de horários configurados subtraindo os já ocupados no dia alvo.
     func obterHorariosLivres(para data: Date, ignorandoSessaoID sessaoID: String) -> [String] {
-        let sessoesNoMesmoDia = sessionRepository.fetchSessoes().filter {
-            Calendar.current.isDate($0.dataDaSessão, inSameDayAs: data) &&
-            $0.status != .cancelada &&
-            $0.id != sessaoID
-        }
+        // Busca a sessão atual para extrair o ID do contrato matriz (caso exista),
+        // garantindo que ela não bloqueie o seu próprio slot durante um reagendamento.
+        let sessaoAtual = sessionRepository.fetchSessoes().first { $0.id == sessaoID }
         
-        let ocupados = sessoesNoMesmoDia.map { $0.horaInicio }
-        return todosHorarios.filter { !ocupados.contains($0) }
+        return availabilityService.horariosLivresParaSessaoAvulsa(
+            data: data,
+            ignorandoSessaoID: sessaoID,
+            derivadaDeContratoID: sessaoAtual?.sessaoFixaID
+        )
     }
     
 }

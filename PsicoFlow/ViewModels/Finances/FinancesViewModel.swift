@@ -17,7 +17,7 @@ enum FinanceViewMode {
 /// ViewModel responsável pelo processamento do fluxo de caixa (recebimentos e pendências).
 /// Gerencia a navegação temporal e a filtragem de pagamentos cruzando dados com o repositório de pacientes.
 class FinanceViewModel: ObservableObject {
-        
+    
     @Published private var todosPagamentos: [MonthlyPayment] = []
     @Published private var pacientes: [Patient] = []
     
@@ -41,23 +41,23 @@ class FinanceViewModel: ObservableObject {
     
     /// Retorna o mes mais antigo com pagamentos atrasados.
     var dataDaPrimeiraPendenciaAtrasada: Date? {
-            return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: todosPagamentos)
-        }
+        return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: todosPagamentos)
+    }
     
     var labelPrimeiraPendencia: String {
-            guard let data = dataDaPrimeiraPendenciaAtrasada else { return "" }
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "pt_BR")
-            formatter.dateFormat = "MMMM/yyyy"
-            return formatter.string(from: data).capitalized
-        }
-        
+        guard let data = dataDaPrimeiraPendenciaAtrasada else { return "" }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.dateFormat = "MMMM/yyyy"
+        return formatter.string(from: data).capitalized
+    }
+    
     /// Sincroniza o estado local com a base de dados principal.
     func carregarDados() {
         self.todosPagamentos = paymentRepository.fetchPagamentos()
         self.pacientes = patientRepository.fetchPacientes()
     }
-        
+    
     /// Avança o calendário em 1 mês ou 1 ano, dependendo do modo de visualização atual.
     func avancarPeriodo() {
         let calendar = Calendar.current
@@ -82,25 +82,25 @@ class FinanceViewModel: ObservableObject {
     }
     
     /// Redefine a navegação para o dia de hoje, focando no Mês/Ano atual real.
-        func irParaPeriodoAtual() {
-            currentDate = Date()
-        }
+    func irParaPeriodoAtual() {
+        currentDate = Date()
+    }
+    
+    /// Verifica se a visualização atual já está focada no mês ou ano corrente.
+    /// Utilizado para desabilitar o botão de "voltar para hoje" na interface.
+    var isPeriodoAtual: Bool {
+        let calendar = Calendar.current
+        let hoje = Date()
         
-        /// Verifica se a visualização atual já está focada no mês ou ano corrente.
-        /// Utilizado para desabilitar o botão de "voltar para hoje" na interface.
-        var isPeriodoAtual: Bool {
-            let calendar = Calendar.current
-            let hoje = Date()
-            
-            if viewMode == .mensal {
-                // Verifica se estão no mesmo Mês e Ano
-                return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .month)
-            } else {
-                // Verifica se estão apenas no mesmo Ano
-                return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .year)
-            }
+        if viewMode == .mensal {
+            // Verifica se estão no mesmo Mês e Ano
+            return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .month)
+        } else {
+            // Verifica se estão apenas no mesmo Ano
+            return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .year)
         }
-        
+    }
+    
     /// Chave de filtragem baseada na ISO string adaptada para comparação rápida (ex: "2026/04").
     private var filtroReferencia: String {
         let formatter = DateFormatter()
@@ -133,7 +133,7 @@ class FinanceViewModel: ObservableObject {
         let soma = pagamentosPendentes.reduce(0) { $0 + $1.valor }
         return String(format: "R$ %.0f", soma)
     }
-        
+    
     /// Retorna os dados do paciente associado a uma cobrança específica.
     func paciente(for pagamento: MonthlyPayment) -> Patient? {
         return pacientes.first(where: { $0.id == pagamento.pacienteID })
