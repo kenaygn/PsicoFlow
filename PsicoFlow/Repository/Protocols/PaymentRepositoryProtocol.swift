@@ -12,4 +12,5 @@ protocol PaymentRepositoryProtocol {
     func fetchPagamentos(paraPacienteID pacienteID: String) -> [MonthlyPayment]
     func atualizarPagamento(_ pagamento: MonthlyPayment)
     func salvarPagamento(_ pagamento: MonthlyPayment)
+    func deletarPagamento(id: String)
 }

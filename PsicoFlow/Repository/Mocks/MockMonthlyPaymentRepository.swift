@@ -27,4 +27,8 @@ class MockPaymentRepository: PaymentRepositoryProtocol {
     func salvarPagamento(_ pagamento: MonthlyPayment) {
             MockData.pagamentosExemplo.append(pagamento)
         }
+    
+    func deletarPagamento(id: String) {
+            MockData.pagamentosExemplo.removeAll(where: { $0.id == id })
+        }
 }
