@@ -18,7 +18,7 @@ class NewSessionViewModel: ObservableObject {
     private let sessionRepository: SessionRepositoryProtocol
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
     
-    private let generatorService = SessionGeneratorService()
+    private let generatorService: SessionGeneratorService
     private let availabilityService: AgendaAvailabilityService
     
     
@@ -47,6 +47,12 @@ class NewSessionViewModel: ObservableObject {
         self.selectedWeekday = Calendar.current.component(.weekday, from: dataSugerida)
         
         self.availabilityService = AgendaAvailabilityService(
+            fixedSessionRepository: fixedSessionRepository,
+            sessionRepository: sessionRepository
+        )
+        
+        self.generatorService = SessionGeneratorService(
+            patientRepository: patientRepository,
             fixedSessionRepository: fixedSessionRepository,
             sessionRepository: sessionRepository
         )

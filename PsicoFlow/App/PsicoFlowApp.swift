@@ -10,14 +10,18 @@ import SwiftUI
 @main
 struct PsicoFlowApp: App {
     
-    init() {
-        MockData.carregarSessoesFixasMockadas()
-    }
+    @Environment(\.scenePhase) var scenePhase
     
     var body: some Scene {
         WindowGroup {
             MainTabView()
                 .preferredColorScheme(.light)
+        }
+        // Dispara toda vez que o usuário abre ou volta para o aplicativo
+        .onChange(of: scenePhase) { novaFase in
+            if novaFase == .active {
+                SystemUpdateManager.shared.runStartupChecks()
+            }
         }
     }
 }

@@ -27,7 +27,8 @@ class PatientFormViewModel: ObservableObject {
     private let patientRepository: PatientRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
-    private let sessionGenerator = SessionGeneratorService()
+    
+    private let sessionGenerator: SessionGeneratorService
     
     init(
         paciente: Patient? = nil,
@@ -54,6 +55,12 @@ class PatientFormViewModel: ObservableObject {
             let valorString = String(format: "%.2f", paciente.valor).replacingOccurrences(of: ".", with: ",")
             self.valorTexto = valorString
         }
+        
+        self.sessionGenerator = SessionGeneratorService(
+            patientRepository: patientRepository,
+            fixedSessionRepository: fixedSessionRepository,
+            sessionRepository: sessionRepository
+        )
     }
     
     /// Retorna verdadeiro se os campos obrigatórios atenderem às regras de negócio e tipagem.
@@ -87,56 +94,56 @@ class PatientFormViewModel: ObservableObject {
     }
     
     /// Salva os dados do paciente e orquestra a limpeza/recriação da agenda se o status mudar.
-        func salvar() {
-            let pacienteAtualizado = obterPacienteAtualizado()
-            
-            patientRepository.atualizarPaciente(pacienteAtualizado)
-            
-            let statusAntigo = pacienteOriginal?.status ?? .ativo
-            
-            if statusAntigo != pacienteAtualizado.status {
-                if pacienteAtualizado.status == .inativo {
-                    executarLimpezaDeAgenda(para: pacienteAtualizado.id)
-                } else if pacienteAtualizado.status == .ativo {
-                    executarReativacaoDeAgenda(para: pacienteAtualizado)
-                }
+    func salvar() {
+        let pacienteAtualizado = obterPacienteAtualizado()
+        
+        patientRepository.atualizarPaciente(pacienteAtualizado)
+        
+        let statusAntigo = pacienteOriginal?.status ?? .ativo
+        
+        if statusAntigo != pacienteAtualizado.status {
+            if pacienteAtualizado.status == .inativo {
+                executarLimpezaDeAgenda(para: pacienteAtualizado.id)
+            } else if pacienteAtualizado.status == .ativo {
+                executarReativacaoDeAgenda(para: pacienteAtualizado)
             }
         }
-                
-        private func executarLimpezaDeAgenda(para pacienteID: String) {
-            let hoje = Calendar.current.startOfDay(for: Date())
-            
-            let sessoesFuturas = sessionRepository.fetchSessoes().filter {
-                $0.pacienteID == pacienteID && $0.dataDaSessão >= hoje
-            }
-            
-            for sessao in sessoesFuturas {
-                sessionRepository.deletarSessao(id: sessao.id)
-            }
+    }
+    
+    private func executarLimpezaDeAgenda(para pacienteID: String) {
+        let hoje = Calendar.current.startOfDay(for: Date())
+        
+        let sessoesFuturas = sessionRepository.fetchSessoes().filter {
+            $0.pacienteID == pacienteID && $0.dataDaSessão >= hoje
         }
         
-        private func executarReativacaoDeAgenda(para paciente: Patient) {
-            let hoje = Calendar.current.startOfDay(for: Date())
-            let dataFim = sessionGenerator.ultimoDiaDoProximoMes(aPartirDe: hoje)
+        for sessao in sessoesFuturas {
+            sessionRepository.deletarSessao(id: sessao.id)
+        }
+    }
+    
+    private func executarReativacaoDeAgenda(para paciente: Patient) {
+        let hoje = Calendar.current.startOfDay(for: Date())
+        let dataFim = sessionGenerator.ultimoDiaDoProximoMes(aPartirDe: hoje)
+        
+        let regrasDoPaciente = fixedSessionRepository.fetchSessoesFixas().filter { $0.pacienteID == paciente.id }
+        let todasSessoes = sessionRepository.fetchSessoes()
+        
+        for regra in regrasDoPaciente {
+            let novasSessoes = sessionGenerator.gerarSessoes(para: regra, dataInicio: hoje, dataFim: dataFim)
             
-            let regrasDoPaciente = fixedSessionRepository.fetchSessoesFixas().filter { $0.pacienteID == paciente.id }
-            let todasSessoes = sessionRepository.fetchSessoes()
-            
-            for regra in regrasDoPaciente {
-                let novasSessoes = sessionGenerator.gerarSessoes(para: regra, dataInicio: hoje, dataFim: dataFim)
+            for novaSessao in novasSessoes {
+                let jaExiste = todasSessoes.contains {
+                    $0.sessaoFixaID == regra.id &&
+                    Calendar.current.isDate($0.dataDaSessão, inSameDayAs: novaSessao.dataDaSessão) &&
+                    $0.status != .cancelada
+                }
                 
-                for novaSessao in novasSessoes {
-                    let jaExiste = todasSessoes.contains {
-                        $0.sessaoFixaID == regra.id &&
-                        Calendar.current.isDate($0.dataDaSessão, inSameDayAs: novaSessao.dataDaSessão) &&
-                        $0.status != .cancelada
-                    }
-                    
-                    if !jaExiste {
-                        sessionRepository.salvarSessao(novaSessao)
-                    }
+                if !jaExiste {
+                    sessionRepository.salvarSessao(novaSessao)
                 }
             }
         }
+    }
     
 }

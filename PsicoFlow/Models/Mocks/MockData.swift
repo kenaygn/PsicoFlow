@@ -150,26 +150,6 @@ struct MockData {
         )
     ]
     
-    
-    static func carregarSessoesFixasMockadas() {
-            let generator = SessionGeneratorService()
-            let dataFim = generator.ultimoDiaDoProximoMes()
-            
-            var totalGeradas = 0
-            
-            for regra in sessoesFixasExemplo {
-                if let paciente = listaPacientes.first(where: { $0.id == regra.pacienteID }),
-                   paciente.status == .ativo {
-                    
-                    let filhas = generator.gerarSessoes(para: regra, dataFim: dataFim)
-                    sessoesExemplo.append(contentsOf: filhas)
-                    totalGeradas += filhas.count
-                }
-            }
-            
-            print("✅ MockData: A agenda foi preenchida com \(totalGeradas) sessões de pacientes ATIVOS!")
-        }
-    
     static var pagamentosExemplo: [MonthlyPayment] = [
         // Pagamento já realizado
         MonthlyPayment(
@@ -192,16 +172,7 @@ struct MockData {
             valor: 720.0, // Ex: 4 sessões de 180
             pago: false
         ),
-        
-        MonthlyPayment(
-            id: "pay_004",
-            psicologoID: "user_dev_01",
-            pacienteID: "p2", // Marcos Vinícius
-            mesReferencia: "2026/06",
-            dataPagamento: nil,
-            valor: 300.0, // Ex: 4 sessões de 180
-            pago: false
-        ),
+
         
         // Pagamento de mês anterior já finalizado
         MonthlyPayment(
@@ -212,29 +183,9 @@ struct MockData {
             dataPagamento: Calendar.current.date(byAdding: .month, value: -1, to: Date())!,
             valor: 600.0,
             pago: true
-        ),
-        
-        // Pagamento já realizado
-        MonthlyPayment(
-            id: "pay_005",
-            psicologoID: "user_dev_01",
-            pacienteID: "p1", // Ana Carolina
-            mesReferencia: "2026/05",
-            dataPagamento: Date(),
-            valor: 400.0, // Ex: 4 sessões de 150
-            pago: true
-        ),
-        
-        // Pagamento pendente do mês atual
-        MonthlyPayment(
-            id: "pay_006",
-            psicologoID: "user_dev_01",
-            pacienteID: "p2", // Marcos Vinícius
-            mesReferencia: "2026/05",
-            dataPagamento: nil,
-            valor: 720.0, // Ex: 4 sessões de 180
-            pago: false
         )
+        
+        
     ]
     
     static var evolucoesExemplo: [Evolution] = [

@@ -23,4 +23,8 @@ class MockPaymentRepository: PaymentRepositoryProtocol {
             MockData.pagamentosExemplo[index] = pagamento
         }
     }
+    
+    func salvarPagamento(_ pagamento: MonthlyPayment) {
+            MockData.pagamentosExemplo.append(pagamento)
+        }
 }
