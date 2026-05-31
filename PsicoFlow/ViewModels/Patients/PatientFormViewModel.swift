@@ -8,9 +8,6 @@
 import Foundation
 import Combine
 
-/// ViewModel responsável pelo controle de estado e validação do formulário de pacientes.
-/// Suporta o reaproveitamento de interface (UI) operando em dois modos dinâmicos:
-/// Criação (paciente == nil) e Edição (paciente != nil).
 class PatientFormViewModel: ObservableObject {
     
     @Published var nome: String = ""
@@ -21,25 +18,23 @@ class PatientFormViewModel: ObservableObject {
     @Published var status: PatientStatus = .ativo
     @Published var observacoes: String = ""
     
-    /// Armazena o estado original para preservar identificadores imutáveis (ID e data de criação) durante atualizações.
     private var pacienteOriginal: Patient?
     
     private let patientRepository: PatientRepositoryProtocol
-    private let sessionRepository: SessionRepositoryProtocol
-    private let fixedSessionRepository: FixedSessionRepositoryProtocol
     
+    // Serviços de Domínio Especializados
     private let sessionGenerator: SessionGeneratorService
+    private let paymentService: MonthlyPaymentGeneratorService
     
     init(
         paciente: Patient? = nil,
         patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
         sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
-        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository()
+        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository(),
+        paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository()
     ) {
         self.pacienteOriginal = paciente
         self.patientRepository = patientRepository
-        self.sessionRepository = sessionRepository
-        self.fixedSessionRepository = fixedSessionRepository
         
         if let paciente = paciente {
             self.nome = paciente.nome
@@ -49,39 +44,35 @@ class PatientFormViewModel: ObservableObject {
             self.status = paciente.status
             self.observacoes = paciente.observacoes ?? ""
             
-            // Note: Para formatação monetária robusta e escalável, considere migrar
-            // para um NumberFormatter com o estilo '.currency' no futuro.
-            // A substituição direta de caracteres atende bem a MVPs focados no Brasil (pt_BR).
             let valorString = String(format: "%.2f", paciente.valor).replacingOccurrences(of: ".", with: ",")
             self.valorTexto = valorString
         }
         
+        // Inicializa os serviços injetando os repositórios
         self.sessionGenerator = SessionGeneratorService(
             patientRepository: patientRepository,
             fixedSessionRepository: fixedSessionRepository,
             sessionRepository: sessionRepository
         )
+        
+        self.paymentService = MonthlyPaymentGeneratorService(
+            patientRepository: patientRepository,
+            paymentRepository: paymentRepository
+        )
     }
     
-    /// Retorna verdadeiro se os campos obrigatórios atenderem às regras de negócio e tipagem.
     var isFormValid: Bool {
         let nomePreenchido = !nome.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let valorValido = Double(valorTexto.replacingOccurrences(of: ",", with: ".")) != nil
-        
         return nomePreenchido && valorValido
     }
     
-    /// Constrói e retorna uma instância de `Patient` com os dados atuais do formulário.
-    /// Preserva automaticamente o `id` e a data de criação caso seja uma operação de edição.
     func obterPacienteAtualizado() -> Patient {
         let valorConvertido = Double(valorTexto.replacingOccurrences(of: ",", with: ".")) ?? 0.0
         
-        // Note: O 'psicologoID' está hardcoded temporariamente.
-        // Em um ambiente de produção (Firebase/Supabase), este valor deve ser extraído
-        // do gerenciador de sessão (ex: AuthService.shared.currentUserId).
         return Patient(
             id: pacienteOriginal?.id ?? UUID().uuidString,
-            psicologoID: pacienteOriginal?.psicologoID ?? "mock_psicologo_123",
+            psicologoID: pacienteOriginal?.psicologoID ?? "user_dev_01",
             nome: nome,
             email: email,
             telefone: telefone,
@@ -93,57 +84,28 @@ class PatientFormViewModel: ObservableObject {
         )
     }
     
-    /// Salva os dados do paciente e orquestra a limpeza/recriação da agenda se o status mudar.
     func salvar() {
-        let pacienteAtualizado = obterPacienteAtualizado()
-        
-        patientRepository.atualizarPaciente(pacienteAtualizado)
-        
-        let statusAntigo = pacienteOriginal?.status ?? .ativo
-        
-        if statusAntigo != pacienteAtualizado.status {
-            if pacienteAtualizado.status == .inativo {
-                executarLimpezaDeAgenda(para: pacienteAtualizado.id)
-            } else if pacienteAtualizado.status == .ativo {
-                executarReativacaoDeAgenda(para: pacienteAtualizado)
-            }
-        }
-    }
-    
-    private func executarLimpezaDeAgenda(para pacienteID: String) {
-        let hoje = Calendar.current.startOfDay(for: Date())
-        
-        let sessoesFuturas = sessionRepository.fetchSessoes().filter {
-            $0.pacienteID == pacienteID && $0.dataDaSessão >= hoje
-        }
-        
-        for sessao in sessoesFuturas {
-            sessionRepository.deletarSessao(id: sessao.id)
-        }
-    }
-    
-    private func executarReativacaoDeAgenda(para paciente: Patient) {
-        let hoje = Calendar.current.startOfDay(for: Date())
-        let dataFim = sessionGenerator.ultimoDiaDoProximoMes(aPartirDe: hoje)
-        
-        let regrasDoPaciente = fixedSessionRepository.fetchSessoesFixas().filter { $0.pacienteID == paciente.id }
-        let todasSessoes = sessionRepository.fetchSessoes()
-        
-        for regra in regrasDoPaciente {
-            let novasSessoes = sessionGenerator.gerarSessoes(para: regra, dataInicio: hoje, dataFim: dataFim)
+            let pacienteAtualizado = obterPacienteAtualizado()
             
-            for novaSessao in novasSessoes {
-                let jaExiste = todasSessoes.contains {
-                    $0.sessaoFixaID == regra.id &&
-                    Calendar.current.isDate($0.dataDaSessão, inSameDayAs: novaSessao.dataDaSessão) &&
-                    $0.status != .cancelada
-                }
+            // 1. Persiste a alteração no banco de dados
+            patientRepository.atualizarPaciente(pacienteAtualizado)
+            
+            // 2. Delega a atualização da agenda para o serviço responsável
+            sessionGenerator.projetarSessoesFuturas()
+            
+            // 3. Regras Financeiras de Status
+            let statusAntigo = pacienteOriginal?.status ?? .ativo
+            let isNovoPaciente = pacienteOriginal == nil
+            
+            if statusAntigo == .ativo && pacienteAtualizado.status == .inativo {
+                // Cenário A: O paciente acabou de ser INATIVADO. Limpa as cobranças pendentes.
+                paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id)
                 
-                if !jaExiste {
-                    sessionRepository.salvarSessao(novaSessao)
-                }
+            } else if (statusAntigo == .inativo && pacienteAtualizado.status == .ativo) || isNovoPaciente {
+                // Cenário B: O paciente foi REATIVADO ou é um paciente RECÉM-CRIADO.
+                // Roda o motor geral. O serviço vai ver que ele está ativo, notar que
+                // faltam as faturas deste mês e do próximo, e gerá-las na hora!
+                paymentService.gerarCobrancasAtuaisEFuturas()
             }
         }
-    }
-    
 }

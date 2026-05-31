@@ -51,6 +51,18 @@ struct MockData {
             horaInicio: "09:00"
         ),
         
+        // 1. Sessão Realizada (Hoje)
+        Session(
+            id: "sess_101",
+            psicologoID: "user_dev_01",
+            pacienteID: "p1", // Ana Carolina
+            sessaoFixaID: "fix_ana_001",
+            dataDaSessão: Calendar.current.date(byAdding: .day, value: -5, to: Date())!,
+            status: .realizada,
+            modalidade: .presencial,
+            horaInicio: "09:00"
+        ),
+        
         // 2. Outra Sessão Realizada (Hoje, mais tarde)
         Session(
             id: "sess_002",
