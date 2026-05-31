@@ -28,21 +28,48 @@ class SessionGeneratorService {
     
     /// Varre os contratos ativos e garante que a linha do tempo do calendário
     /// esteja preenchida até o último dia do mês seguinte, evitando duplicações.
+    /// Também remove sessões futuras de pacientes que foram inativados.
     func projetarSessoesFuturas() {
+        let hoje = Calendar.current.startOfDay(for: Date())
         let dataFim = ultimoDiaDoProximoMes() // Chama a função local
         let regrasFixas = fixedSessionRepository.fetchSessoesFixas()
-        let pacientesAtivos = patientRepository.fetchPacientes().filter { $0.status == .ativo }
-        let sessoesExistentes = sessionRepository.fetchSessoes()
         
+        let todosPacientes = patientRepository.fetchPacientes()
+        // Pega apenas os IDs dos pacientes que continuam ativos
+        let pacientesAtivosIDs = todosPacientes.filter { $0.status == .ativo }.map { $0.id }
+        
+        var sessoesExistentes = sessionRepository.fetchSessoes()
+        
+        // MARK: - 1. PASSO DE LIMPEZA (Cleanup)
+        // Deleta sessões futuras geradas por contrato caso o paciente não esteja mais ativo
+        var totalRemovidas = 0
+        
+        for sessao in sessoesExistentes {
+            // Só apaga se for no futuro E se for fruto de um contrato (sessaoFixaID != nil)
+            if sessao.dataDaSessão >= hoje && sessao.sessaoFixaID != nil {
+                if !pacientesAtivosIDs.contains(sessao.pacienteID) {
+                    sessionRepository.deletarSessao(id: sessao.id)
+                    totalRemovidas += 1
+                }
+            }
+        }
+        
+        if totalRemovidas > 0 {
+            print("🧹 [Session Generator] \(totalRemovidas) sessões futuras removidas de pacientes inativos.")
+            // Atualiza a variável com a lista limpa para não bugar a geração abaixo
+            sessoesExistentes = sessionRepository.fetchSessoes()
+        }
+        
+        // MARK: - 2. PASSO DE GERAÇÃO (Projeção)
         var totalNovasGeradas = 0
         
         for regra in regrasFixas {
-            // Só gera sessões se o paciente ainda estiver ativo na clínica
-            if pacientesAtivos.contains(where: { $0.id == regra.pacienteID }) {
+            // Só gera sessões se o paciente AINDA estiver na lista de ativos
+            if pacientesAtivosIDs.contains(regra.pacienteID) {
                 
-                let sessoesProjetadas = gerarSessoes(para: regra, dataFim: dataFim) // Chama a função local
+                let sessoesProjetadas = gerarSessoes(para: regra, dataFim: dataFim)
                 
-                // Filtro Anti-Duplicação: Garante que não vamos salvar a mesma sessão duas vezes
+                // Filtro Anti-Duplicação
                 for sessaoNova in sessoesProjetadas {
                     let jaExiste = sessoesExistentes.contains {
                         $0.sessaoFixaID == regra.id &&
@@ -82,7 +109,7 @@ class SessionGeneratorService {
                     pacienteID: regra.pacienteID,
                     sessaoFixaID: regra.id,
                     dataDaSessão: dataAtual,
-                    status: .agendada, // Por regra de negócio, projeções futuras nascem pendentes
+                    status: .agendada,
                     modalidade: regra.modalidade,
                     horaInicio: regra.horaInicio
                 )
