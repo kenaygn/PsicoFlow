@@ -49,9 +49,7 @@ struct MainTabView: View {
                 .tag(AppRouter.Tab.finances)
             
             // 5. ABA: AJUSTES (Placeholder)
-            Text("Tela de Ajustes em construção ⚙️")
-                .font(.title)
-                .foregroundColor(.gray)
+            SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape")
                     Text("Ajustes")

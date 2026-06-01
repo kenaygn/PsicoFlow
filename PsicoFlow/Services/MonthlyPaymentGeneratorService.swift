@@ -21,6 +21,12 @@ class MonthlyPaymentGeneratorService {
         self.paymentRepository = paymentRepository
     }
     
+    
+    // MARK: - TODO: MIGRAÇÃO PARA BACKEND (FIREBASE CLOUD FUNCTIONS)
+    // TODO: [V2.0] Esta lógica é executada no "Client-Side" (depende de o app ser aberto).
+    // Para garantir que faturas sejam geradas no dia 1º mesmo se o psicólogo ficar meses
+    // sem abrir o app, esta função deve ser migrada para um Cron Job no Firebase (Server-Side).
+    
     /// Varre os pacientes ativos e gera as faturas para o mês corrente e para o próximo mês.
     func gerarCobrancasAtuaisEFuturas() {
         let calendar = Calendar.current

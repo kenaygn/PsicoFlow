@@ -26,6 +26,11 @@ class SessionGeneratorService {
         self.sessionRepository = sessionRepository
     }
     
+    // MARK: - TODO: MIGRAÇÃO PARA BACKEND (FIREBASE CLOUD FUNCTIONS)
+    // TODO: [V2.0] A projeção de sessões na agenda também está rodando no "Client-Side".
+    // Para garantir escalabilidade, notificações push precisas e não depender do
+    // ciclo de vida do app no iPhone do usuário, mover essa rotina para um Cron Job no Firebase.
+    
     /// Varre os contratos ativos e garante que a linha do tempo do calendário
     /// esteja preenchida até o último dia do mês seguinte, evitando duplicações.
     /// Também remove sessões futuras de pacientes que foram inativados.
@@ -40,7 +45,7 @@ class SessionGeneratorService {
         
         var sessoesExistentes = sessionRepository.fetchSessoes()
         
-        // MARK: - 1. PASSO DE LIMPEZA (Cleanup)
+        //- 1. PASSO DE LIMPEZA (Cleanup)
         // Deleta sessões futuras geradas por contrato caso o paciente não esteja mais ativo
         var totalRemovidas = 0
         
@@ -60,7 +65,7 @@ class SessionGeneratorService {
             sessoesExistentes = sessionRepository.fetchSessoes()
         }
         
-        // MARK: - 2. PASSO DE GERAÇÃO (Projeção)
+        //- 2. PASSO DE GERAÇÃO (Projeção)
         var totalNovasGeradas = 0
         
         for regra in regrasFixas {

@@ -1,0 +1,162 @@
+//
+//  SettingsView.swift
+//  PsicoFlow
+//
+//  Created by Kenay on 31/05/26.
+//
+
+import SwiftUI
+
+struct SettingsView: View {
+    
+    @StateObject private var viewModel = SettingsViewModel()
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                
+                // MARK: - 1. Assinatura e Planos
+                if viewModel.currentUser.premium {
+                    Section {
+                        HStack {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(.cyan)
+                                .font(.title2)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Plano PsicoFlow Pro")
+                                    .font(.headline)
+                                Text("Assinatura ativa")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            
+                            Text("Gerenciar")
+                                .font(.subheadline)
+                                .foregroundColor(.cyan)
+                        }
+                    }
+                } else {
+                    PremiumCard()
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .padding(.vertical, 8)
+                }
+                
+                // MARK: - 2. Conta do Usuário
+                Section(header: Text("Sua Conta")) {
+                    NavigationLink(destination: Text("Tela de Edição de Perfil")) {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(viewModel.currentUser.nome)
+                                    .font(.body)
+                                Text("Editar informações e senha")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                
+                // MARK: - 3. Preferências do Aplicativo
+                Section(header: Text("Preferências")) {
+                    Toggle(isOn: $viewModel.ativarNotificacoes) {
+
+                            Text("Notificações de Sessões")
+                        
+                    }
+                    
+                    Toggle(isOn: $viewModel.usarFaceID) {
+  
+                            Text("Exigir Face ID")
+                        
+                    }
+                }
+                
+                // MARK: - 4. Suporte e Comunidade
+                Section(header: Text("Suporte")) {
+                    Button(action: { print("Abrir FAQ") }) {
+
+                            Text("Central de Ajuda")
+                                .foregroundColor(.primary)
+                        
+                    }
+                    
+                    Button(action: { print("Abrir Feedback") }) {
+
+                            Text("Enviar Feedback")
+                                .foregroundColor(.primary)
+                        
+                    }
+                }
+                
+                // MARK: - 5. Redes Sociais
+                Section(header: Text("Redes Sociais")) {
+                    Button(action: { print("Abrir Instagram") }) {
+                        HStack {
+                            Text("Instagram")
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    
+                    Button(action: { print("Abrir TikTok") }) {
+                        HStack {
+                            Text("TikTok")
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    
+                    Button(action: { print("Abrir LinkedIn") }) {
+                        HStack {
+                            Text("LinkedIn")
+                                .foregroundColor(.primary)
+                        }
+                    }
+                }
+                
+                // MARK: - 6. Sobre e Documentos Legais
+                Section(header: Text("Sobre")) {
+                    NavigationLink(destination: Text("Termos de Serviço")) {
+                        Text("Termos de Serviço")
+                    }
+                    NavigationLink(destination: Text("Política de Privacidade")) {
+                        Text("Política de Privacidade")
+                    }
+                    
+                    HStack {
+                        Text("Versão do Aplicativo")
+                        Spacer()
+                        Text("1.0.0")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // MARK: - 7. Área Sensível (Danger Zone)
+                Section(header: Text("Área de Risco")) {
+                    Button(action: {
+                        viewModel.sairDaConta()
+                    }) {
+                        Text("Sair da Conta")
+                            .foregroundColor(.red)
+                    }
+                    
+                    Button(action: {
+                        viewModel.deletarConta()
+                    }) {
+                        Text("Excluir Conta")
+                            .foregroundColor(.red)
+                    }
+                }
+            }
+            .navigationTitle("Ajustes")
+        }
+    }
+}
+
+
+
+#Preview {
+    SettingsView()
+}
