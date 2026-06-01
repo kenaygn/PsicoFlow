@@ -21,24 +21,24 @@ struct PaymentAlertCard: View {
             ZStack {
                 
                 // MARK: ROXO TOP
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 129/255, green: 140/255, blue: 248/255), // Indigo 400
-                                        Color(red: 79/255, green: 70/255, blue: 229/255)    // Indigo 600
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-  
+                LinearGradient(
+                    colors: [
+                        Color(red: 129/255, green: 140/255, blue: 248/255), // Indigo 400
+                        Color(red: 79/255, green: 70/255, blue: 229/255)    // Indigo 600
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                
                 // MARK: VINHO TOP
-//                LinearGradient(
-//                    colors: [
-//                        Color(red: 225/255, green: 29/255, blue: 72/255), // Rose/Ruby 600 (Vibrante)
-//                        Color(red: 159/255, green: 18/255, blue: 57/255)  // Rose/Ruby 800 (Profundo)
-//                    ],
-//                    startPoint: .topLeading,
-//                    endPoint: .bottomTrailing
-//                )
+                //                LinearGradient(
+                //                    colors: [
+                //                        Color(red: 225/255, green: 29/255, blue: 72/255), // Rose/Ruby 600 (Vibrante)
+                //                        Color(red: 159/255, green: 18/255, blue: 57/255)  // Rose/Ruby 800 (Profundo)
+                //                    ],
+                //                    startPoint: .topLeading,
+                //                    endPoint: .bottomTrailing
+                //                )
                 
                 // MARK: - Decorações
                 GeometryReader { geo in
