@@ -11,11 +11,11 @@ import SwiftUI
 /// Exibe os detalhes rápidos da sessão (paciente, status, duração e valor) e aciona
 /// o modal de ações rápidas ao ser tocado.
 struct OccupiedSlotCard: View {
-        
+    
     var sessao: Session
     var paciente: Patient
     var onSelect: () -> Void
-        
+    
     var body: some View {
         Button(action: onSelect) {
             VStack(alignment: .leading, spacing: 12) {
@@ -41,6 +41,26 @@ struct OccupiedSlotCard: View {
                 
                 // MARK: - Detalhes Operacionais
                 HStack(spacing: 16) {
+                    
+                    if sessao.sessaoFixaID != nil {
+                        HStack(spacing: 4) {
+                            Image(systemName: "repeat")
+                            Text("Fixa")
+                        }
+                        .foregroundColor(Color(red: 0.89, green: 0.25, blue: 0.35)) // O mesmo Rosa do FixedSessionCard
+                    } else {
+                        HStack(spacing: 4) {
+                            Image(systemName: "1.circle")
+                            Text("Avulsa")
+                        }
+                        .foregroundColor(.orange) // A cor laranja que você determinou para avulsas
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: sessao.modalidade.rawValue.lowercased() == "online" ? "video" : "person.2")
+                        Text(sessao.modalidade.rawValue.capitalized)
+                    }
+                    
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
                         
@@ -49,10 +69,6 @@ struct OccupiedSlotCard: View {
                         Text("50 min")
                     }
                     
-                    HStack(spacing: 4) {
-                        Image(systemName: "creditcard")
-                        Text(String(format: "R$ %.0f", paciente.valor))
-                    }
                 }
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.secondary)
