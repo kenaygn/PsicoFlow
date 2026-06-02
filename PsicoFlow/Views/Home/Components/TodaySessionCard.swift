@@ -8,10 +8,9 @@
 import SwiftUI
 
 /// Card interativo que exibe uma sessão agendada para o dia atual.
-/// Adapta seu estilo visual para destacar a sessão imediata (`isNext`) e
-/// permite ações rápidas de status (Realizada, Adiada, Cancelada) e reagendamento inline.
+/// Adapta seu estilo visual para destacar a sessão imediata (`isNext`)
 struct TodaySessionCard: View {
-        
+    
     var session: Session
     var nomePaciente: String
     var iniciaisPaciente: String
@@ -28,11 +27,11 @@ struct TodaySessionCard: View {
     private var horariosLivres: [String] {
         fetchAvailableTimes(novaData, session.id)
     }
-        
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             
-            // MARK: - Cabeçalho
+            // MARK: - Cabeçalho (Relógio e Status/A Seguir)
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
@@ -53,10 +52,19 @@ struct TodaySessionCard: View {
                         .background(Color.teal)
                         .foregroundColor(.white)
                         .clipShape(Capsule())
+                } else {
+                    Text(session.status.rawValue.capitalized)
+                        .font(.system(size: 10, weight: .bold))
+                        .textCase(.uppercase)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(corBadge(status: session.status).opacity(0.15))
+                        .foregroundColor(corBadge(status: session.status))
+                        .clipShape(Capsule())
                 }
             }
             
-            // MARK: - Informações do Paciente
+            // MARK: - Informações do Paciente e Detalhes Operacionais
             HStack(spacing: 12) {
                 Circle()
                     .fill(isNext ? Color.white : Color.gray.opacity(0.1))
@@ -67,14 +75,41 @@ struct TodaySessionCard: View {
                             .foregroundColor(isNext ? .black : .primary)
                     )
                 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(nomePaciente)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(isNext ? .white : .primary)
                     
-                    Text(session.status.rawValue)
-                        .font(.system(size: 13))
+                    HStack(spacing: 12) {
+                        
+                        if session.sessaoFixaID != nil {
+                            HStack(spacing: 4) {
+                                Image(systemName: "repeat")
+                                Text("Fixa")
+                            }
+                            .foregroundColor(Color(red: 0.89, green: 0.25, blue: 0.35))
+                        } else {
+                            HStack(spacing: 4) {
+                                Image(systemName: "1.circle")
+                                Text("Avulsa")
+                            }
+                            .foregroundColor(.orange)
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: session.modalidade.rawValue.lowercased() == "online" ? "video" : "person.2")
+                            Text(session.modalidade.rawValue.capitalized)
+                        }
                         .foregroundColor(isNext ? .gray : .secondary)
+                        
+                        //Notes: Poder definit o tanto que a sessao vai durar
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock")
+                            Text("50 min")
+                        }
+                        .foregroundColor(isNext ? .gray : .secondary)
+                    }
+                    .font(.system(size: 13, weight: .medium))
                 }
                 Spacer()
             }
@@ -86,7 +121,6 @@ struct TodaySessionCard: View {
                     .padding(.top, 4)
                 
                 if mostrandoAdiar {
-                    
                     // MARK: Modo Reagendamento
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Reagendar para:")
@@ -121,40 +155,47 @@ struct TodaySessionCard: View {
                         }
                         
                         HStack {
-                            Button("Cancelar") {
+                            Button(action: {
                                 withAnimation { mostrandoAdiar = false }
+                            }) {
+                                Text("Cancelar")
+                                    .font(.caption.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .contentShape(Rectangle())
+                                    .background(.red.opacity(0.1))
+                                    .foregroundColor(.red)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
-                            .font(.caption.bold())
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(.red.opacity(0.1))
-                            .foregroundColor(.red)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .buttonStyle(.plain)
                             
-                            Button("Salvar") {
+                            Button(action: {
                                 let dataFinal = combinarDataEHora(data: novaData, horaString: novaHoraStr)
                                 onUpdateStatus(.adiada, dataFinal)
                                 mostrandoAdiar = false
+                            }) {
+                                Text("Salvar")
+                                    .font(.caption.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .contentShape(Rectangle())
+                                    .background(Color.teal)
+                                    .foregroundColor(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
-                            .font(.caption.bold())
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(Color.teal)
-                            .foregroundColor(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .buttonStyle(.plain)
                             .disabled(horariosLivres.isEmpty || novaHoraStr.isEmpty)
                         }
                     }
                     .padding(.top, 4)
                     
                 } else {
-                    
                     // MARK: Botões Padrão
                     HStack(spacing: 8) {
                         actionButton(title: "Realizada", icon: "checkmark.circle", isNext: isNext, color: .green) {
                             onUpdateStatus(.realizada, nil)
                         }
-                        actionButton(title: "Adiada", icon: "calendar.badge.clock", isNext: isNext, color: .blue) {
+                        actionButton(title: "Adiada", icon: "calendar.badge.clock", isNext: isNext, color: .orange) {
                             novaData = session.dataDaSessão
                             novaHoraStr = session.horaInicio
                             withAnimation { mostrandoAdiar = true }
@@ -188,8 +229,6 @@ struct TodaySessionCard: View {
         )
         .shadow(color: Color.black.opacity(isNext ? 0.15 : 0.03), radius: 8, x: 0, y: 4)
         .onChange(of: novaData) { _ in
-            // Note: Previne que o sistema mantenha uma hora selecionada que não
-            // está disponível no novo dia selecionado pelo usuário.
             if !horariosLivres.contains(novaHoraStr) {
                 novaHoraStr = horariosLivres.first ?? ""
             }
@@ -219,5 +258,14 @@ struct TodaySessionCard: View {
         let partes = horaString.split(separator: ":")
         guard partes.count == 2, let hora = Int(partes[0]), let minuto = Int(partes[1]) else { return data }
         return Calendar.current.date(bySettingHour: hora, minute: minuto, second: 0, of: data) ?? data
+    }
+    
+    private func corBadge(status: SessionStatus) -> Color {
+        switch status {
+        case .realizada: return .gray
+        case .agendada: return .teal
+        case .adiada: return .orange
+        case .cancelada: return .red
+        }
     }
 }
