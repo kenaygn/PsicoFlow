@@ -133,7 +133,7 @@ struct SessionQuickActionView: View {
                             dismiss()
                         }
                         
-                        actionButton(title: "Adiada", icon: "calendar.badge.clock", color: .blue) {
+                        actionButton(title: "Adiada", icon: "calendar.badge.clock", color: .orange) {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
                                 mostrandoAdiar = true
                                 alturaModal = .height(420)
