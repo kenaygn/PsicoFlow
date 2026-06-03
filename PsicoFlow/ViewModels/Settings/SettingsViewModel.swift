@@ -8,24 +8,61 @@
 import Foundation
 import SwiftUI
 import Combine
+import LocalAuthentication
 
 class SettingsViewModel: ObservableObject {
     
-    // Utilizando a estrutura User nativa do sistema
     @Published var currentUser: User = User(
         id: "user_123",
         nome: "Dr. Psicólogo",
         email: "contato@psicoflow.com.br",
         crp: "06/123456",
-        premium: false, // Mude para true para ver o layout de assinante
+        premium: false,
         criadoEm: Date()
     )
     
-    // Toggles de Preferência
-    @Published var usarFaceID: Bool = false
     @Published var ativarNotificacoes: Bool = true
     
-    // Ações Sensíveis
+    @Published var usarFaceID: Bool = UserDefaults.standard.bool(forKey: "usarFaceID") {
+        didSet {
+            UserDefaults.standard.set(usarFaceID, forKey: "usarFaceID")
+        }
+    }
+    
+    @Published var mostrarAlertaPermissaoFaceID: Bool = false
+    
+    // MARK: - Lógica do Face ID
+    func autenticarAtivacaoFaceID(ativar: Bool) {
+        guard ativar else {
+            self.usarFaceID = false
+            return
+        }
+        
+        let context = LAContext()
+        var error: NSError?
+        
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            let reason = "Autentique para habilitar o bloqueio por Face ID."
+            
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authError in
+                DispatchQueue.main.async {
+                    if success {
+                        self.usarFaceID = true
+                    } else {
+
+                        self.usarFaceID = false
+                    }
+                }
+            }
+        } else {
+            DispatchQueue.main.async {
+                self.usarFaceID = false
+                
+                self.mostrarAlertaPermissaoFaceID = true
+            }
+        }
+    }
+    
     func sairDaConta() {
         print("🚪 Fazendo logout...")
     }

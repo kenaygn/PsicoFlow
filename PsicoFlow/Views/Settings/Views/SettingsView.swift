@@ -63,31 +63,32 @@ struct SettingsView: View {
                 // MARK: - 3. Preferências do Aplicativo
                 Section(header: Text("Preferências")) {
                     Toggle(isOn: $viewModel.ativarNotificacoes) {
-
-                            Text("Notificações de Sessões")
-                        
+                        Text("Notificações de Sessões")
                     }
                     
-                    Toggle(isOn: $viewModel.usarFaceID) {
-  
-                            Text("Exigir Face ID")
-                        
+                    Toggle(isOn: Binding(
+                        get: { viewModel.usarFaceID },
+                        set: { newValue in
+                            viewModel.autenticarAtivacaoFaceID(ativar: newValue)
+                        }
+                    )) {
+                        Text("Exigir Face ID")
                     }
                 }
                 
                 // MARK: - 4. Suporte e Comunidade
                 Section(header: Text("Suporte")) {
                     Button(action: { print("Abrir FAQ") }) {
-
-                            Text("Central de Ajuda")
-                                .foregroundColor(.primary)
+                        
+                        Text("Central de Ajuda")
+                            .foregroundColor(.primary)
                         
                     }
                     
                     Button(action: { print("Abrir Feedback") }) {
-
-                            Text("Enviar Feedback")
-                                .foregroundColor(.primary)
+                        
+                        Text("Enviar Feedback")
+                            .foregroundColor(.primary)
                         
                     }
                 }
@@ -151,6 +152,17 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Ajustes")
+            .alert("Permissão Necessária", isPresented: $viewModel.mostrarAlertaPermissaoFaceID) {
+                Button("Cancelar", role: .cancel) { }
+                
+                Button("Abrir Ajustes") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            } message: {
+                Text("O acesso ao Face ID foi negado anteriormente. Para utilizar este recurso, toque em 'Abrir Ajustes' e habilite o Face ID para o PsicoFlow.")
+            }
         }
     }
 }
