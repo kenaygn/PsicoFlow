@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
-import LocalAuthentication
 
 /// Tela de segurança apresentada quando o usuário exige biometria para entrar no app.
 struct FaceIDBlockView: View {
     
     // Recebe o controle da RootView para avisar quando o app pode ser destrancado
     @Binding var estaDesbloqueado: Bool
+    
+    @StateObject private var vm = FaceIDBlockViewModel()
     
     var body: some View {
         VStack(spacing: 24) {
@@ -31,7 +32,7 @@ struct FaceIDBlockView: View {
                 .padding(.horizontal, 40)
             
             Button(action: {
-                autenticarParaEntrar()
+                iniciarAutenticacao()
             }) {
                 Text("Desbloquear")
                     .font(.headline)
@@ -46,34 +47,22 @@ struct FaceIDBlockView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
         .onAppear {
-            autenticarParaEntrar()
+            iniciarAutenticacao()
         }
     }
     
-    // MARK: - Função de Autenticação Biométrica
-    private func autenticarParaEntrar() {
-            let context = LAContext()
-            var error: NSError?
-            
-            if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
-                let motivo = "Desbloqueie o aplicativo para continuar."
-                
-                context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: motivo) { sucesso, _ in
-                    DispatchQueue.main.async {
-                        if sucesso {
-                            // Rosto reconhecido OU senha digitada corretamente!
-                            withAnimation { self.estaDesbloqueado = true }
-                        } else {
-                            // Usuário cancelou ou errou a senha
-                            self.estaDesbloqueado = false
-                        }
-                    }
-                }
-            } else {
-                // Dispositivo sem senha e sem biometria: libera por padrão
-                DispatchQueue.main.async {
+    /// Solicita ao ViewModel que realize a autenticação e atualiza o estado da tela
+    private func iniciarAutenticacao() {
+        vm.autenticarParaEntrar { sucesso in
+            if sucesso {
+                // Rosto reconhecido OU senha digitada corretamente, libera o app com animação
+                withAnimation {
                     self.estaDesbloqueado = true
                 }
+            } else {
+                // Usuário cancelou ou errou, mantém bloqueado
+                self.estaDesbloqueado = false
             }
         }
+    }
 }
