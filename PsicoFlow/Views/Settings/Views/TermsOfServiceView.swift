@@ -24,6 +24,7 @@ struct TermsOfServiceView: View {
                 .padding(.bottom, 8)
                 
                 // MARK: - Cláusulas
+                //TODO: tem que mexer nelas tudo 
                 Group {
                     TermSection(
                         title: "1. Aceitação dos Termos",

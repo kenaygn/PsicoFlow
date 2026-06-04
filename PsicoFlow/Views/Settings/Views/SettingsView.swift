@@ -159,7 +159,7 @@ struct SettingsView: View {
                     NavigationLink(destination: TermsOfServiceView()) {
                         Text("Termos de Serviço")
                     }
-                    NavigationLink(destination: Text("Política de Privacidade")) {
+                    NavigationLink(destination: PrivacyPolicyView()) {
                         Text("Política de Privacidade")
                     }
                     
