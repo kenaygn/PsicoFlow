@@ -156,7 +156,7 @@ struct SettingsView: View {
                 
                 // MARK: - 6. Sobre e Documentos Legais
                 Section(header: Text("Sobre")) {
-                    NavigationLink(destination: Text("Termos de Serviço")) {
+                    NavigationLink(destination: TermsOfServiceView()) {
                         Text("Termos de Serviço")
                     }
                     NavigationLink(destination: Text("Política de Privacidade")) {
