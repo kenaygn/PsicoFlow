@@ -11,6 +11,8 @@ struct SettingsView: View {
     
     @StateObject private var viewModel = SettingsViewModel()
     
+    let versaoApp = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Desconhecida"
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -78,38 +80,73 @@ struct SettingsView: View {
                 
                 // MARK: - 4. Suporte e Comunidade
                 Section(header: Text("Suporte")) {
-                    Button(action: { print("Abrir FAQ") }) {
-                        
+                    
+                    NavigationLink(destination: HelpCenterView()) {
                         Text("Central de Ajuda")
                             .foregroundColor(.primary)
-                        
                     }
                     
-                    Button(action: { print("Abrir Feedback") }) {
+                    //Note: mudar o nome do app
+                    Button(action: {
+                        let email = "kenaysocial@gmail.com"
+                        let assunto = "Feedback / Reportar Erro - PsicoFlow"
+                        let corpo = "Olá equipe do PsicoFlow!\n\n[Escreva aqui sua sugestão ou relate um erro]\n\n\n* Muito obrigado por compartilhar sua ideia ou nos ajudar a corrigir um problema! Seu feedback é essencial para continuarmos evoluindo o aplicativo. *\n\n---\nVersão do App: \(versaoApp)"
                         
+                        let urlString = "mailto:\(email)?subject=\(assunto.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(corpo.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+                        
+                        if let url = URL(string: urlString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
                         Text("Enviar Feedback")
                             .foregroundColor(.primary)
-                        
                     }
                 }
                 
                 // MARK: - 5. Redes Sociais
                 Section(header: Text("Redes Sociais")) {
-                    Button(action: { print("Abrir Instagram") }) {
+                    
+                    // Botão do Instagram
+                    Button(action: {
+                        let usuario = "kenaygn" //sem o @
+                        let urlString = "https://www.instagram.com/\(usuario)"
+                        
+                        if let url = URL(string: urlString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
                         HStack {
                             Text("Instagram")
                                 .foregroundColor(.primary)
                         }
                     }
                     
-                    Button(action: { print("Abrir TikTok") }) {
+                    // Botão do TikTok
+                    Button(action: {
+                        let usuario = "@psicoflowapp" //COM o @
+                        let urlString = "https://www.tiktok.com/\(usuario)"
+                        
+                        if let url = URL(string: urlString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
                         HStack {
                             Text("TikTok")
                                 .foregroundColor(.primary)
                         }
                     }
                     
-                    Button(action: { print("Abrir LinkedIn") }) {
+                    // Botão do LinkedIn
+                    Button(action: {
+                        // empresa: "company/nome"
+                        // perfil pessoal: "in/nome"
+                        let caminho = "in/kenay-gomes-nobre-509498339"
+                        let urlString = "https://www.linkedin.com/\(caminho)"
+                        
+                        if let url = URL(string: urlString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
                         HStack {
                             Text("LinkedIn")
                                 .foregroundColor(.primary)
@@ -129,7 +166,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Versão do Aplicativo")
                         Spacer()
-                        Text("1.0.0")
+                        Text(versaoApp)
                             .foregroundColor(.secondary)
                     }
                 }
