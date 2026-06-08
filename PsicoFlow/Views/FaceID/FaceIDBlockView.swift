@@ -66,3 +66,8 @@ struct FaceIDBlockView: View {
         }
     }
 }
+
+
+#Preview {
+    FaceIDBlockView(estaDesbloqueado: .constant(false))
+}

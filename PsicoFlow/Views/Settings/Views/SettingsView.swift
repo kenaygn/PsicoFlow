@@ -48,7 +48,7 @@ struct SettingsView: View {
                 
                 // MARK: - 2. Conta do Usuário
                 Section(header: Text("Sua Conta")) {
-                    NavigationLink(destination: Text("Tela de Edição de Perfil")) {
+                    NavigationLink(destination: EditProfileView(settingsViewModel: viewModel)) {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(viewModel.currentUser.nome)
