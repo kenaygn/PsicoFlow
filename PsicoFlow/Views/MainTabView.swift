@@ -11,8 +11,6 @@ struct MainTabView: View {
     
     @StateObject private var router = AppRouter()
     
-    //EnviromentObjetc do login para dar acesso a todas as views a quem ta logado.
-    
     var body: some View {
         TabView(selection: $router.selectedTab) {
             

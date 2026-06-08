@@ -12,15 +12,6 @@ import LocalAuthentication
 
 class SettingsViewModel: ObservableObject {
     
-    @Published var currentUser: User = User(
-        id: "user_123",
-        nome: "Dr. Psicólogo",
-        email: "contato@psicoflow.com.br",
-        crp: "06/123456",
-        premium: false,
-        criadoEm: Date()
-    )
-    
     @Published var ativarNotificacoes: Bool = true
     
     @Published var usarFaceID: Bool = UserDefaults.standard.bool(forKey: "usarFaceID") {
@@ -61,13 +52,5 @@ class SettingsViewModel: ObservableObject {
                 self.mostrarAlertaPermissaoFaceID = true
             }
         }
-    }
-    
-    func sairDaConta() {
-        print("🚪 Fazendo logout...")
-    }
-    
-    func deletarConta() {
-        print("⚠️ Deletando conta permanentemente...")
     }
 }

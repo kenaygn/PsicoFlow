@@ -12,8 +12,8 @@ struct EditProfileView: View {
     
     @StateObject private var viewModel: EditProfileViewModel
     
-    init(settingsViewModel: SettingsViewModel) {
-        _viewModel = StateObject(wrappedValue: EditProfileViewModel(settingsViewModel: settingsViewModel))
+    init(authManager: AuthManager) {
+        _viewModel = StateObject(wrappedValue: EditProfileViewModel(authManager: authManager))
     }
     
     var body: some View {
@@ -50,9 +50,9 @@ struct EditProfileView: View {
                 header: Text("Alterar Senha"),
                 footer:
                     Text(viewModel.senhasDivergem ? "As novas senhas não coincidem.\n" : "")
-                        .foregroundColor(.red)
-                    + Text("Deixe em branco caso não queira alterar sua senha atual.")
-                        .foregroundColor(.secondary)
+                    .foregroundColor(.red)
+                + Text("Deixe em branco caso não queira alterar sua senha atual.")
+                    .foregroundColor(.secondary)
             ){
                 
                 PasswordToggleField(title: "Senha Atual", text: $viewModel.senhaAtual, contentType: .password)

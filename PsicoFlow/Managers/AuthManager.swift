@@ -8,10 +8,40 @@
 import Foundation
 import Combine
 
-/// Gerenciador temporário (Mock) de estado de autenticação.
-/// No futuro, esta classe fará a ponte com o Firebase Auth.
 class AuthManager: ObservableObject {
-    // Mantemos como 'true' por padrão agora para que você possa testar e acessar o app livremente.
-    // Quando formos fazer o Login real, isso começará como 'false'.
-    @Published var usuarioLogado: Bool = true
+    // Se for 'nil', o app entende que ninguém está logado e joga para o RootView (Login).
+    @Published var currentUser: User?
+    
+    // Propriedade computada que mantém a compatibilidade perfeita com o seu RootView atual
+    var usuarioLogado: Bool {
+        currentUser != nil
+    }
+    
+    init() {
+        logarMock()
+    }
+    
+    // MARK: - Funções de Autenticação (Mock para o Firebase)
+    func logarMock() {
+        self.currentUser = User(
+            id: "firebase_mock_uid_123",
+            nome: "Dr. Psicólogo",
+            email: "contato@psicoflow.com.br",
+            crp: "06/123456",
+            premium: false,
+            criadoEm: Date()
+        )
+    }
+    
+    func sairDaConta() {
+        print("🚪 Fazendo logout do Mock...")
+        // Futuramente: try? Auth.auth().signOut()
+        self.currentUser = nil // Isso avisa o RootView para fechar o MainTabView
+    }
+    
+    func deletarConta() {
+        print("⚠️ Deletando conta do Mock...")
+        // Futuramente: Auth.auth().currentUser?.delete()
+        self.currentUser = nil
+    }
 }

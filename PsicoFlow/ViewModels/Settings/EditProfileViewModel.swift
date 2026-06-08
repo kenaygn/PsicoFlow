@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 class EditProfileViewModel: ObservableObject {
-    private var settingsViewModel: SettingsViewModel
+    private var authManager: AuthManager
     
     @Published var nome: String = ""
     @Published var email: String = ""
@@ -24,49 +24,40 @@ class EditProfileViewModel: ObservableObject {
         !confirmarNovaSenha.isEmpty && novaSenha != confirmarNovaSenha
     }
     
-    init(settingsViewModel: SettingsViewModel) {
-        self.settingsViewModel = settingsViewModel
+    init(authManager: AuthManager) {
+        self.authManager = authManager
         carregarDadosAtuais()
     }
     
     var temAlteracoes: Bool {
-        let dadosMudaram = nome != settingsViewModel.currentUser.nome ||
-        email != settingsViewModel.currentUser.email ||
-        crp != settingsViewModel.currentUser.crp
+        guard let user = authManager.currentUser else { return false }
+        
+        let dadosMudaram = nome != user.nome || email != user.email || crp != user.crp
         
         let tentandoMudarSenha = !senhaAtual.isEmpty || !novaSenha.isEmpty || !confirmarNovaSenha.isEmpty
         
         var senhasValidas = true
         if tentandoMudarSenha {
-            senhasValidas = !senhaAtual.isEmpty &&
-            !novaSenha.isEmpty &&
-            (novaSenha == confirmarNovaSenha)
+            senhasValidas = !senhaAtual.isEmpty && !novaSenha.isEmpty && (novaSenha == confirmarNovaSenha)
         }
         
-        let camposValidos = !nome.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !email.trimmingCharacters(in: .whitespaces).isEmpty
+        let camposValidos = !nome.trimmingCharacters(in: .whitespaces).isEmpty && !email.trimmingCharacters(in: .whitespaces).isEmpty
         
         return (dadosMudaram || tentandoMudarSenha) && camposValidos && senhasValidas
     }
     
     private func carregarDadosAtuais() {
-        self.nome = settingsViewModel.currentUser.nome
-        self.email = settingsViewModel.currentUser.email
-        self.crp = settingsViewModel.currentUser.crp
+        guard let user = authManager.currentUser else { return }
+        self.nome = user.nome
+        self.email = user.email
+        self.crp = user.crp
     }
     
     func salvarAlteracoes() {
-        // 1. Salva os dados normais no banco de dados...
-        settingsViewModel.currentUser.nome = nome
-        // ...
+        authManager.currentUser?.nome = nome
+        authManager.currentUser?.email = email
+        authManager.currentUser?.crp = crp
         
-        // 2. Tenta mudar a senha no Firebase
-        if !senhaAtual.isEmpty && novaSenha == confirmarNovaSenha {
-            // Código do Firebase:
-            // Auth.auth().signIn(withEmail: email, password: senhaAtual) { ... }
-            // Auth.auth().currentUser?.updatePassword(to: novaSenha) { erro in
-            //     if erro != nil { mostrarAlerta("Sua senha atual está incorreta!") }
-            // }
-        }
+        // Futuramente: Lógica do Firebase para trocar senha
     }
 }

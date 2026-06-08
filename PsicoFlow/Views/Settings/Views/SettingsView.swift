@@ -9,16 +9,21 @@ import SwiftUI
 
 struct SettingsView: View {
     
+    @EnvironmentObject var authManager: AuthManager
+    
     @StateObject private var viewModel = SettingsViewModel()
     
     let versaoApp = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Desconhecida"
     
     var body: some View {
+        
+        let user = authManager.currentUser ?? User(id: "", nome: "Carregando...", email: "", crp: "", premium: false, criadoEm: Date())
+        
         NavigationStack {
             Form {
                 
                 // MARK: - 1. Assinatura e Planos
-                if viewModel.currentUser.premium {
+                if user.premium {
                     Section {
                         HStack {
                             Image(systemName: "checkmark.seal.fill")
@@ -48,10 +53,10 @@ struct SettingsView: View {
                 
                 // MARK: - 2. Conta do Usuário
                 Section(header: Text("Sua Conta")) {
-                    NavigationLink(destination: EditProfileView(settingsViewModel: viewModel)) {
+                    NavigationLink(destination: EditProfileView(authManager: authManager)) {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(viewModel.currentUser.nome)
+                                Text(user.nome)
                                     .font(.body)
                                 Text("Editar informações e senha")
                                     .font(.caption)
@@ -174,14 +179,14 @@ struct SettingsView: View {
                 // MARK: - 7. Área Sensível (Danger Zone)
                 Section(header: Text("Área de Risco")) {
                     Button(action: {
-                        viewModel.sairDaConta()
+                        authManager.sairDaConta()
                     }) {
                         Text("Sair da Conta")
                             .foregroundColor(.red)
                     }
                     
                     Button(action: {
-                        viewModel.deletarConta()
+                        authManager.deletarConta()
                     }) {
                         Text("Excluir Conta")
                             .foregroundColor(.red)
