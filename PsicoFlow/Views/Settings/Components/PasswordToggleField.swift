@@ -33,7 +33,7 @@ struct PasswordToggleField: View {
                 isRevealed.toggle()
             }) {
                 Image(systemName: isRevealed ? "eye.slash.fill" : "eye.fill")
-                    .foregroundColor(.cyan)
+                    .foregroundColor(.teal)
             }
             .buttonStyle(PlainButtonStyle())
         }

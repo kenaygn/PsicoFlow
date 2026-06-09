@@ -27,7 +27,7 @@ struct SettingsView: View {
                     Section {
                         HStack {
                             Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.cyan)
+                                .foregroundColor(.teal)
                                 .font(.title2)
                             
                             VStack(alignment: .leading, spacing: 2) {
@@ -41,7 +41,7 @@ struct SettingsView: View {
                             
                             Text("Gerenciar")
                                 .font(.subheadline)
-                                .foregroundColor(.cyan)
+                                .foregroundColor(.teal)
                         }
                     }
                 } else {

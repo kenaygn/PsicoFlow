@@ -59,7 +59,7 @@ struct HelpCenterView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.cyan)
+                        .background(Color.teal)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                     }

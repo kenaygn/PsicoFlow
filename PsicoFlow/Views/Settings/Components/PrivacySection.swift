@@ -15,7 +15,7 @@ struct PrivacySection: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.headline)
-                .foregroundColor(.cyan)
+                .foregroundColor(.teal)
             
             Text(content)
                 .font(.body)
