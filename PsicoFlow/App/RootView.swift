@@ -12,7 +12,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(\.scenePhase) var scenePhase
     
-    @AppStorage("viuOnboarding") private var viuOnboarding: Bool = true
+    @AppStorage("viuOnboarding") private var viuOnboarding: Bool = false
     
     @StateObject private var authManager = AuthManager()
     
@@ -24,9 +24,7 @@ struct RootView: View {
             if !viuOnboarding {
                 // ESTADO 1: Onboarding
                 
-                // OnboardingView(viuOnboarding: $viuOnboarding)
-                
-                Text("Placeholder: OnboardingView")
+                OnboardingView(viuOnboarding: $viuOnboarding)
                 
             } else if !authManager.usuarioLogado {
                 // ESTADO 2: Login
