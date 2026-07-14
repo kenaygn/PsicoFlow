@@ -17,7 +17,7 @@ struct SettingsView: View {
     
     var body: some View {
         
-        let user = authManager.currentUser ?? User(id: "", nome: "Carregando...", email: "", crp: "", premium: false, criadoEm: Date())
+        let user = User(id: "", nome: "Carregando...", email: "", crp: "", premium: false, criadoEm: Date())
         
         NavigationStack {
             Form {
@@ -177,6 +177,7 @@ struct SettingsView: View {
                 }
                 
                 // MARK: - 7. Área Sensível (Danger Zone)
+                // TODO: Colocar confirmações para nao excluir sem querer
                 Section(header: Text("Área de Risco")) {
                     Button(action: {
                         authManager.sairDaConta()
@@ -186,7 +187,15 @@ struct SettingsView: View {
                     }
                     
                     Button(action: {
-                        authManager.deletarConta()
+                        Task{
+                            do{
+                               try await authManager.deletarConta()
+                            }catch{
+                                print("Erro ao deletar a conta")
+                            }
+                            
+                        }
+                       
                     }) {
                         Text("Excluir Conta")
                             .foregroundColor(.red)

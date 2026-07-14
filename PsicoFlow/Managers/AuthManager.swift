@@ -5,43 +5,58 @@
 //  Created by Kenay on 02/06/26.
 //
 
+//
+//  AuthManager.swift
+//  Psyes
+//
+
 import Foundation
+import FirebaseAuth
 import Combine
 
+@MainActor
 class AuthManager: ObservableObject {
-    // Se for 'nil', o app entende que ninguém está logado e joga para o RootView (Login).
-    @Published var currentUser: User?
+    @Published var usuarioLogado: Bool = false
+    @Published var usuarioID: String? = nil
     
-    // Propriedade computada que mantém a compatibilidade perfeita com o seu RootView atual
-    var usuarioLogado: Bool {
-        currentUser != nil
-    }
+    private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
     
     init() {
-        logarMock()
+        configurarListenerDeAutenticacao()
     }
     
-    // MARK: - Funções de Autenticação (Mock para o Firebase)
-    func logarMock() {
-        self.currentUser = User(
-            id: "firebase_mock_uid_123",
-            nome: "Dr. Psicólogo",
-            email: "contato@psicoflow.com.br",
-            crp: "06/123456",
-            premium: false,
-            criadoEm: Date()
-        )
+    private func configurarListenerDeAutenticacao() {
+        authStateListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            self?.usuarioLogado = (user != nil)
+            self?.usuarioID = user?.uid
+        }
     }
+    
+    func criarConta(email: String, senha: String) async throws {
+        // O Firebase já faz a validação se o e-mail é válido e se a senha é forte
+        try await Auth.auth().createUser(withEmail: email, password: senha)
+    }
+    
+    func fazerLogin(email: String, senha: String) async throws {
+        try await Auth.auth().signIn(withEmail: email, password: senha)
+    }
+    
+    func recuperarSenha(email: String) async throws {
+            try await Auth.auth().sendPasswordReset(withEmail: email)
+        }
     
     func sairDaConta() {
-        print("🚪 Fazendo logout do Mock...")
-        // Futuramente: try? Auth.auth().signOut()
-        self.currentUser = nil // Isso avisa o RootView para fechar o MainTabView
+        print("Fazendo logout do Firebase...")
+        do {
+            try Auth.auth().signOut()
+        } catch {
+            print("Erro ao tentar sair da conta: \(error.localizedDescription)")
+        }
     }
     
-    func deletarConta() {
-        print("⚠️ Deletando conta do Mock...")
-        // Futuramente: Auth.auth().currentUser?.delete()
-        self.currentUser = nil
+    func deletarConta() async throws {
+        print("Deletando conta no Firebase...")
+        guard let user = Auth.auth().currentUser else { return }
+        try await user.delete()
     }
 }

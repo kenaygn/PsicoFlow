@@ -30,33 +30,34 @@ class EditProfileViewModel: ObservableObject {
     }
     
     var temAlteracoes: Bool {
-        guard let user = authManager.currentUser else { return false }
-        
-        let dadosMudaram = nome != user.nome || email != user.email || crp != user.crp
-        
-        let tentandoMudarSenha = !senhaAtual.isEmpty || !novaSenha.isEmpty || !confirmarNovaSenha.isEmpty
-        
-        var senhasValidas = true
-        if tentandoMudarSenha {
-            senhasValidas = !senhaAtual.isEmpty && !novaSenha.isEmpty && (novaSenha == confirmarNovaSenha)
-        }
-        
-        let camposValidos = !nome.trimmingCharacters(in: .whitespaces).isEmpty && !email.trimmingCharacters(in: .whitespaces).isEmpty
-        
-        return (dadosMudaram || tentandoMudarSenha) && camposValidos && senhasValidas
+//        guard let user = authManager.currentUser else { return false }
+//        
+//        let dadosMudaram = nome != user.nome || email != user.email || crp != user.crp
+//        
+//        let tentandoMudarSenha = !senhaAtual.isEmpty || !novaSenha.isEmpty || !confirmarNovaSenha.isEmpty
+//        
+//        var senhasValidas = true
+//        if tentandoMudarSenha {
+//            senhasValidas = !senhaAtual.isEmpty && !novaSenha.isEmpty && (novaSenha == confirmarNovaSenha)
+//        }
+//        
+//        let camposValidos = !nome.trimmingCharacters(in: .whitespaces).isEmpty && !email.trimmingCharacters(in: .whitespaces).isEmpty
+//        
+//        return (dadosMudaram || tentandoMudarSenha) && camposValidos && senhasValidas
+        return true
     }
     
     private func carregarDadosAtuais() {
-        guard let user = authManager.currentUser else { return }
-        self.nome = user.nome
-        self.email = user.email
-        self.crp = user.crp
+//        guard let user = authManager.currentUser else { return }
+//        self.nome = user.nome
+//        self.email = user.email
+//        self.crp = user.crp
     }
     
     func salvarAlteracoes() {
-        authManager.currentUser?.nome = nome
-        authManager.currentUser?.email = email
-        authManager.currentUser?.crp = crp
+//        authManager.currentUser?.nome = nome
+//        authManager.currentUser?.email = email
+//        authManager.currentUser?.crp = crp
         
         // Futuramente: Lógica do Firebase para trocar senha
     }

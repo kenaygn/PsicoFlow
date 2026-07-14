@@ -29,10 +29,9 @@ struct RootView: View {
             } else if !authManager.usuarioLogado {
                 // ESTADO 2: Login
                 
-                // LoginView()
-                
-                Text("Placeholder: LoginView")
-                
+                 LoginView()
+                    .environmentObject(authManager)
+                                
             } else if appExigeFaceID && !estaDesbloqueado {
                 // ESTADO 3: Tela trancada com Face ID
                 FaceIDBlockView(estaDesbloqueado: $estaDesbloqueado)
