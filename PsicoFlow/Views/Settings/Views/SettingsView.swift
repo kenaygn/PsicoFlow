@@ -15,6 +15,9 @@ struct SettingsView: View {
     
     let versaoApp = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Desconhecida"
     
+    @State private var mostrarAlertaSair = false
+    @State private var mostrarAlertaExcluir = false
+    
     var body: some View {
         
         let user = User(id: "", nome: "Carregando...", email: "", crp: "", premium: false, criadoEm: Date())
@@ -178,27 +181,16 @@ struct SettingsView: View {
                 }
                 
                 // MARK: - 7. Área Sensível (Danger Zone)
-                // TODO: Colocar confirmações para nao excluir sem querer
                 Section(header: Text("Área de Risco")) {
                     Button(action: {
-                        UserDefaults.standard.set(false, forKey: "usarFaceID")
-                        authManager.sairDaConta()
+                        mostrarAlertaSair = true
                     }) {
                         Text("Sair da Conta")
                             .foregroundColor(.red)
                     }
                     
                     Button(action: {
-                        Task{
-                            do{
-                                UserDefaults.standard.set(false, forKey: "usarFaceID")
-                               try await authManager.deletarConta()
-                            }catch{
-                                print("Erro ao deletar a conta")
-                            }
-                            
-                        }
-                       
+                            mostrarAlertaExcluir = true
                     }) {
                         Text("Excluir Conta")
                             .foregroundColor(.red)
@@ -216,6 +208,36 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("O acesso ao Face ID foi negado anteriormente. Para utilizar este recurso, toque em 'Abrir Ajustes' e habilite o Face ID para o Psyes.")
+            }
+            
+            .alert("Sair da Conta", isPresented: $mostrarAlertaSair) {
+                Button("Cancelar", role: .cancel) { }
+                
+                Button("Sair", role: .destructive) {
+                    UserDefaults.standard.set(false, forKey: "usarFaceID")
+                    authManager.sairDaConta()
+                }
+            } message: {
+                Text("Tem certeza de que deseja desconectar sua conta deste dispositivo?")
+            }
+            
+            // ALERTA DE EXCLUIR CONTA
+            .alert("Excluir Conta", isPresented: $mostrarAlertaExcluir) {
+                Button("Cancelar", role: .cancel) { }
+                
+                Button("Excluir Tudo", role: .destructive) {
+                    Task {
+                        do {
+                            
+                            UserDefaults.standard.set(false, forKey: "usarFaceID")
+                            try await authManager.deletarConta()
+                        } catch {
+                            print("Erro ao deletar a conta: \(error)")
+                        }
+                    }
+                }
+            } message: {
+                Text("Esta ação é irreversível. Todos os seus dados, configurações e informações vinculadas ao Psyes serão apagados permanentemente.")
             }
         }
     }
