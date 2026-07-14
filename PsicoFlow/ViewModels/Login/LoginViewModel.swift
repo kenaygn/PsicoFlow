@@ -22,6 +22,7 @@ class LoginViewModel: ObservableObject {
     
     @Published var tempoRestante = 0
     
+    var nonceAtual: String?
     
     func executarLogin(authManager: AuthManager) {
         carregando = true
@@ -66,14 +67,29 @@ class LoginViewModel: ObservableObject {
         }
     }
     
-    private func iniciarCronometro() {
-            tempoRestante = 60
-            
-            Task {
-                while tempoRestante > 0 {
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
-                    tempoRestante -= 1
-                }
+    func processarLoginApple(idToken: String, nonce: String, authManager: AuthManager) {
+        carregando = true
+        Task {
+            do {
+                try await authManager.loginComApple(idToken: idToken, nonce: nonce)
+                carregando = false
+            } catch {
+                tituloErro = "Erro na Apple"
+                mensagemErro = error.localizedDescription
+                exibirAlertaErro = true
+                carregando = false
             }
         }
+    }
+    
+    private func iniciarCronometro() {
+        tempoRestante = 60
+        
+        Task {
+            while tempoRestante > 0 {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                tempoRestante -= 1
+            }
+        }
+    }
 }

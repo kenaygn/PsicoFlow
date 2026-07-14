@@ -42,8 +42,8 @@ class AuthManager: ObservableObject {
     }
     
     func recuperarSenha(email: String) async throws {
-            try await Auth.auth().sendPasswordReset(withEmail: email)
-        }
+        try await Auth.auth().sendPasswordReset(withEmail: email)
+    }
     
     func sairDaConta() {
         print("Fazendo logout do Firebase...")
@@ -58,5 +58,13 @@ class AuthManager: ObservableObject {
         print("Deletando conta no Firebase...")
         guard let user = Auth.auth().currentUser else { return }
         try await user.delete()
+    }
+    
+    func loginComApple(idToken: String, nonce: String) async throws {
+        let credential = OAuthProvider.appleCredential(withIDToken: idToken,
+                                                       rawNonce: nonce,
+                                                       fullName: nil)
+        
+        try await Auth.auth().signIn(with: credential)
     }
 }

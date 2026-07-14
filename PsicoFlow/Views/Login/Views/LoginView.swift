@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct LoginView: View {
     @EnvironmentObject var authManager: AuthManager
@@ -112,20 +113,42 @@ struct LoginView: View {
                     
                     // MARK: - 4. OPÇÕES SOCIAIS (Google & Apple)
                     VStack(spacing: 12) {
-                        Button {
-                            // Implementação futura
-                        } label: {
-                            HStack {
-                                Image(systemName: "apple.logo")
-                                Text("Continuar com a Apple")
-                                    .font(.body).bold()
+                        // Botão Nativo da Apple
+                        SignInWithAppleButton(.continue) { request in
+                            //O usuário clicou. Geramos a criptografia antes de abrir o FaceID
+                            let nonce = AppleSignInHelper.randomNonceString()
+                            vm.nonceAtual = nonce
+                            
+                            // Avisamos a Apple o que queremos acessar (e-mail e nome)
+                            request.requestedScopes = [.fullName, .email]
+                            request.nonce = AppleSignInHelper.sha256(nonce)
+                            
+                        } onCompletion: { result in
+                            // O usuário colocou o FaceID e a Apple respondeu
+                            switch result {
+                            case .success(let autorizacao):
+                                if let credencial = autorizacao.credential as? ASAuthorizationAppleIDCredential {
+                                    
+                                    // Pega os dados que a Apple devolveu
+                                    guard let nonce = vm.nonceAtual,
+                                          let tokenDados = credencial.identityToken,
+                                          let idToken = String(data: tokenDados, encoding: .utf8) else {
+                                        print("Erro ao extrair tokens da Apple.")
+                                        return
+                                    }
+                                    
+                                    vm.processarLoginApple(idToken: idToken, nonce: nonce, authManager: authManager)
+                                }
+                                
+                            case .failure(let error):
+                                // TODO: Criar alerta de falha
+                                // Se a pessoa cancelar o FaceID, vai cair aqui. Você pode ignorar ou avisar.
+                                print("Login com Apple falhou: \(error.localizedDescription)")
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.black)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
                         }
+                        .signInWithAppleButtonStyle(.black)
+                        .frame(height: 50)
+                        .cornerRadius(12)
                         
                         Button {
                             // Implementação futura
@@ -182,9 +205,8 @@ struct LoginView: View {
                     
                 }
             }
-            .onTapGesture {
-                esconderTeclado()
-            }
+            .scrollDismissesKeyboard(.immediately)
+            
             .sheet(isPresented: $exibirTermos) {
                 TermsOfServiceView().padding(.top, 24)
                     .presentationDragIndicator(.visible)

@@ -18,6 +18,8 @@ class CreateAccountViewModel: ObservableObject {
     @Published var mensagemErro: String? = nil
     @Published var exibirAlertaErro = false
     
+    var nonceAtual: String?
+    
     func criarConta(authManager: AuthManager) {
         guard !email.trimmingCharacters(in: .whitespaces).isEmpty else {
             mostrarErro(titulo: "E-mail inválido", mensagem: "Por favor, digite um e-mail válido.")
@@ -46,5 +48,18 @@ class CreateAccountViewModel: ObservableObject {
         tituloErro = titulo
         mensagemErro = mensagem
         exibirAlertaErro = true
+    }
+    
+    func processarLoginApple(idToken: String, nonce: String, authManager: AuthManager) {
+        carregando = true
+        Task {
+            do {
+                try await authManager.loginComApple(idToken: idToken, nonce: nonce)
+                carregando = false
+            } catch {
+                mostrarErro(titulo: "Erro na Apple", mensagem: error.localizedDescription)
+                carregando = false
+            }
+        }
     }
 }
