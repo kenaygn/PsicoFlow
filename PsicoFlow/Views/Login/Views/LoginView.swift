@@ -151,15 +151,15 @@ struct LoginView: View {
                         .cornerRadius(12)
                         
                         Button {
-                            // Implementação futura
+                            vm.processarLoginGoogle(authManager: authManager)
                         } label: {
-                            HStack {
+                            HStack(spacing: 4) {
                                 Image("googleLogo")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 20, height: 20)
                                 Text("Continuar com o Google")
-                                    .font(.body).bold()
+                                    .font(.system(size: 19, weight: .medium))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()

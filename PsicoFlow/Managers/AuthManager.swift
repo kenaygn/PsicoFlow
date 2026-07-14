@@ -12,6 +12,7 @@
 
 import Foundation
 import FirebaseAuth
+import GoogleSignIn
 import Combine
 
 @MainActor
@@ -64,6 +65,13 @@ class AuthManager: ObservableObject {
         let credential = OAuthProvider.appleCredential(withIDToken: idToken,
                                                        rawNonce: nonce,
                                                        fullName: nil)
+        
+        try await Auth.auth().signIn(with: credential)
+    }
+    
+    func loginComGoogle(idToken: String, accessToken: String) async throws {
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken,
+                                                       accessToken: accessToken)
         
         try await Auth.auth().signIn(with: credential)
     }
