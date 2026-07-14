@@ -180,6 +180,7 @@ struct SettingsView: View {
                 // TODO: Colocar confirmações para nao excluir sem querer
                 Section(header: Text("Área de Risco")) {
                     Button(action: {
+                        UserDefaults.standard.set(false, forKey: "usarFaceID")
                         authManager.sairDaConta()
                     }) {
                         Text("Sair da Conta")
@@ -189,6 +190,7 @@ struct SettingsView: View {
                     Button(action: {
                         Task{
                             do{
+                                UserDefaults.standard.set(false, forKey: "usarFaceID")
                                try await authManager.deletarConta()
                             }catch{
                                 print("Erro ao deletar a conta")
