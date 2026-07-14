@@ -31,7 +31,7 @@ struct SettingsView: View {
                                 .font(.title2)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Plano PsicoFlow Pro")
+                                Text("Plano Psyes Pro")
                                     .font(.headline)
                                 Text("Assinatura ativa")
                                     .font(.subheadline)
@@ -93,9 +93,9 @@ struct SettingsView: View {
                     
                     //Note: mudar o nome do app
                     Button(action: {
-                        let email = "kenaysocial@gmail.com"
-                        let assunto = "Feedback / Reportar Erro - PsicoFlow"
-                        let corpo = "Olá equipe do PsicoFlow!\n\n[Escreva aqui sua sugestão ou relate um erro]\n\n\n* Muito obrigado por compartilhar sua ideia ou nos ajudar a corrigir um problema! Seu feedback é essencial para continuarmos evoluindo o aplicativo. *\n\n---\nVersão do App: \(versaoApp)"
+                        let email = "psyes.app@gmail.com"
+                        let assunto = "Feedback / Reportar Erro - Psyes"
+                        let corpo = "Olá equipe do Psyes!\n\n[Escreva aqui sua sugestão ou relate um erro]\n\n\n* Muito obrigado por compartilhar sua ideia ou nos ajudar a corrigir um problema! Seu feedback é essencial para continuarmos evoluindo o aplicativo. *\n\n---\nVersão do App: \(versaoApp)"
                         
                         let urlString = "mailto:\(email)?subject=\(assunto.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(corpo.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
                         
@@ -128,6 +128,7 @@ struct SettingsView: View {
                     
                     // Botão do TikTok
                     Button(action: {
+                        //TODO: Criar insta do app
                         let usuario = "@psicoflowapp" //COM o @
                         let urlString = "https://www.tiktok.com/\(usuario)"
                         
@@ -214,7 +215,7 @@ struct SettingsView: View {
                     }
                 }
             } message: {
-                Text("O acesso ao Face ID foi negado anteriormente. Para utilizar este recurso, toque em 'Abrir Ajustes' e habilite o Face ID para o PsicoFlow.")
+                Text("O acesso ao Face ID foi negado anteriormente. Para utilizar este recurso, toque em 'Abrir Ajustes' e habilite o Face ID para o Psyes.")
             }
         }
     }

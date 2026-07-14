@@ -21,7 +21,7 @@ struct HelpCenterView: View {
                 }
                 
                 DisclosureGroup("Como cancelo a assinatura?") {
-                    Text("O cancelamento é feito com segurança pelo próprio sistema da Apple. Vá no aplicativo 'Ajustes' do seu iPhone > Toque no seu Nome (ID Apple) > Assinaturas > PsicoFlow > Cancelar Assinatura.")
+                    Text("O cancelamento é feito com segurança pelo próprio sistema da Apple. Vá no aplicativo 'Ajustes' do seu iPhone > Toque no seu Nome (ID Apple) > Assinaturas > Psyes > Cancelar Assinatura.")
                         .font(.callout)
                         .foregroundColor(.secondary)
                         .padding(.vertical, 4)
@@ -77,11 +77,11 @@ struct HelpCenterView: View {
     // MARK: - Função de Deep Link para E-mail
     //Note: mudar o nome do app
     private func enviarEmailSuporte() {
-        let email = "kenaysocial@gmail.com"
-        let assunto = "Ajuda com o PsicoFlow"
+        let email = "psyes.app@gmail.com"
+        let assunto = "Ajuda com o Psyes"
         let versaoApp = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Desconhecida"
         
-        let corpo = "Olá equipe do PsicoFlow!\n\n[Escreva aqui com o que podemos te ajudar]\n\n\n* Fique tranquilo, nossa equipe vai analisar sua mensagem e responderemos o mais rápido possível! *\n\n---\nVersão do App: \(versaoApp)"
+        let corpo = "Olá equipe do Psyes!\n\n[Escreva aqui com o que podemos te ajudar]\n\n\n* Fique tranquilo, nossa equipe vai analisar sua mensagem e responderemos o mais rápido possível! *\n\n---\nVersão do App: \(versaoApp)"
         
         let urlString = "mailto:\(email)?subject=\(assunto.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(corpo.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         

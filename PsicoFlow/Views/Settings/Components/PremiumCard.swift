@@ -45,7 +45,7 @@ struct PremiumCard: View {
                         .foregroundColor(.white)
                         .clipShape(Capsule())
                     
-                    Text("PsicoFlow Pro")
+                    Text("Psyes Pro")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)

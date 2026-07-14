@@ -28,12 +28,12 @@ struct PrivacyPolicyView: View {
                 Group {
                     PrivacySection(
                         title: "1. Coleta de Dados",
-                        content: "O PsicoFlow coleta apenas as informações estritamente necessárias para o funcionamento do sistema de gestão clínica. Isso inclui seus dados de cadastro profissional e as informações que você insere ativamente sobre seus pacientes, sessões e evoluções."
+                        content: "O Psyes coleta apenas as informações estritamente necessárias para o funcionamento do sistema de gestão clínica. Isso inclui seus dados de cadastro profissional e as informações que você insere ativamente sobre seus pacientes, sessões e evoluções."
                     )
                     
                     PrivacySection(
                         title: "2. Uso das Informações",
-                        content: "Os dados inseridos no aplicativo são utilizados exclusivamente para facilitar a sua organização profissional. O PsicoFlow não acessa, não analisa e não utiliza os prontuários ou dados financeiros dos seus pacientes para nenhum fim analítico ou publicitário."
+                        content: "Os dados inseridos no aplicativo são utilizados exclusivamente para facilitar a sua organização profissional. O Psyes não acessa, não analisa e não utiliza os prontuários ou dados financeiros dos seus pacientes para nenhum fim analítico ou publicitário."
                     )
                     
                     PrivacySection(

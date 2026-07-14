@@ -28,7 +28,7 @@ struct TermsOfServiceView: View {
                 Group {
                     TermSection(
                         title: "1. Aceitação dos Termos",
-                        content: "Ao acessar e utilizar o aplicativo PsicoFlow, você concorda expressamente em cumprir estes Termos de Serviço. Este aplicativo é uma ferramenta destinada a profissionais de saúde para auxiliar no gerenciamento de suas rotinas clínicas e informações de pacientes."
+                        content: "Ao acessar e utilizar o aplicativo Psyes, você concorda expressamente em cumprir estes Termos de Serviço. Este aplicativo é uma ferramenta destinada a profissionais de saúde para auxiliar no gerenciamento de suas rotinas clínicas e informações de pacientes."
                     )
                     
                     TermSection(
@@ -43,12 +43,12 @@ struct TermsOfServiceView: View {
                     
                     TermSection(
                         title: "4. Assinaturas e Pagamentos",
-                        content: "O PsicoFlow pode oferecer funcionalidades Premium mediante assinatura. O faturamento, gerenciamento e cancelamento destas assinaturas são processados exclusivamente através da sua conta Apple, seguindo as políticas da App Store."
+                        content: "O Psyes pode oferecer funcionalidades Premium mediante assinatura. O faturamento, gerenciamento e cancelamento destas assinaturas são processados exclusivamente através da sua conta Apple, seguindo as políticas da App Store."
                     )
                     
                     TermSection(
                         title: "5. Limitação de Responsabilidade",
-                        content: "O PsicoFlow atua como um sistema de apoio ao gerenciamento. Não nos responsabilizamos por perdas de dados decorrentes do mau uso do dispositivo ou por decisões clínicas tomadas com base nas anotações inseridas na plataforma."
+                        content: "O Psyes atua como um sistema de apoio ao gerenciamento. Não nos responsabilizamos por perdas de dados decorrentes do mau uso do dispositivo ou por decisões clínicas tomadas com base nas anotações inseridas na plataforma."
                     )
                 }
                 

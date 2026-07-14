@@ -21,7 +21,7 @@ struct FaceIDBlockView: View {
                 .font(.system(size: 70))
                 .foregroundColor(.teal)
             
-            Text("PsicoFlow Bloqueado")
+            Text("Psyes Bloqueado")
                 .font(.title2)
                 .fontWeight(.bold)
             
