@@ -13,20 +13,30 @@ struct CompleteProfileView: View {
     var body: some View {
         VStack(spacing: 0) {
             if vm.passoAtual != .sucesso {
-                HStack(spacing: 16) {
-//                    if vm.passoAtual != .introducao {
-//                        Button {
-//                            withAnimation {
-//                                vm.voltarPasso()
-//                            }
-//                        } label: {
-//                            Image(systemName: "chevron.left")
-//                                .font(.title3.bold())
-//                                .foregroundColor(.primary)
-//                                .frame(width: 24, height: 24)
-//                        }
-//                        .transition(.opacity.combined(with: .scale))
-//                    }
+                HStack(spacing: vm.passoAtual != .introducao ? 16 : 0) {
+                    if vm.passoAtual != .introducao {
+                        Button {
+                            withAnimation {
+                                vm.voltarPasso()
+                            }
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.title3.bold())
+                                .foregroundColor(.primary)
+                                .frame(width: 24, height: 24)
+                        }
+                        .transition(.opacity.combined(with: .scale))
+                    }else{
+                        Button { } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.title3.bold())
+                                .foregroundColor(.primary)
+                                .frame(width: 0, height: 24)
+                        }
+                        .transition(.opacity.combined(with: .scale))
+                        .disabled(true)
+                        .opacity(0)
+                    }
 
                     // Barra de Progresso
                     ProgressView(
@@ -37,9 +47,9 @@ struct CompleteProfileView: View {
                     .tint(.teal)
                     .animation(.easeInOut, value: vm.passoAtual)
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 32)
                 .padding(.top, 20)
-                .padding(.bottom, 30)
+                .padding(.bottom, 16)
                 .animation(.easeInOut, value: vm.passoAtual)
             }
             
@@ -52,6 +62,7 @@ struct CompleteProfileView: View {
                 SuccessStepCompleteProfileView().tag(PassoCadastro.sucesso)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .highPriorityGesture(DragGesture())
             .animation(.easeInOut, value: vm.passoAtual)
         }
     }
