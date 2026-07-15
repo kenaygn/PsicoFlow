@@ -41,6 +41,12 @@ class CompleteProfileViewModel: ObservableObject {
         }
     }
     
+    func voltarPasso() {
+        if let anterior = PassoCadastro(rawValue: passoAtual.rawValue - 1) {
+            passoAtual = anterior
+        }
+    }
+    
     func finalizarCadastro() {
         //TODO: Salvar no Firebase
         // Lógica futura para salvar no Firebase

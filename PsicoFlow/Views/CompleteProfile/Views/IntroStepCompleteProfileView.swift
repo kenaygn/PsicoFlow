@@ -11,21 +11,40 @@ struct IntroStepCompleteProfileView: View {
     @ObservedObject var vm: CompleteProfileViewModel
     
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(alignment: .leading, spacing: 0) {
+            
+            VStack(alignment: .leading, spacing: 24) {
+                Text("Bem-vindo ao Psyes!")
+                    .font(.title).bold()
+                    .padding(.bottom, -16)
+                Text("Antes de começarmos a organizar sua rotina de atendimentos e deixar tudo em paz, precisamos te conhecer um pouco melhor.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)    
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            
             Spacer()
-            Image(systemName: "sparkles")
-                .font(.system(size: 60))
-                .foregroundColor(.teal)
-            Text("Bem-vindo ao Psyes!")
-                .font(.title).bold()
-            Text("Antes de começarmos a organizar sua rotina de atendimentos e deixar tudo em paz, precisamos te conhecer um pouco melhor.\n\nLeva menos de um minuto!")
-                .font(.body)
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 32)
+            
+            // MARK: O Meio da Tela
+            VStack(spacing: 16) {
+                InfiniteCarousel(items: pacientesFila1, rolarParaEsquerda: true)
+                
+                InfiniteCarousel(items: pacientesFila2, rolarParaEsquerda: false)
+                
+            }
+            .padding(.horizontal, -8)
+            
             Spacer()
-            PrimaryButton(texto: "Vamos lá", habilitado: true) {
-                withAnimation { vm.avancarPasso() }
+            
+            VStack(spacing: 16) {
+                Text("Leva menos de um minuto!")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                PrimaryButton(texto: "Vamos lá", habilitado: true) {
+                    withAnimation { vm.avancarPasso() }
+                }
             }
         }
     }
