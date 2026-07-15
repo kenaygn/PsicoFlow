@@ -17,14 +17,13 @@ struct PrivacyPolicyView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("Última atualização: 04 de Junho de 2026")
+                    Text("Última atualização: 07 de Julho de 2026")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .padding(.bottom, 8)
                 
                 // MARK: - Cláusulas de Privacidade
-                //TODO: tem que mexer nelas tudo 
                 Group {
                     PrivacySection(
                         title: "1. Coleta de Dados",
@@ -43,7 +42,7 @@ struct PrivacyPolicyView: View {
                     
                     PrivacySection(
                         title: "4. Compartilhamento de Dados",
-                        content: "Garantimos o sigilo profissional. Sob nenhuma circunstância nós vendemos, alugamos ou compartilhamos seus dados pessoais ou os dados dos seus pacientes com terceiros, exceto quando estritamente exigido por determinação legal ou judicial."
+                        content: "Garantimos o sigilo profissional. Não vendemos, alugamos ou monetizamos seus dados ou os de seus pacientes. O tráfego e armazenamento das informações ocorre exclusivamente em provedores de infraestrutura de nuvem de alta segurança (cloud), que atuam sob rigorosos contratos de confidencialidade e conformidade com a LGPD. Nenhum dado é aberto a outras entidades, exceto por determinação legal ou judicial."
                     )
                     
                     PrivacySection(

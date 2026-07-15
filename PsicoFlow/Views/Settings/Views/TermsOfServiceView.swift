@@ -17,14 +17,13 @@ struct TermsOfServiceView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("Última atualização: 04 de Junho de 2026")
+                    Text("Última atualização: 07 de Julho de 2026")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .padding(.bottom, 8)
                 
                 // MARK: - Cláusulas
-                //TODO: tem que mexer nelas tudo 
                 Group {
                     TermSection(
                         title: "1. Aceitação dos Termos",
@@ -38,7 +37,7 @@ struct TermsOfServiceView: View {
                     
                     TermSection(
                         title: "3. Segurança e Acesso",
-                        content: "Você é o único responsável por manter a confidencialidade das suas credenciais de acesso. Recomendamos fortemente a utilização dos recursos de segurança do dispositivo, como o Face ID, disponibilizados nas preferências do aplicativo, para evitar o acesso físico não autorizado aos dados da clínica."
+                        content: "Você é o único responsável por manter a confidencialidade das suas credenciais de acesso. Recomendamos fortemente a utilização dos recursos de segurança do dispositivo, como o Face ID, disponibilizados nas preferências do aplicativo, para evitar o acesso físico não autorizado aos seus dados e de seus pacientes."
                     )
                     
                     TermSection(
@@ -49,6 +48,11 @@ struct TermsOfServiceView: View {
                     TermSection(
                         title: "5. Limitação de Responsabilidade",
                         content: "O Psyes atua como um sistema de apoio ao gerenciamento. Não nos responsabilizamos por perdas de dados decorrentes do mau uso do dispositivo ou por decisões clínicas tomadas com base nas anotações inseridas na plataforma."
+                    )
+                    
+                    TermSection(
+                        title: "6. Disponibilidade e Atualizações",
+                        content: "Trabalhamos para manter o Psyes sempre disponível, mas não garantimos que o serviço será ininterrupto ou livre de falhas técnicas. O aplicativo pode passar por manutenções, atualizações ou instabilidades de servidores de terceiros. Recomendamos que você mantenha sua própria organização essencial de contingência."
                     )
                 }
                 
