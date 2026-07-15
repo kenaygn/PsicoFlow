@@ -30,8 +30,8 @@ struct OnboardingView: View {
     // Dados configurados conforme o seu novo design
     private let paginas: [OnboardingFullScreenCard] = [
         OnboardingFullScreenCard(
-            tag: "BEM-VINDO",
-            titulo: "Sua clinica\nem paz",
+            tag: "BEM-VINDO AO PSYES",
+            titulo: "Mais tempo\npara cuidar",
             textoInicio: "Tiramos a carga burocrática dos seus ombros. ",
             destaque: "Foque no que importa:",
             textoFim: " o bem-estar dos seus pacientes.",

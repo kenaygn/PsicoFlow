@@ -79,6 +79,7 @@ struct CreateAccountView: View {
                 
                 Text("Criar conta no Psyes")
                     .font(.headline)
+                    .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                     .padding(.top, -40)
