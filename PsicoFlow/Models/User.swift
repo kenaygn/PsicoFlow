@@ -10,10 +10,13 @@ import Foundation
 struct User: Identifiable, Codable {
     var id: String           // UID do Firebase Auth
     var nome: String
-    var email: String
+    var email: String // nao vou mais ter o email. É irrelevante para o aplicativo. 
     var crp: String
     var premium: Bool
     var criadoEm: Date
+    
+    var horaInicioExpediente: String
+    var horaFimExpediente: String
     
     // Propriedade Computada para a UI (Avatar)
     var iniciais: String {

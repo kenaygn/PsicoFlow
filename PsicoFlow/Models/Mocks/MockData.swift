@@ -15,7 +15,10 @@ struct MockData {
         email: "contato@mindflow.com.br",
         crp: "06/123456",
         premium: false,
-        criadoEm: Date()
+        criadoEm: Date(),
+        
+        horaInicioExpediente: "07:00",
+        horaFimExpediente: "22:00"
     )
     
     static var listaPacientes: [Patient] = [
