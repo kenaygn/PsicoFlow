@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct SuccessStepCompleteProfileView: View {
+    @ObservedObject var vm: CompleteProfileViewModel
+    @EnvironmentObject var authManager: AuthManager
+    
     // Variáveis de estado para controlar a linha do tempo das animações
     @State private var icone = "circle"
     @State private var isPulsing = false
@@ -41,7 +44,18 @@ struct SuccessStepCompleteProfileView: View {
             Spacer()
             
             PrimaryButton(texto: "Entrar no App", habilitado: true) {
-                print("Ir para a HomeView!")
+                Task {
+                    do {
+                        try await authManager.salvarPerfilCompleto(
+                            nome: vm.nome,
+                            crp: vm.crp,
+                            horaInicio: vm.horaInicio,
+                            horaFim: vm.horaFim
+                        )
+                    } catch {
+                        print("Erro ao salvar o perfil: \(error)")
+                    }
+                }
             }
             .opacity(mostrarConteudo ? 1 : 0)
             .animation(.easeInOut(duration: 0.5).delay(0.2), value: mostrarConteudo)
@@ -66,8 +80,4 @@ struct SuccessStepCompleteProfileView: View {
             isPulsing = true
         }
     }
-}
-
-#Preview {
-    SuccessStepCompleteProfileView()
 }

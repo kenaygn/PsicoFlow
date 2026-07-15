@@ -20,17 +20,68 @@ class AuthManager: ObservableObject {
     @Published var usuarioLogado: Bool = false
     @Published var usuarioID: String? = nil
     
-    private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
+    @Published var usuarioAtual: User? = nil
     
-    init() {
+    @Published var carregandoDados: Bool = false
+    
+    private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
+    private let userRepository: UserRepositoryProtocol
+    
+    init(userRepository: UserRepositoryProtocol = UserRepository()) {
+        self.userRepository = userRepository
         configurarListenerDeAutenticacao()
     }
     
     private func configurarListenerDeAutenticacao() {
         authStateListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            self?.usuarioLogado = (user != nil)
-            self?.usuarioID = user?.uid
+            guard let self = self else { return }
+            
+            self.usuarioLogado = (user != nil)
+            self.usuarioID = user?.uid
+            
+            if let uid = user?.uid {
+                // Dizemos que começou a carregar
+                self.carregandoDados = true
+                Task {
+                    await self.buscarDadosDoUsuario(uid: uid)
+                    // Dizemos que terminou de carregar
+                    self.carregandoDados = false
+                }
+            } else {
+                self.usuarioAtual = nil
+                self.carregandoDados = false
+            }
         }
+    }
+    
+    /// Busca o documento do usuário no Firestore e atualiza a interface
+    private func buscarDadosDoUsuario(uid: String) async {
+        do {
+            self.usuarioAtual = try await userRepository.fetchUser(uid: uid)
+        } catch {
+            print("Erro ao buscar dados do usuário no Firestore: \(error.localizedDescription)")
+            self.usuarioAtual = nil
+        }
+    }
+    
+    func salvarPerfilCompleto(nome: String, crp: String, horaInicio: String, horaFim: String) async throws {
+        guard let uid = self.usuarioID else {
+            throw NSError(domain: "AuthManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "Usuário não autenticado."])
+        }
+        
+        let novoUsuario = User(
+            id: uid,
+            nome: nome,
+            crp: crp,
+            premium: false,
+            criadoEm: Date(),
+            horaInicioExpediente: horaInicio,
+            horaFimExpediente: horaFim
+        )
+        
+        try await userRepository.saveUser(user: novoUsuario)
+        
+        self.usuarioAtual = novoUsuario
     }
     
     func criarConta(email: String, senha: String) async throws {

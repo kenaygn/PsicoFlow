@@ -29,7 +29,12 @@ struct ScheduleStepCompleteProfileView: View {
             
             Spacer()
             PrimaryButton(texto: "Finalizar", habilitado: vm.formularioValido) {
-                withAnimation { vm.finalizarCadastro() }
+                hideKeyboard()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    withAnimation {
+                        vm.avancarPasso()
+                    }
+                }
             }
         }
         .padding(.top, 20)

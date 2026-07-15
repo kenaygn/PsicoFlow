@@ -68,3 +68,65 @@ class AgendaAvailabilityService {
         return todosHorarios.filter { !todosOcupados.contains($0) }
     }
 }
+
+
+//class AgendaAvailabilityService {
+//    
+//    private let fixedSessionRepository: FixedSessionRepositoryProtocol
+//    private let sessionRepository: SessionRepositoryProtocol
+//    
+//    init(
+//        fixedSessionRepository: FixedSessionRepositoryProtocol,
+//        sessionRepository: SessionRepositoryProtocol
+//    ) {
+//        self.fixedSessionRepository = fixedSessionRepository
+//        self.sessionRepository = sessionRepository
+//    }
+//    
+//    private func obterHorariosDoExpediente(inicio: String, fim: String) -> [String] {
+//        // Cria todos os horários possíveis do dia (00:00 até 23:00)
+//        let todosOsHorarios = (0...23).map { String(format: "%02d:00", $0) }
+//        
+//        guard let startIndex = todosOsHorarios.firstIndex(of: inicio),
+//              let endIndex = todosOsHorarios.firstIndex(of: fim),
+//              startIndex <= endIndex else {
+//            return []
+//        }
+//        
+//        return Array(todosOsHorarios[startIndex...endIndex])
+//    }
+//    
+//    func horariosLivresParaContrato(diaDaSemana: Int, inicioExpediente: String, fimExpediente: String, ignorandoContratoID: String? = nil) -> [String] {
+//        
+//        let horariosDoExpediente = obterHorariosDoExpediente(inicio: inicioExpediente, fim: fimExpediente)
+//        
+//        let regrasNoMesmoDia = fixedSessionRepository.fetchSessoesFixas().filter {
+//            $0.diaDaSemana == diaDaSemana && $0.id != ignorandoContratoID
+//        }
+//        
+//        let ocupados = regrasNoMesmoDia.map { $0.horaInicio }
+//        return horariosDoExpediente.filter { !ocupados.contains($0) }
+//    }
+//    
+//    func horariosLivresParaSessaoAvulsa(data: Date, inicioExpediente: String, fimExpediente: String, ignorandoSessaoID: String? = nil, derivadaDeContratoID: String? = nil) -> [String] {
+//        
+//        let horariosDoExpediente = obterHorariosDoExpediente(inicio: inicioExpediente, fim: fimExpediente)
+//        let weekdayDaData = Calendar.current.component(.weekday, from: data)
+//        
+//        let regrasFixas = fixedSessionRepository.fetchSessoesFixas().filter {
+//            $0.diaDaSemana == weekdayDaData && $0.id != derivadaDeContratoID
+//        }
+//        
+//        let outrasAvulsas = sessionRepository.fetchSessoes().filter {
+//            Calendar.current.isDate($0.dataDaSessão, inSameDayAs: data) &&
+//            $0.status != .cancelada &&
+//            $0.id != ignorandoSessaoID
+//        }
+//        
+//        let ocupadosFixas = regrasFixas.map { $0.horaInicio }
+//        let ocupadosAvulsas = outrasAvulsas.map { $0.horaInicio }
+//        let todosOcupados = ocupadosFixas + ocupadosAvulsas
+//        
+//        return horariosDoExpediente.filter { !todosOcupados.contains($0) }
+//    }
+//}

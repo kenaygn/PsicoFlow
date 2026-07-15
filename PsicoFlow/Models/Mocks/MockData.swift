@@ -12,7 +12,6 @@ struct MockData {
     static let psicologoPrincipal = User(
         id: "user_dev_01",
         nome: "Dr. Psicólogo",
-        email: "contato@mindflow.com.br",
         crp: "06/123456",
         premium: false,
         criadoEm: Date(),

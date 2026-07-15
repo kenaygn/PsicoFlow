@@ -20,7 +20,7 @@ struct SettingsView: View {
     
     var body: some View {
         
-        let user = User(id: "", nome: "Carregando...", email: "", crp: "", premium: false, criadoEm: Date(), horaInicioExpediente: "07:00", horaFimExpediente: "22:00")
+        let user = User(id: "", nome: "Carregando...", crp: "", premium: false, criadoEm: Date(), horaInicioExpediente: "07:00", horaFimExpediente: "22:00")
         
         NavigationStack {
             Form {

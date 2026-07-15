@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+// TODO: tirar isso daqui
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
 struct CompleteProfileView: View {
     @StateObject private var vm = CompleteProfileViewModel()
     
@@ -16,8 +23,13 @@ struct CompleteProfileView: View {
                 HStack(spacing: vm.passoAtual != .introducao ? 16 : 0) {
                     if vm.passoAtual != .introducao {
                         Button {
-                            withAnimation {
-                                vm.voltarPasso()
+                            
+                            hideKeyboard()
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                withAnimation {
+                                    vm.voltarPasso()
+                                }
                             }
                         } label: {
                             Image(systemName: "chevron.left")
@@ -37,7 +49,7 @@ struct CompleteProfileView: View {
                         .disabled(true)
                         .opacity(0)
                     }
-
+                    
                     // Barra de Progresso
                     ProgressView(
                         value: Double(vm.passoAtual.rawValue),
@@ -59,12 +71,19 @@ struct CompleteProfileView: View {
                 NameStepCompleteProfileView(vm: vm).tag(PassoCadastro.nome)
                 CRPStepCompleteProfileView(vm: vm).tag(PassoCadastro.crp)
                 ScheduleStepCompleteProfileView(vm: vm).tag(PassoCadastro.horarios)
-                SuccessStepCompleteProfileView().tag(PassoCadastro.sucesso)
+                SuccessStepCompleteProfileView(vm: vm).tag(PassoCadastro.sucesso)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .highPriorityGesture(DragGesture())
             .animation(.easeInOut, value: vm.passoAtual)
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
+        
+        //        .onChange(of: vm.passoAtual) { _ in
+        //            hideKeyboard()
+        //        }
     }
 }
 

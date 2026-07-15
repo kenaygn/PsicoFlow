@@ -25,7 +25,12 @@ struct NameStepCompleteProfileView: View {
             
             Spacer()
             PrimaryButton(texto: "Continuar", habilitado: !vm.nome.trimmingCharacters(in: .whitespaces).isEmpty) {
-                withAnimation { vm.avancarPasso() }
+                hideKeyboard()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    withAnimation {
+                        vm.avancarPasso()
+                    }
+                }
             }
         }
         .padding(.top, 20)

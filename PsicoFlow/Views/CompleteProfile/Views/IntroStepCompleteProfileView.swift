@@ -43,7 +43,12 @@ struct IntroStepCompleteProfileView: View {
                     .foregroundColor(.secondary)
                 
                 PrimaryButton(texto: "Vamos lá", habilitado: true) {
-                    withAnimation { vm.avancarPasso() }
+                    hideKeyboard()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation {
+                            vm.avancarPasso()
+                        }
+                    }
                 }
             }
         }
