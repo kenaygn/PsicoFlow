@@ -28,7 +28,7 @@ class MonthlyPaymentGeneratorService {
     // sem abrir o app, esta função deve ser migrada para um Cron Job no Firebase (Server-Side).
     
     /// Varre os pacientes ativos e gera as faturas para o mês corrente e para o próximo mês.
-    func gerarCobrancasAtuaisEFuturas() {
+    func gerarCobrancasAtuaisEFuturas(userId: String) async throws {
         let calendar = Calendar.current
         let hoje = Date()
         
@@ -41,8 +41,10 @@ class MonthlyPaymentGeneratorService {
         let proximoMesStr = formatter.string(from: proximoMes)
         let mesesParaProcessar = [mesAtualStr, proximoMesStr]
         
-        let pacientesAtivos = patientRepository.fetchPacientes().filter { $0.status == .ativo }
-        let todosPagamentos = paymentRepository.fetchPagamentos()
+        // 1. Buscas assíncronas no Firebase usando o userId
+        let pacientesDoBanco = try await patientRepository.fetchPacientes(userId: userId)
+        let pacientesAtivos = pacientesDoBanco.filter { $0.status == .ativo }
+        let todosPagamentos = try await paymentRepository.fetchPagamentos(userId: userId)
         
         for paciente in pacientesAtivos {
             for mesStr in mesesParaProcessar {
@@ -53,7 +55,7 @@ class MonthlyPaymentGeneratorService {
                 if !jaPossuiCobranca {
                     let novaCobranca = MonthlyPayment(
                         id: "pay_\(UUID().uuidString)",
-                        psicologoID: paciente.psicologoID,
+                        psicologoID: userId, // Utiliza o ID seguro fornecido por parâmetro
                         pacienteID: paciente.id,
                         mesReferencia: mesStr,
                         dataPagamento: nil,
@@ -61,7 +63,8 @@ class MonthlyPaymentGeneratorService {
                         pago: false
                     )
                     
-                    paymentRepository.salvarPagamento(novaCobranca)
+                    // 2. Persistência assíncrona
+                    try await paymentRepository.salvarPagamento(novaCobranca, userId: userId)
                     print("💰 Mensalidade gerada para o paciente \(paciente.nome) referente a \(mesStr).")
                 }
             }
@@ -70,7 +73,7 @@ class MonthlyPaymentGeneratorService {
     
     /// Remove as cobranças do mês atual e do mês seguinte caso o paciente seja desativado,
     /// preservando faturas que já tenham sido pagas.
-    func removerCobrancasPendentes(para pacienteID: String) {
+    func removerCobrancasPendentes(para pacienteID: String, userId: String) async throws {
         let hoje = Date()
         let calendar = Calendar.current
         
@@ -83,12 +86,14 @@ class MonthlyPaymentGeneratorService {
         let proximoMesStr = formatter.string(from: proximoMes)
         let mesesAlvo = [mesAtualStr, proximoMesStr]
         
-        let pagamentosDoPaciente = paymentRepository.fetchPagamentos(paraPacienteID: pacienteID)
+        // 3. Busca assíncrona focada no paciente
+        let pagamentosDoPaciente = try await paymentRepository.fetchPagamentos(paraPacienteID: pacienteID, userId: userId)
         var totalDeletados = 0
         
         for pagamento in pagamentosDoPaciente {
             if mesesAlvo.contains(pagamento.mesReferencia) && !pagamento.pago {
-                paymentRepository.deletarPagamento(id: pagamento.id)
+                // 4. Deleção assíncrona
+                try await paymentRepository.deletarPagamento(id: pagamento.id, userId: userId)
                 totalDeletados += 1
             }
         }

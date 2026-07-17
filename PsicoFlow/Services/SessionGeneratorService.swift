@@ -34,16 +34,18 @@ class SessionGeneratorService {
     /// Varre os contratos ativos e garante que a linha do tempo do calendário
     /// esteja preenchida até o último dia do mês seguinte, evitando duplicações.
     /// Também remove sessões futuras de pacientes que foram inativados.
-    func projetarSessoesFuturas() {
+    func projetarSessoesFuturas(userId: String) async throws {
         let hoje = Calendar.current.startOfDay(for: Date())
         let dataFim = ultimoDiaDoProximoMes() // Chama a função local
-        let regrasFixas = fixedSessionRepository.fetchSessoesFixas()
         
-        let todosPacientes = patientRepository.fetchPacientes()
+        // Buscas assíncronas usando o userId
+        let regrasFixas = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
+        let todosPacientes = try await patientRepository.fetchPacientes(userId: userId)
+        
         // Pega apenas os IDs dos pacientes que continuam ativos
         let pacientesAtivosIDs = todosPacientes.filter { $0.status == .ativo }.map { $0.id }
         
-        var sessoesExistentes = sessionRepository.fetchSessoes()
+        var sessoesExistentes = try await sessionRepository.fetchSessoes(userId: userId)
         
         //- 1. PASSO DE LIMPEZA (Cleanup)
         // Deleta sessões futuras geradas por contrato caso o paciente não esteja mais ativo
@@ -53,7 +55,7 @@ class SessionGeneratorService {
             // Só apaga se for no futuro E se for fruto de um contrato (sessaoFixaID != nil)
             if sessao.dataDaSessão >= hoje && sessao.sessaoFixaID != nil {
                 if !pacientesAtivosIDs.contains(sessao.pacienteID) {
-                    sessionRepository.deletarSessao(id: sessao.id)
+                    try await sessionRepository.deletarSessao(id: sessao.id, userId: userId)
                     totalRemovidas += 1
                 }
             }
@@ -62,7 +64,7 @@ class SessionGeneratorService {
         if totalRemovidas > 0 {
             print("🧹 [Session Generator] \(totalRemovidas) sessões futuras removidas de pacientes inativos.")
             // Atualiza a variável com a lista limpa para não bugar a geração abaixo
-            sessoesExistentes = sessionRepository.fetchSessoes()
+            sessoesExistentes = try await sessionRepository.fetchSessoes(userId: userId)
         }
         
         //- 2. PASSO DE GERAÇÃO (Projeção)
@@ -82,7 +84,7 @@ class SessionGeneratorService {
                     }
                     
                     if !jaExiste {
-                        sessionRepository.salvarSessao(sessaoNova)
+                        try await sessionRepository.salvarSessao(sessaoNova, userId: userId)
                         totalNovasGeradas += 1
                     }
                 }
