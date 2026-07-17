@@ -8,7 +8,7 @@
 import Foundation
 import FirebaseFirestore
 
-class UserRepository: UserRepositoryProtocol {
+class UserFirebaseRepository: UserRepositoryProtocol {
     
     private let db = Firestore.firestore()
     

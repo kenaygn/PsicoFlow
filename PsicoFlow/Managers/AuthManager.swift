@@ -27,7 +27,7 @@ class AuthManager: ObservableObject {
     private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
     private let userRepository: UserRepositoryProtocol
     
-    init(userRepository: UserRepositoryProtocol = UserRepository()) {
+    init(userRepository: UserRepositoryProtocol = UserFirebaseRepository()) {
         self.userRepository = userRepository
         configurarListenerDeAutenticacao()
     }
