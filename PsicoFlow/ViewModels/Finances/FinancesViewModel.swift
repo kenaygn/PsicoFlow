@@ -7,6 +7,8 @@
 
 import Foundation
 import Combine
+import SwiftUI // Necessário para usar o withAnimation na ViewModel
+import FirebaseFirestore // Necessário para segurar o ListenerRegistration
 
 /// Define os períodos de agregação disponíveis para a visualização financeira.
 enum FinanceViewMode {
@@ -15,7 +17,7 @@ enum FinanceViewMode {
 }
 
 /// ViewModel responsável pelo processamento do fluxo de caixa (recebimentos e pendências).
-/// Gerencia a navegação temporal e a filtragem de pagamentos cruzando dados com o repositório de pacientes.
+@MainActor
 class FinanceViewModel: ObservableObject {
     
     @Published private var todosPagamentos: [MonthlyPayment] = []
@@ -29,17 +31,83 @@ class FinanceViewModel: ObservableObject {
     private let paymentRepository: PaymentRepositoryProtocol
     private let patientRepository: PatientRepositoryProtocol
     
+    // Listener para manter a conexão em tempo real aberta
+    private var pagamentosListener: ListenerRegistration?
+    
     init(
-        paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository(),
-        patientRepository: PatientRepositoryProtocol = MockPatientRepository()
+        paymentRepository: PaymentRepositoryProtocol = PaymentFirebaseRepository(),
+        patientRepository: PatientRepositoryProtocol = PatientFirebaseRepository()
     ) {
         self.paymentRepository = paymentRepository
         self.patientRepository = patientRepository
-        
-        carregarDados()
     }
     
-    /// Retorna o mes mais antigo com pagamentos atrasados.
+    // MARK: - Limpeza de Memória (MUITO IMPORTANTE)
+    deinit {
+        pagamentosListener?.remove()
+    }
+    
+    // MARK: - Carregamento Offline-First
+    /// Sincroniza o estado local com a base de dados em tempo real.
+    func carregarDados(userId: String) {
+        guard !userId.isEmpty else { return }
+        
+        // Remove listener antigo para evitar duplicatas se a tela for recarregada
+        pagamentosListener?.remove()
+        
+        // Inicia a escuta em tempo real (Retorna o cache instantaneamente)
+        // Se a sua PaymentRepositoryProtocol reclamar, adicione a assinatura da função lá!
+        if let firebaseRepo = paymentRepository as? PaymentFirebaseRepository {
+            pagamentosListener = firebaseRepo.escutarPagamentos(userId: userId) { [weak self] novosPagamentos in
+                guard let self = self else { return }
+                
+                // Anima as mudanças vindo da rede ou do cache
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    self.todosPagamentos = novosPagamentos
+                }
+            }
+        }
+        
+        // Busca de pacientes (pode se tornar listener futuramente se desejar)
+        Task {
+            do {
+                let fetchedPacientes = try await patientRepository.fetchPacientes(userId: userId)
+                withAnimation {
+                    self.pacientes = fetchedPacientes
+                }
+            } catch {
+                print("Erro ao carregar pacientes: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    // MARK: - Ações e Mutação
+    /// Alterna o status de quitação de uma mensalidade e persiste a alteração de imediato.
+    func togglePagamento(pagamentoID: String, userId: String) {
+        if let index = todosPagamentos.firstIndex(where: { $0.id == pagamentoID }) {
+            
+            // 1. ATUALIZAÇÃO OTIMISTA: Muda a interface antes de ir para a internet
+            var pagamentoAtualizado = todosPagamentos[index]
+            pagamentoAtualizado.pago.toggle()
+            pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
+            
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                self.todosPagamentos[index] = pagamentoAtualizado
+            }
+            
+            // 2. SALVAMENTO EM BACKGROUND: Deixa o Firebase sincronizar silenciosamente
+            Task {
+                do {
+                    try await paymentRepository.atualizarPagamento(pagamentoAtualizado, userId: userId)
+                } catch {
+                    print("Erro ao atualizar pagamento: \(error.localizedDescription)")
+                    // Em caso de falha crítica (ex: permissão negada), você poderia reverter a UI aqui
+                }
+            }
+        }
+    }
+    
+    // MARK: - Propriedades Computadas (Inalteradas)
     var dataDaPrimeiraPendenciaAtrasada: Date? {
         return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: todosPagamentos)
     }
@@ -52,56 +120,40 @@ class FinanceViewModel: ObservableObject {
         return formatter.string(from: data).capitalized
     }
     
-    /// Sincroniza o estado local com a base de dados principal.
-    func carregarDados() {
-        self.todosPagamentos = paymentRepository.fetchPagamentos()
-        self.pacientes = patientRepository.fetchPacientes()
-    }
-    
-    /// Avança o calendário em 1 mês ou 1 ano, dependendo do modo de visualização atual.
     func avancarPeriodo() {
         let calendar = Calendar.current
         let component: Calendar.Component = viewMode == .mensal ? .month : .year
         currentDate = calendar.date(byAdding: component, value: 1, to: currentDate) ?? currentDate
     }
     
-    /// Retrocede o calendário em 1 mês ou 1 ano, dependendo do modo de visualização atual.
     func voltarPeriodo() {
         let calendar = Calendar.current
         let component: Calendar.Component = viewMode == .mensal ? .month : .year
         currentDate = calendar.date(byAdding: component, value: -1, to: currentDate) ?? currentDate
     }
     
-    /// Retorna a string formatada do período selecionado para exibição no cabeçalho (Ex: "Abril 2026" ou "2026").
     var labelPeriodo: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "pt_BR")
         formatter.dateFormat = viewMode == .mensal ? "MMMM yyyy" : "yyyy"
-        
         return formatter.string(from: currentDate).capitalized
     }
     
-    /// Redefine a navegação para o dia de hoje, focando no Mês/Ano atual real.
     func irParaPeriodoAtual() {
         currentDate = Date()
     }
     
-    /// Verifica se a visualização atual já está focada no mês ou ano corrente.
-    /// Utilizado para desabilitar o botão de "voltar para hoje" na interface.
     var isPeriodoAtual: Bool {
         let calendar = Calendar.current
         let hoje = Date()
         
         if viewMode == .mensal {
-            // Verifica se estão no mesmo Mês e Ano
             return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .month)
         } else {
-            // Verifica se estão apenas no mesmo Ano
             return calendar.isDate(currentDate, equalTo: hoje, toGranularity: .year)
         }
     }
     
-    /// Chave de filtragem baseada na ISO string adaptada para comparação rápida (ex: "2026/04").
     private var filtroReferencia: String {
         let formatter = DateFormatter()
         formatter.dateFormat = viewMode == .mensal ? "yyyy/MM" : "yyyy"
@@ -134,28 +186,11 @@ class FinanceViewModel: ObservableObject {
         return String(format: "R$ %.0f", soma)
     }
     
-    /// Retorna os dados do paciente associado a uma cobrança específica.
     func paciente(for pagamento: MonthlyPayment) -> Patient? {
         return pacientes.first(where: { $0.id == pagamento.pacienteID })
     }
     
-    /// Alterna o status de quitação de uma mensalidade e persiste a alteração de imediato.
-    func togglePagamento(pagamentoID: String) {
-        if let index = todosPagamentos.firstIndex(where: { $0.id == pagamentoID }) {
-            var pagamentoAtualizado = todosPagamentos[index]
-            pagamentoAtualizado.pago.toggle()
-            pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
-            
-            paymentRepository.atualizarPagamento(pagamentoAtualizado)
-            carregarDados()
-        }
-    }
-    
-    /// Converte a chave referencial de banco de dados (ex: "2026/03") em um formato amigável para a View (ex: "Mar/2026").
     func formatarMesRefParaExibicao(_ ref: String) -> String {
-        // Note: Para maior robustez em escalabilidade internacional e localização de sistema,
-        // considere converter o prefixo numérico em uma Date real e formatá-la via DateFormatter,
-        // ao invés de usar um array estático de strings (Hardcoded Array).
         let partes = ref.split(separator: "/")
         guard partes.count == 2, let mesInt = Int(partes[1]) else { return ref }
         

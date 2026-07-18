@@ -12,6 +12,7 @@ import SwiftUI
 struct FinancesView: View {
     
     @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var authManager: AuthManager
     
     @StateObject private var viewModel = FinanceViewModel()
     
@@ -30,10 +31,7 @@ struct FinancesView: View {
                         }
                     } else {
                         FinancesSuccessCard()
-                        // Animacao top
-                        //  .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
-                    
                     
                     // MARK: - Filtro de Visualização
                     Picker("Modo de Visualização", selection: $viewModel.viewMode) {
@@ -44,7 +42,6 @@ struct FinancesView: View {
                     .padding(.top, 8)
                     
                     // MARK: - Navegação de Período
-                    
                     HStack {
                         Text(viewModel.labelPeriodo)
                             .font(.system(size: 22, weight: .bold))
@@ -107,8 +104,6 @@ struct FinancesView: View {
                             corTema: .teal
                         )
                         
-                        
-                        
                         FinanceStatCard(
                             titulo: viewModel.totalPendenteText == "R$ 0" ? "Tudo Certo" : "A Receber",
                             valor: viewModel.totalPendenteText,
@@ -143,8 +138,11 @@ struct FinancesView: View {
                                     iniciais: paciente?.iniciais ?? "?",
                                     mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
                                     onPagar: {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                            viewModel.togglePagamento(pagamentoID: pagamento.id)
+                                        // 2. Repassamos o ID do usuário para o ViewModel
+                                        if let uid = authManager.usuarioID {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                                viewModel.togglePagamento(pagamentoID: pagamento.id, userId: uid)
+                                            }
                                         }
                                     }
                                 )
@@ -177,15 +175,17 @@ struct FinancesView: View {
                                     nomePaciente: paciente?.nome ?? "Desconhecido",
                                     mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
                                     onDesfazer: {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                            viewModel.togglePagamento(pagamentoID: pagamento.id)
+                                        // 3. Repassamos o ID do usuário para o ViewModel
+                                        if let uid = authManager.usuarioID {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                                viewModel.togglePagamento(pagamentoID: pagamento.id, userId: uid)
+                                            }
                                         }
                                     }
                                 )
                             }
                         }
                     }
-                    // Note: Padding essencial para evitar que o último item seja ocultado pela TabBar do iOS.
                     .padding(.bottom, 100)
                     
                 }
@@ -194,7 +194,11 @@ struct FinancesView: View {
             .navigationTitle("Finanças")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                viewModel.carregarDados()
+                // 4. Carregamos os dados passando o ID do usuário
+                if let uid = authManager.usuarioID {
+                    viewModel.carregarDados(userId: uid)
+                }
+                
                 if let monthPending = router.pendingMonth{
                     viewModel.currentDate = monthPending
                     viewModel.viewMode = .mensal
@@ -203,8 +207,4 @@ struct FinancesView: View {
             }
         }
     }
-}
-
-#Preview {
-    FinancesView()
 }
