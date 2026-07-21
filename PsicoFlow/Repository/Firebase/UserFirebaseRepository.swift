@@ -35,4 +35,18 @@ class UserFirebaseRepository: UserRepositoryProtocol {
         // O merge: true garante que, se houver outros campos lá, eles não serão apagados
         try db.collection(collectionName).document(user.id).setData(from: user, merge: true)
     }
+    
+    /// Cria um túnel em tempo real com o documento do usuário
+    func escutarUsuario(uid: String, onChange: @escaping (User?) -> Void) -> ListenerRegistration {
+        return db.collection(collectionName).document(uid).addSnapshotListener { snapshot, error in
+            guard let document = snapshot, document.exists else {
+                print("Erro ao ouvir usuário: \(error?.localizedDescription ?? "Desconhecido")")
+                onChange(nil)
+                return
+            }
+            
+            let user = try? document.data(as: User.self)
+            onChange(user)
+        }
+    }
 }

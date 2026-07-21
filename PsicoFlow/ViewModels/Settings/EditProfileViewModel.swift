@@ -8,57 +8,91 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseAuth // Necessário para gerenciar a autenticação e provedores
 
+@MainActor
 class EditProfileViewModel: ObservableObject {
     private var authManager: AuthManager
+    private let userRepository: UserRepositoryProtocol
     
     @Published var nome: String = ""
-    @Published var email: String = ""
     @Published var crp: String = ""
     
     @Published var senhaAtual: String = ""
     @Published var novaSenha: String = ""
-    @Published var confirmarNovaSenha: String = ""
     
-    var senhasDivergem: Bool {
-        !confirmarNovaSenha.isEmpty && novaSenha != confirmarNovaSenha
+    @Published var errorMessage: String? = nil
+    @Published var isUpdating: Bool = false
+    
+    /// Verifica se o usuário fez login com E-mail e Senha (ignora Apple/Google)
+    var isEmailProvider: Bool {
+        guard let user = Auth.auth().currentUser else { return false }
+        // "password" é a identificação interna do Firebase para E-mail e Senha
+        return user.providerData.contains { $0.providerID == "password" }
     }
     
-    init(authManager: AuthManager) {
+    init(authManager: AuthManager, userRepository: UserRepositoryProtocol = UserFirebaseRepository()) {
         self.authManager = authManager
+        self.userRepository = userRepository
         carregarDadosAtuais()
     }
     
     var temAlteracoes: Bool {
-//        guard let user = authManager.currentUser else { return false }
-//        
-//        let dadosMudaram = nome != user.nome || email != user.email || crp != user.crp
-//        
-//        let tentandoMudarSenha = !senhaAtual.isEmpty || !novaSenha.isEmpty || !confirmarNovaSenha.isEmpty
-//        
-//        var senhasValidas = true
-//        if tentandoMudarSenha {
-//            senhasValidas = !senhaAtual.isEmpty && !novaSenha.isEmpty && (novaSenha == confirmarNovaSenha)
-//        }
-//        
-//        let camposValidos = !nome.trimmingCharacters(in: .whitespaces).isEmpty && !email.trimmingCharacters(in: .whitespaces).isEmpty
-//        
-//        return (dadosMudaram || tentandoMudarSenha) && camposValidos && senhasValidas
-        return true
+        guard let user = authManager.usuarioAtual else { return false }
+        
+        let dadosMudaram = nome != user.nome || crp != user.crp
+        
+        let tentandoMudarSenha = isEmailProvider && !novaSenha.isEmpty && !senhaAtual.isEmpty
+        
+        let camposValidos = !nome.trimmingCharacters(in: .whitespaces).isEmpty
+        
+        return (dadosMudaram || tentandoMudarSenha) && camposValidos
     }
     
     private func carregarDadosAtuais() {
-//        guard let user = authManager.currentUser else { return }
-//        self.nome = user.nome
-//        self.email = user.email
-//        self.crp = user.crp
+        guard let user = authManager.usuarioAtual else { return }
+        self.nome = user.nome
+        self.crp = user.crp
     }
     
-    func salvarAlteracoes() {
-//        authManager.currentUser?.nome = nome
-//        authManager.currentUser?.email = email
-//        authManager.currentUser?.crp = crp
+    func salvarAlteracoes() async -> Bool {
+        isUpdating = true
+        defer { isUpdating = false }
         
-        // Futuramente: Lógica do Firebase para trocar senha
+        // 1. Atualizar Perfil no Firestore (se houve mudança)
+        if let currentUser = authManager.usuarioAtual {
+            var userAtualizado = currentUser
+            userAtualizado.nome = self.nome
+            userAtualizado.crp = self.crp
+            
+            do {
+                try await userRepository.updateUser(user: userAtualizado)
+            } catch {
+                self.errorMessage = "Erro ao atualizar os dados: \(error.localizedDescription)"
+                return false
+            }
+        }
+        
+        // 2. Atualizar Senha no FirebaseAuth (se aplicável e se for provedor de email)
+        if isEmailProvider && !novaSenha.isEmpty && !senhaAtual.isEmpty {
+            do {
+                guard let user = Auth.auth().currentUser, let email = user.email else { return false }
+                
+                // Reautentica o usuário (exigência de segurança do Firebase)
+                let credential = EmailAuthProvider.credential(withEmail: email, password: senhaAtual)
+                try await user.reauthenticate(with: credential)
+                
+                // Atualiza a senha
+                try await user.updatePassword(to: novaSenha)
+                
+                self.senhaAtual = ""
+                self.novaSenha = ""
+            } catch {
+                self.errorMessage = "Erro ao alterar a senha. Verifique se a 'Senha Atual' está correta."
+                return false
+            }
+        }
+        
+        return true // Sucesso total
     }
 }

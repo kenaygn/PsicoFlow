@@ -10,7 +10,6 @@ import SwiftUI
 struct SettingsView: View {
     
     @EnvironmentObject var authManager: AuthManager
-    
     @StateObject private var viewModel = SettingsViewModel()
     
     let versaoApp = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Desconhecida"
@@ -20,7 +19,8 @@ struct SettingsView: View {
     
     var body: some View {
         
-        let user = User(id: "", nome: "Carregando...", crp: "", premium: false, criadoEm: Date(), horaInicioExpediente: "07:00", horaFimExpediente: "22:00")
+        // Utilizamos o usuário da ViewModel, ou um fallback visual enquanto o Firebase devolve do cache (0.001s)
+        let user = viewModel.currentUser ?? User(id: "", nome: "Carregando...", crp: "", premium: false, criadoEm: Date(), horaInicioExpediente: "07:00", horaFimExpediente: "22:00")
         
         NavigationStack {
             Form {
@@ -94,7 +94,6 @@ struct SettingsView: View {
                             .foregroundColor(.primary)
                     }
                     
-                    //Note: mudar o nome do app
                     Button(action: {
                         let email = "psyes.app@gmail.com"
                         let assunto = "Feedback / Reportar Erro - Psyes"
@@ -114,7 +113,6 @@ struct SettingsView: View {
                 // MARK: - 5. Redes Sociais
                 Section(header: Text("Redes Sociais")) {
                     
-                    // Botão do Instagram
                     Button(action: {
                         let usuario = "kenaygn" //sem o @
                         let urlString = "https://www.instagram.com/\(usuario)"
@@ -129,9 +127,7 @@ struct SettingsView: View {
                         }
                     }
                     
-                    // Botão do TikTok
                     Button(action: {
-                        //TODO: Criar insta do app
                         let usuario = "@psicoflowapp" //COM o @
                         let urlString = "https://www.tiktok.com/\(usuario)"
                         
@@ -145,10 +141,7 @@ struct SettingsView: View {
                         }
                     }
                     
-                    // Botão do LinkedIn
                     Button(action: {
-                        // empresa: "company/nome"
-                        // perfil pessoal: "in/nome"
                         let caminho = "in/kenay-gomes-nobre-509498339"
                         let urlString = "https://www.linkedin.com/\(caminho)"
                         
@@ -198,6 +191,14 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Ajustes")
+            
+            // MARK: - Eventos de Ciclo de Vida
+            .onAppear {
+                if let uid = authManager.usuarioID {
+                    viewModel.carregarDadosUsuario(userId: uid)
+                }
+            }
+            
             .alert("Permissão Necessária", isPresented: $viewModel.mostrarAlertaPermissaoFaceID) {
                 Button("Cancelar", role: .cancel) { }
                 
@@ -221,14 +222,12 @@ struct SettingsView: View {
                 Text("Tem certeza de que deseja desconectar sua conta deste dispositivo?")
             }
             
-            // ALERTA DE EXCLUIR CONTA
             .alert("Excluir Conta", isPresented: $mostrarAlertaExcluir) {
                 Button("Cancelar", role: .cancel) { }
                 
                 Button("Excluir Tudo", role: .destructive) {
                     Task {
                         do {
-                            
                             UserDefaults.standard.set(false, forKey: "usarFaceID")
                             try await authManager.deletarConta()
                         } catch {
@@ -242,8 +241,6 @@ struct SettingsView: View {
         }
     }
 }
-
-
 
 #Preview {
     SettingsView()
