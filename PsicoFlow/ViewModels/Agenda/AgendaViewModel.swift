@@ -7,20 +7,21 @@
 
 import Foundation
 import Combine
+import SwiftUI
+import FirebaseFirestore
 
-/// ViewModel responsável pelo controle de estado e navegação temporal da tela de Agenda.
-/// Gerencia a projeção de dias da semana, a montagem da linha do tempo (timeline)
-/// e o cruzamento de sessões com os horários de expediente.
 class AgendaViewModel: ObservableObject {
     
     @Published var selectedDate: Date = Date()
     @Published var weekDays: [Date] = []
-    
-    /// Data âncora utilizada para calcular o intervalo da semana atualmente visível na tela.
     @Published private var dataBaseDaSemana: Date = Date()
     
     @Published private var todasSessoes: [Session] = []
     @Published private var pacientes: [Patient] = []
+    
+    // Listeners para o padrão Offline-First
+    private var sessoesListener: ListenerRegistration?
+    private var pacientesListener: ListenerRegistration?
     
     var timeSlots: [String] {
         availabilityService.todosHorarios
@@ -29,13 +30,12 @@ class AgendaViewModel: ObservableObject {
     private let sessionRepository: SessionRepositoryProtocol
     private let patientRepository: PatientRepositoryProtocol
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
-    
     private let availabilityService: AgendaAvailabilityService
     
     init(
-        sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
-        patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
-        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository()
+        sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository(),
+        patientRepository: PatientRepositoryProtocol = PatientFirebaseRepository(),
+        fixedSessionRepository: FixedSessionRepositoryProtocol = FixedSessionFirebaseRepository()
     ) {
         self.sessionRepository = sessionRepository
         self.patientRepository = patientRepository
@@ -46,14 +46,41 @@ class AgendaViewModel: ObservableObject {
             sessionRepository: sessionRepository
         )
         
-        
         gerarDiasDaSemana()
-        carregarDados()
     }
     
-    func carregarDados() {
-        self.todasSessoes = sessionRepository.fetchSessoes()
-        self.pacientes = patientRepository.fetchPacientes()
+    deinit {
+        sessoesListener?.remove()
+        pacientesListener?.remove()
+    }
+    
+    // MARK: - Carregamento Offline-First (Tempo Real)
+    
+    func carregarDados(userId: String) {
+        guard !userId.isEmpty else { return }
+        
+        sessoesListener?.remove()
+        pacientesListener?.remove()
+        
+        // 1. Ouvinte em tempo real para sessões
+        if let sessionRepo = sessionRepository as? SessionFirebaseRepository {
+            sessoesListener = sessionRepo.escutarSessoes(userId: userId) { [weak self] novasSessoes in
+                guard let self = self else { return }
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.todasSessoes = novasSessoes
+                }
+            }
+        }
+        
+        // 2. Ouvinte em tempo real para pacientes
+        if let patientRepo = patientRepository as? PatientFirebaseRepository {
+            pacientesListener = patientRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
+                guard let self = self else { return }
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.pacientes = novosPacientes
+                }
+            }
+        }
     }
     
     func avancarSemana() {
@@ -77,11 +104,8 @@ class AgendaViewModel: ObservableObject {
         return formatter.string(from: selectedDate).capitalized
     }
     
-    /// Calcula e projeta os 7 dias da semana com base na `dataBaseDaSemana` atual.
     private func gerarDiasDaSemana() {
         let calendar = Calendar.current
-        
-        // Encontra o domingo correspondente à semana base
         guard let inicioDaSemana = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: dataBaseDaSemana)) else { return }
         
         var dias: [Date] = []
@@ -92,9 +116,6 @@ class AgendaViewModel: ObservableObject {
         }
         self.weekDays = dias
         
-        // Regra de Seleção Automática:
-        // - Se a semana visível contiver o dia de hoje, foca no hoje.
-        // - Se for uma semana no passado/futuro, foca na segunda-feira (índice 1).
         if dias.contains(where: { calendar.isDate($0, inSameDayAs: Date()) }) {
             self.selectedDate = Date()
         } else {
@@ -102,14 +123,8 @@ class AgendaViewModel: ObservableObject {
         }
     }
     
-    func selecionarData(_ data: Date) {
-        self.selectedDate = data
-    }
-    
-    func irParaHoje() {
-        dataBaseDaSemana = Date()
-        gerarDiasDaSemana()
-    }
+    func selecionarData(_ data: Date) { self.selectedDate = data }
+    func irParaHoje() { dataBaseDaSemana = Date(); gerarDiasDaSemana() }
     
     func pularParaData(_ data: Date) {
         dataBaseDaSemana = data
@@ -117,17 +132,9 @@ class AgendaViewModel: ObservableObject {
         selecionarData(data)
     }
     
-    var isHojeSelecionado: Bool {
-        return Calendar.current.isDateInToday(selectedDate)
-    }
-    
-    func isHoje(_ data: Date) -> Bool {
-        return Calendar.current.isDateInToday(data)
-    }
-    
-    func isMesmoDia(_ data1: Date, _ data2: Date) -> Bool {
-        return Calendar.current.isDate(data1, inSameDayAs: data2)
-    }
+    var isHojeSelecionado: Bool { Calendar.current.isDateInToday(selectedDate) }
+    func isHoje(_ data: Date) -> Bool { Calendar.current.isDateInToday(data) }
+    func isMesmoDia(_ data1: Date, _ data2: Date) -> Bool { Calendar.current.isDate(data1, inSameDayAs: data2) }
     
     func nomeCurtoDoDia(_ data: Date) -> String {
         let formatter = DateFormatter()
@@ -142,12 +149,11 @@ class AgendaViewModel: ObservableObject {
         return formatter.string(from: data)
     }
     
-    /// Retorna as sessões mapeadas para um slot de tempo específico no dia atualmente selecionado.
     func sessoesPara(horario: String) -> [Session] {
         return todasSessoes.filter { sessao in
             isMesmoDia(sessao.dataDaSessão, selectedDate) &&
             sessao.horaInicio == horario &&
-            sessao.status != .cancelada // Exclui sessões canceladas da linha do tempo visual
+            sessao.status != .cancelada
         }
     }
     
@@ -155,32 +161,41 @@ class AgendaViewModel: ObservableObject {
         return pacientes.first { $0.id == sessao.pacienteID }
     }
     
-    /// Processa a mutação de estado de uma sessão a partir do atalho da UI.
-    func atualizarStatus(da sessao: Session, para novoStatus: SessionStatus, novaData: Date? = nil) {
+    // MARK: - Atualização com Atualização Otimista
+    
+    func atualizarStatus(da sessao: Session, para novoStatus: SessionStatus, novaData: Date? = nil, userId: String) {
         var sessaoAtualizada = sessao
         sessaoAtualizada.status = novoStatus
         
-        // Tratamento especial para reagendamentos
         if novoStatus == .adiada, let data = novaData {
             sessaoAtualizada.dataDaSessão = data
-            sessaoAtualizada.sessaoFixaID = nil // Desvincula o evento avulso do contrato matriz
+            sessaoAtualizada.sessaoFixaID = nil
             
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
             sessaoAtualizada.horaInicio = formatter.string(from: data)
         }
         
-        sessionRepository.atualizarSessao(sessaoAtualizada)
-        carregarDados()
+        // Atualização otimista imediata na UI local
+        if let index = todasSessoes.firstIndex(where: { $0.id == sessao.id }) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                todasSessoes[index] = sessaoAtualizada
+            }
+        }
+        
+        // Persistência em background
+        Task {
+            do {
+                try await sessionRepository.atualizarSessao(sessaoAtualizada, userId: userId)
+            } catch {
+                print("Erro ao atualizar status na agenda: \(error.localizedDescription)")
+            }
+        }
     }
     
-    /// Procura em toda a base de dados a data do primeiro conflito existente na agenda
     var primeiraDataComConflito: Date? {
         let sessoesAtivas = todasSessoes.filter { $0.status != .cancelada }
-        
-        // Vamos agrupar as sessões por "Data + Hora". Ex: "2026-05-24-14:00"
         var agrupamento: [String: [Session]] = [:]
-        
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         
@@ -189,13 +204,7 @@ class AgendaViewModel: ObservableObject {
             agrupamento[chaveDeTempo, default: []].append(sessao)
         }
         
-        // Filtra os grupos que têm mais de 1 sessão no mesmo slot
         let gruposComConflito = agrupamento.values.filter { $0.count > 1 }
-        
-        // Pega a data exata da primeira sessão de cada grupo conflitante
-        let datasComConflito = gruposComConflito.compactMap { $0.first?.dataDaSessão }
-        
-        // Retorna a data mais próxima de hoje (ou a primeira da lista)
-        return datasComConflito.sorted().first
+        return gruposComConflito.compactMap { $0.first?.dataDaSessão }.sorted().first
     }
 }

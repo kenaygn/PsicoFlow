@@ -18,15 +18,15 @@ struct TodaySessionCard: View {
     
     var onSelectPaciente: () -> Void
     var onUpdateStatus: (SessionStatus, Date?) -> Void
-    var fetchAvailableTimes: (Date, String) -> [String]
+    var fetchAvailableTimes: (Date, String) async -> [String]
     
     @State private var mostrandoAdiar = false
     @State private var novaData = Date()
     @State private var novaHoraStr = ""
     
-    private var horariosLivres: [String] {
-        fetchAvailableTimes(novaData, session.id)
-    }
+    // Novos estados para gerenciar a chamada assíncrona do Firebase
+    @State private var horariosLivres: [String] = []
+    @State private var estaCarregandoHorarios = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -102,7 +102,6 @@ struct TodaySessionCard: View {
                         }
                         .foregroundColor(isNext ? .gray : .secondary)
                         
-                        //Notes: Poder definit o tanto que a sessao vai durar
                         HStack(spacing: 4) {
                             Image(systemName: "clock")
                             Text("50 min")
@@ -134,7 +133,9 @@ struct TodaySessionCard: View {
                                 .environment(\.colorScheme, isNext ? .dark : .light)
                             
                             Picker("Horário", selection: $novaHoraStr) {
-                                if horariosLivres.isEmpty {
+                                if estaCarregandoHorarios {
+                                    Text("Buscando...").tag("")
+                                } else if horariosLivres.isEmpty {
                                     Text("Lotado").tag("")
                                 } else {
                                     ForEach(horariosLivres, id: \.self) { horario in
@@ -149,7 +150,7 @@ struct TodaySessionCard: View {
                             .foregroundColor(isNext ? .white : .primary)
                             .clipShape(RoundedRectangle(cornerRadius: 80, style: .continuous))
                             .environment(\.colorScheme, isNext ? .dark : .light)
-                            .disabled(horariosLivres.isEmpty)
+                            .disabled(horariosLivres.isEmpty || estaCarregandoHorarios)
                             
                             Spacer()
                         }
@@ -184,7 +185,7 @@ struct TodaySessionCard: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             .buttonStyle(.plain)
-                            .disabled(horariosLivres.isEmpty || novaHoraStr.isEmpty)
+                            .disabled(horariosLivres.isEmpty || novaHoraStr.isEmpty || estaCarregandoHorarios)
                         }
                     }
                     .padding(.top, 4)
@@ -199,6 +200,8 @@ struct TodaySessionCard: View {
                             novaData = session.dataDaSessão
                             novaHoraStr = session.horaInicio
                             withAnimation { mostrandoAdiar = true }
+                            // Carrega horários assincronamente ao abrir o reagendamento
+                            carregarHorarios(para: novaData)
                         }
                         actionButton(title: "Cancelada", icon: "xmark.circle", isNext: isNext, color: .red) {
                             onUpdateStatus(.cancelada, nil)
@@ -229,8 +232,26 @@ struct TodaySessionCard: View {
         )
         .shadow(color: Color.black.opacity(isNext ? 0.15 : 0.03), radius: 8, x: 0, y: 4)
         .onChange(of: novaData) { _ in
-            if !horariosLivres.contains(novaHoraStr) {
-                novaHoraStr = horariosLivres.first ?? ""
+            if mostrandoAdiar {
+                carregarHorarios(para: novaData)
+            }
+        }
+    }
+    
+    // MARK: - Lógica Assíncrona
+    
+    private func carregarHorarios(para data: Date) {
+        Task {
+            estaCarregandoHorarios = true
+            let novosHorarios = await fetchAvailableTimes(data, session.id)
+            
+            await MainActor.run {
+                self.horariosLivres = novosHorarios
+                // Ajusta a hora selecionada se a atual não estiver disponível na nova data
+                if !novosHorarios.contains(novaHoraStr) {
+                    novaHoraStr = novosHorarios.first ?? ""
+                }
+                estaCarregandoHorarios = false
             }
         }
     }

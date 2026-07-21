@@ -12,6 +12,8 @@ import SwiftUI
 struct EditPatientView: View {
     
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authManager: AuthManager
+    
     @Binding var pacienteAtual: Patient
     
     @StateObject private var viewModel: PatientFormViewModel
@@ -76,9 +78,12 @@ struct EditPatientView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
-                        viewModel.salvar()
-                        pacienteAtual = viewModel.obterPacienteAtualizado()
-                        dismiss()
+                        if let uid = authManager.usuarioID {
+                            // Atualiza via Firebase passando o ID do usuário logado
+                            viewModel.salvar(userId: uid)
+                            pacienteAtual = viewModel.obterPacienteAtualizado(userId: uid)
+                            dismiss()
+                        }
                     }
                     .fontWeight(.bold)
                     .foregroundColor(viewModel.isFormValid ? .teal : .gray)

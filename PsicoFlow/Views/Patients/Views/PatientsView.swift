@@ -10,6 +10,9 @@ import SwiftUI
 /// Tela principal de listagem e busca de pacientes.
 struct PatientsView: View {
     
+    // 1. Injetamos o gerenciador de autenticação
+    @EnvironmentObject var authManager: AuthManager
+    
     @StateObject private var viewModel = PatientsViewModel()
     @State private var mostrarModalAdicionar = false
     
@@ -19,7 +22,6 @@ struct PatientsView: View {
                 VStack(spacing: 16) {
                     VStack(spacing: 12) {
                         
-                        // Estado Vazio: Exibido quando a lista real está vazia ou a busca não acha ninguém
                         if viewModel.pacientesFiltrados.isEmpty {
                             VStack {
                                 Image(systemName: "person.crop.circle.badge.questionmark")
@@ -33,7 +35,6 @@ struct PatientsView: View {
                             .padding(.top, 60)
                             
                         } else {
-                            // Lista de Pacientes
                             ForEach(viewModel.pacientesFiltrados) { paciente in
                                 NavigationLink(destination: PatientDetailView(paciente: paciente)) {
                                     PatientCardView(paciente: paciente)
@@ -41,14 +42,15 @@ struct PatientsView: View {
                             }
                         }
                     }
-                    // Importante: Espaçamento para garantir que o último item não fique escondido sob a TabBar
                     .padding(.bottom, 100)
                 }
                 .padding(.horizontal, 20)
             }
             .onAppear {
-                // Garante que a lista esteja sempre atualizada ao voltar de outras telas
-                viewModel.carregarPacientes()
+                // 2. Passamos o ID do usuário logado para carregar a lista correta
+                if let uid = authManager.usuarioID {
+                    viewModel.carregarPacientes(userId: uid)
+                }
             }
             .navigationTitle("Pacientes")
             .navigationBarTitleDisplayMode(.large)
@@ -62,16 +64,14 @@ struct PatientsView: View {
                     }
                 }
             }
-            // Fluxo de criação de novo paciente
             .sheet(isPresented: $mostrarModalAdicionar) {
                 AddPatientView { novoPaciente in
-                    viewModel.adicionarPaciente(novoPaciente)
+                    // 3. Passamos o ID do usuário ao salvar um novo paciente
+                    if let uid = authManager.usuarioID {
+                        viewModel.adicionarPaciente(novoPaciente, userId: uid)
+                    }
                 }
             }
         }
     }
-}
-
-#Preview {
-    PatientsView()
 }

@@ -13,6 +13,7 @@ struct EditSessionView: View {
     
     @StateObject private var viewModel: PatientEditSessionViewModel
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authManager: AuthManager
     
     @State private var mostrarAlertaExclusao = false
     
@@ -37,7 +38,6 @@ struct EditSessionView: View {
                 // MARK: - Dados da Sessão
                 Section(
                     header: Text(viewModel.isFixa ? "Regras do Contrato" : "Dados da Sessão"),
-                    // Importante: Alerta visual para evitar que o usuário altere uma regra fixa sem querer
                     footer: Text(viewModel.isFixa ? "Alterar essas regras afetará as próximas sessões geradas para este paciente." : "Alterar esta sessão não afeta o contrato recorrente.")
                 ) {
                     Picker("Modalidade", selection: $viewModel.selectedModalidade) {
@@ -45,7 +45,6 @@ struct EditSessionView: View {
                         Text("Online").tag(Modalidade.online)
                     }
                     
-                    // Alterna o controle de entrada: Contratos dependem do dia da semana, sessões avulsas de uma data exata
                     if viewModel.isFixa {
                         Picker("Dia da Semana", selection: $viewModel.selectedWeekday) {
                             Text("Domingo").tag(1)
@@ -62,10 +61,15 @@ struct EditSessionView: View {
                     }
                     
                     Picker("Horário", selection: $viewModel.selectedTime) {
-                        ForEach(viewModel.horariosLivres, id: \.self) { horario in
-                            Text(horario).tag(horario)
+                        if viewModel.horariosLivres.isEmpty {
+                            Text("Buscando...").tag("")
+                        } else {
+                            ForEach(viewModel.horariosLivres, id: \.self) { horario in
+                                Text(horario).tag(horario)
+                            }
                         }
                     }
+                    .disabled(viewModel.horariosLivres.isEmpty)
                 }
                 
                 // MARK: - Zona de Perigo (Exclusão)
@@ -86,14 +90,15 @@ struct EditSessionView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
-                        .foregroundColor(.teal)
+                    Button("Cancelar") { dismiss() }.foregroundColor(.teal)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Salvar") {
-                        viewModel.salvarEdicao()
-                        dismiss()
+                        if let uid = authManager.usuarioID {
+                            viewModel.salvarEdicao(userId: uid)
+                            dismiss()
+                        }
                     }
                     .foregroundColor(.teal)
                 }
@@ -106,8 +111,10 @@ struct EditSessionView: View {
             ) {
                 Button("Cancelar", role: .cancel) { }
                 Button("Excluir", role: .destructive) {
-                    viewModel.deletarSessao()
-                    dismiss()
+                    if let uid = authManager.usuarioID {
+                        viewModel.deletarSessao(userId: uid)
+                        dismiss()
+                    }
                 }
             } message: {
                 Text(viewModel.isFixa
@@ -115,15 +122,17 @@ struct EditSessionView: View {
                      : "Tem certeza que deseja excluir esta sessão avulsa permanentemente?")
             }
             
-            // Recalcula a lista de horários livres sempre que a data ou o dia da semana mudam
+            // Carregamento inicial e reatividade via Firebase
             .onAppear {
-                viewModel.atualizarSelecaoDeHorario()
+                if let uid = authManager.usuarioID {
+                    viewModel.carregarHorariosLivres(userId: uid)
+                }
             }
             .onChange(of: viewModel.selectedDate) { _ in
-                viewModel.atualizarSelecaoDeHorario()
+                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
             }
             .onChange(of: viewModel.selectedWeekday) { _ in
-                viewModel.atualizarSelecaoDeHorario()
+                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
             }
         }
     }

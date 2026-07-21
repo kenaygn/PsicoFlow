@@ -15,6 +15,7 @@ class PaymentFirebaseRepository: PaymentRepositoryProtocol {
         return db.collection("users").document(userId).collection("payments")
     }
     
+    // MARK: - Funções de Fetch Antigas (Mantidas para compatibilidade)
     func fetchPagamentos(userId: String) async throws -> [MonthlyPayment] {
         let snapshot = try await collection(userId: userId).getDocuments()
         return snapshot.documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
@@ -28,6 +29,7 @@ class PaymentFirebaseRepository: PaymentRepositoryProtocol {
         return snapshot.documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
     }
     
+    // MARK: - Escrita de Dados
     func atualizarPagamento(_ pagamento: MonthlyPayment, userId: String) async throws {
         try collection(userId: userId).document(pagamento.id).setData(from: pagamento, merge: true)
     }
@@ -38,5 +40,19 @@ class PaymentFirebaseRepository: PaymentRepositoryProtocol {
     
     func deletarPagamento(id: String, userId: String) async throws {
         try await collection(userId: userId).document(id).delete()
+    }
+    
+    // MARK: - NOVO: Função Offline-First (Tempo Real)
+    /// Cria um túnel em tempo real com o Firestore, acionando o cache local imediatamente.
+    func escutarPagamentos(userId: String, onChange: @escaping ([MonthlyPayment]) -> Void) -> ListenerRegistration {
+        return collection(userId: userId).addSnapshotListener { snapshot, error in
+            guard let documents = snapshot?.documents else {
+                print("Erro ao ouvir pagamentos: \(error?.localizedDescription ?? "Desconhecido")")
+                return
+            }
+            
+            let pagamentos = documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
+            onChange(pagamentos)
+        }
     }
 }

@@ -22,11 +22,14 @@ class SessionQuickActionViewModel: ObservableObject {
     @Published var novaData: Date
     @Published var novaHoraStr: String
     
+    // Transformamos em @Published para receber os dados do Firebase de forma assíncrona
+    @Published var horariosLivres: [String] = []
+    
     init(
         sessao: Session,
-        sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
-        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository())
-    {
+        sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository(),
+        fixedSessionRepository: FixedSessionRepositoryProtocol = FixedSessionFirebaseRepository()
+    ) {
         self.sessao = sessao
         self.sessionRepository = sessionRepository
         self.fixedSessionRepository = fixedSessionRepository
@@ -40,15 +43,27 @@ class SessionQuickActionViewModel: ObservableObject {
         self._novaHoraStr = Published(initialValue: sessao.horaInicio)
     }
     
-    /// Delega o cálculo de horários livres para o serviço centralizado,
+    /// Delega o cálculo de horários livres para o serviço centralizado de forma assíncrona,
     /// ignorando a própria sessão atual para permitir que o utilizador mantenha o mesmo horário
     /// caso esteja apenas a mudar a data.
-    var horariosLivres: [String] {
-        return availabilityService.horariosLivresParaSessaoAvulsa(
-            data: novaData,
-            ignorandoSessaoID: sessao.id,
-            derivadaDeContratoID: sessao.sessaoFixaID
-        )
+    func carregarHorariosLivres(userId: String) {
+        guard !userId.isEmpty else { return }
+        
+        Task {
+            do {
+                let livres = try await availabilityService.horariosLivresParaSessaoAvulsa(
+                    data: novaData,
+                    ignorandoSessaoID: sessao.id,
+                    derivadaDeContratoID: sessao.sessaoFixaID,
+                    userId: userId
+                )
+                
+                self.horariosLivres = livres
+                self.ajustarHorarioSeNecessario()
+            } catch {
+                print("Erro ao calcular horários livres: \(error.localizedDescription)")
+            }
+        }
     }
     
     /// Retorna a lista de horários disponíveis formatada para exibição segura na UI.
@@ -56,6 +71,11 @@ class SessionQuickActionViewModel: ObservableObject {
     /// ele é injetado temporariamente para evitar falhas de seleção no Picker nativo.
     var horariosParaOPicker: [String] {
         var listaSegura = horariosLivres
+        
+        // Evita piscar a tela antes da primeira busca
+        if listaSegura.isEmpty && !novaHoraStr.isEmpty {
+            return [novaHoraStr]
+        }
         
         if !novaHoraStr.isEmpty && !listaSegura.contains(novaHoraStr) {
             listaSegura.append(novaHoraStr)
@@ -68,7 +88,7 @@ class SessionQuickActionViewModel: ObservableObject {
     /// Valida e ajusta automaticamente o horário selecionado caso o usuário altere
     /// a data alvo e o slot anteriormente preenchido fique indisponível.
     func ajustarHorarioSeNecessario() {
-        if !horariosLivres.contains(novaHoraStr) {
+        if !horariosLivres.isEmpty && !horariosLivres.contains(novaHoraStr) {
             novaHoraStr = horariosLivres.first ?? ""
         }
     }

@@ -13,18 +13,17 @@ import Combine
 struct HomeView: View {
     
     @EnvironmentObject var router: AppRouter
+    // 1. Injetamos o AuthManager para garantir a segurança dos dados
+    @EnvironmentObject var authManager: AuthManager
     
     @StateObject private var viewModel = HomeViewModel()
     
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
     @State private var navegarParaDiaComConflito: Bool = false
-
     
     @State private var slideAtual: HomeViewModel.HomeSlide = .proximaSessao
     let timer = Timer.publish(every: 7, on: .main, in: .common).autoconnect()
-    
-    
     
     var body: some View {
         NavigationStack {
@@ -32,42 +31,10 @@ struct HomeView: View {
                 VStack(spacing: 24) {
                     
                     // MARK: - Destaque Principal (Carrossel)
-                    // O TabView permite o "swipe" horizontal entre os cartões
                     TabView(selection: $slideAtual) {
                         ForEach(viewModel.slidesAtivos, id: \.self) { slide in
-                            switch slide {
-                            case .conflito:
-                                
-                                if let dataDoProblema = viewModel.primeiraDataComConflito {
-                                    ConflictAlertCard(dataDoConflito: dataDoProblema) {
-                                        router.goToAgendaConflict(day: dataDoProblema)
-                                    }
-                                    .padding(.horizontal, 20)
-                                }
-                                
-                            case .proximaSessao:
-                                if let proxima = viewModel.proximaSessao {
-                                    NextSessionMainCard(
-                                        session: proxima,
-                                        nomeDaPaciente: viewModel.nomePacienteProximaSessao,
-                                        onAbrirProntuario: {
-                                            self.pacienteSelecionado = viewModel.paciente(for: proxima)
-                                            self.navegarParaProntuario = true
-                                        }
-                                    )
-                                    .padding(.horizontal, 20)
-                                }
-                            case .resumo:
-                                WeeklySummaryCard(atendimentosNaSemana: viewModel.atendimentosRealizadosNaSemana)
-                                    .padding(.horizontal, 20)
-                            
-                            case .pendencias:
-                                PaymentAlertCard(mesReferencia: viewModel.labelPendenciaFinanceira){
-                                    router.goToFinancePendingMonth(month: viewModel.primeiraPendenciaAtrasada!)
-                                }
-                                    .padding(.horizontal, 20)
-
-                            }
+                            carregarSlide(slide)
+                                .tag(slide)
                         }
                     }
                     .tabViewStyle(.page(indexDisplayMode: viewModel.slidesAtivos.count == 1 ? .never : .automatic))
@@ -155,10 +122,18 @@ struct HomeView: View {
                                         self.navegarParaProntuario = true
                                     },
                                     onUpdateStatus: { novoStatus, novaData in
-                                        viewModel.atualizarStatusDaSessao(sessaoID: sessao.id, novoStatus: novoStatus, novaData: novaData)
+                                        // 2. Passando o userId para atualizar o status
+                                        if let uid = authManager.usuarioID {
+                                            viewModel.atualizarStatusDaSessao(sessaoID: sessao.id, novoStatus: novoStatus, novaData: novaData, userId: uid)
+                                        }
                                     },
                                     fetchAvailableTimes: { dataDesejada, sessaoID in
-                                        viewModel.obterHorariosLivres(para: dataDesejada, ignorandoSessaoID: sessaoID)
+                                        if let uid = authManager.usuarioID {
+                                            return await viewModel.obterHorariosLivres(para: dataDesejada, ignorandoSessaoID: sessaoID, userId: uid)
+                                        }
+                                        
+                                        
+                                        return [] // Retorno temporário para não quebrar sua View atual
                                     }
                                 )
                             }
@@ -177,7 +152,10 @@ struct HomeView: View {
                 }
             }
             .onAppear {
-                viewModel.carregarDados()
+                // 3. Carregamos os dados passando o userId logado
+                if let uid = authManager.usuarioID {
+                    viewModel.carregarDados(userId: uid)
+                }
                 if let primeiro = viewModel.slidesAtivos.first {
                     slideAtual = primeiro
                 }
@@ -205,6 +183,45 @@ struct HomeView: View {
     }
 }
 
-#Preview {
-    HomeView()
+
+// MARK: - Subviews
+extension HomeView {
+    
+    @ViewBuilder
+    private func carregarSlide(_ slide: HomeViewModel.HomeSlide) -> some View {
+        switch slide {
+        case .conflito:
+            if let dataDoProblema = viewModel.primeiraDataComConflito {
+                ConflictAlertCard(dataDoConflito: dataDoProblema) {
+                    router.goToAgendaConflict(day: dataDoProblema)
+                }
+                .padding(.horizontal, 20)
+            }
+            
+        case .proximaSessao:
+            if let proxima = viewModel.proximaSessao {
+                NextSessionMainCard(
+                    session: proxima,
+                    nomeDaPaciente: viewModel.nomePacienteProximaSessao,
+                    onAbrirProntuario: {
+                        self.pacienteSelecionado = viewModel.paciente(for: proxima)
+                        self.navegarParaProntuario = true
+                    }
+                )
+                .padding(.horizontal, 20)
+            }
+            
+        case .resumo:
+            WeeklySummaryCard(atendimentosNaSemana: viewModel.atendimentosRealizadosNaSemana)
+                .padding(.horizontal, 20)
+            
+        case .pendencias:
+            if let atraso = viewModel.primeiraPendenciaAtrasada {
+                PaymentAlertCard(mesReferencia: viewModel.labelPendenciaFinanceira) {
+                    router.goToFinancePendingMonth(month: atraso)
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
 }

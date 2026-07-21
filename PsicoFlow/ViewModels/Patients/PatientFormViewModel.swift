@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class PatientFormViewModel: ObservableObject {
     
     @Published var nome: String = ""
@@ -21,17 +22,15 @@ class PatientFormViewModel: ObservableObject {
     private var pacienteOriginal: Patient?
     
     private let patientRepository: PatientRepositoryProtocol
-    
-    // Serviços de Domínio Especializados
     private let sessionGenerator: SessionGeneratorService
     private let paymentService: MonthlyPaymentGeneratorService
     
     init(
         paciente: Patient? = nil,
-        patientRepository: PatientRepositoryProtocol = MockPatientRepository(),
-        sessionRepository: SessionRepositoryProtocol = MockSessionRepository(),
-        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository(),
-        paymentRepository: PaymentRepositoryProtocol = MockPaymentRepository()
+        patientRepository: PatientRepositoryProtocol = PatientFirebaseRepository(),
+        sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository(),
+        fixedSessionRepository: FixedSessionRepositoryProtocol = FixedSessionFirebaseRepository(),
+        paymentRepository: PaymentRepositoryProtocol = PaymentFirebaseRepository()
     ) {
         self.pacienteOriginal = paciente
         self.patientRepository = patientRepository
@@ -48,7 +47,6 @@ class PatientFormViewModel: ObservableObject {
             self.valorTexto = valorString
         }
         
-        // Inicializa os serviços injetando os repositórios
         self.sessionGenerator = SessionGeneratorService(
             patientRepository: patientRepository,
             fixedSessionRepository: fixedSessionRepository,
@@ -67,12 +65,12 @@ class PatientFormViewModel: ObservableObject {
         return nomePreenchido && valorValido
     }
     
-    func obterPacienteAtualizado() -> Patient {
+    func obterPacienteAtualizado(userId: String) -> Patient {
         let valorConvertido = Double(valorTexto.replacingOccurrences(of: ",", with: ".")) ?? 0.0
         
         return Patient(
             id: pacienteOriginal?.id ?? UUID().uuidString,
-            psicologoID: pacienteOriginal?.psicologoID ?? "user_dev_01",
+            psicologoID: userId,
             nome: nome,
             email: email,
             telefone: telefone,
@@ -84,28 +82,27 @@ class PatientFormViewModel: ObservableObject {
         )
     }
     
-    func salvar() {
-            let pacienteAtualizado = obterPacienteAtualizado()
-            
-            // 1. Persiste a alteração no banco de dados
-            patientRepository.atualizarPaciente(pacienteAtualizado)
-            
-            // 2. Delega a atualização da agenda para o serviço responsável
-            sessionGenerator.projetarSessoesFuturas()
-            
-            // 3. Regras Financeiras de Status
-            let statusAntigo = pacienteOriginal?.status ?? .ativo
-            let isNovoPaciente = pacienteOriginal == nil
-            
-            if statusAntigo == .ativo && pacienteAtualizado.status == .inativo {
-                // Cenário A: O paciente acabou de ser INATIVADO. Limpa as cobranças pendentes.
-                paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id)
+    func salvar(userId: String) {
+        let pacienteAtualizado = obterPacienteAtualizado(userId: userId)
+        let statusAntigo = pacienteOriginal?.status ?? .ativo
+        let isNovoPaciente = pacienteOriginal == nil
+        
+        Task {
+            do {
+                // 1. Persiste a alteração no banco de dados Firebase
+                try await patientRepository.atualizarPaciente(pacienteAtualizado, userId: userId)
                 
-            } else if (statusAntigo == .inativo && pacienteAtualizado.status == .ativo) || isNovoPaciente {
-                // Cenário B: O paciente foi REATIVADO ou é um paciente RECÉM-CRIADO.
-                // Roda o motor geral. O serviço vai ver que ele está ativo, notar que
-                // faltam as faturas deste mês e do próximo, e gerá-las na hora!
-                paymentService.gerarCobrancasAtuaisEFuturas()
+                // 2. Delega a atualização da agenda e finanças com suporte a async/await
+                try await sessionGenerator.projetarSessoesFuturas(userId: userId)
+                
+                if statusAntigo == .ativo && pacienteAtualizado.status == .inativo {
+                    try await paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id, userId: userId)
+                } else if (statusAntigo == .inativo && pacienteAtualizado.status == .ativo) || isNovoPaciente {
+                    try await paymentService.gerarCobrancasAtuaisEFuturas(userId: userId)
+                }
+            } catch {
+                print("Erro ao processar salvamento do paciente: \(error.localizedDescription)")
             }
         }
+    }
 }

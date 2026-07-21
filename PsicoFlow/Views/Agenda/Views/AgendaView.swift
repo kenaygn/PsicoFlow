@@ -7,24 +7,23 @@
 
 import SwiftUI
 
-/// Tela principal de Agenda de tempo do psicólogo.
 struct AgendaView: View {
     
     @EnvironmentObject var router: AppRouter
+    // 1. Injetamos o gerenciador de autenticação
+    @EnvironmentObject var authManager: AuthManager
     
     @StateObject private var viewModel = AgendaViewModel()
     
-    // MARK: Estados de Navegação Programática
+    // Estados de Navegação Programática
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
     
-    // MARK: Estados de Modais
+    // Estados de Modais
     @State private var mostrarNovaSessao = false
     @State private var horarioSugerido: String = "08:00"
     @State private var sessaoParaAcao: Session? = nil
     @State private var mostrarAcoesRapidas: Bool = false
-    @State private var mostrarEdicaoDeSessao: Bool = false
-    @State private var sessaoParaEditar: Session? = nil
     
     var body: some View {
         NavigationStack {
@@ -66,30 +65,11 @@ struct AgendaView: View {
                             .disabled(viewModel.isHojeSelecionado)
                             
                             HStack(spacing: 8) {
-                                Button(action: {
-                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                        viewModel.voltarSemana()
-                                    }
-                                }) {
-                                    Image(systemName: "chevron.left")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(.gray)
-                                        .frame(width: 32, height: 32)
-                                        .background(Color(.systemGray6))
-                                        .clipShape(Circle())
+                                Button(action: { withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { viewModel.voltarSemana() } }) {
+                                    Image(systemName: "chevron.left").font(.system(size: 14, weight: .bold)).foregroundColor(.gray).frame(width: 32, height: 32).background(Color(.systemGray6)).clipShape(Circle())
                                 }
-                                
-                                Button(action: {
-                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                        viewModel.avancarSemana()
-                                    }
-                                }) {
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(.gray)
-                                        .frame(width: 32, height: 32)
-                                        .background(Color(.systemGray6))
-                                        .clipShape(Circle())
+                                Button(action: { withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { viewModel.avancarSemana() } }) {
+                                    Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundColor(.gray).frame(width: 32, height: 32).background(Color(.systemGray6)).clipShape(Circle())
                                 }
                             }
                         }
@@ -98,7 +78,7 @@ struct AgendaView: View {
                     .padding(.top, 8)
                     .padding(.bottom, -12)
                     
-                    // MARK: - Seletor de Dias da Semana
+                    // MARK: - Seletor de Dias
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(viewModel.weekDays, id: \.self) { date in
@@ -111,21 +91,13 @@ struct AgendaView: View {
                                     }
                                 }) {
                                     VStack(spacing: 4) {
-                                        Text(viewModel.nomeCurtoDoDia(date))
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(isSelected ? .white.opacity(0.8) : (isToday ? .teal.opacity(0.8) : .secondary))
-                                        
-                                        Text(viewModel.numeroDoDia(date))
-                                            .font(.system(size: 20, weight: .bold))
-                                            .foregroundColor(isSelected ? .white : (isToday ? .teal : Color(.darkText)))
+                                        Text(viewModel.nomeCurtoDoDia(date)).font(.system(size: 11, weight: .semibold)).foregroundColor(isSelected ? .white.opacity(0.8) : (isToday ? .teal.opacity(0.8) : .secondary))
+                                        Text(viewModel.numeroDoDia(date)).font(.system(size: 20, weight: .bold)).foregroundColor(isSelected ? .white : (isToday ? .teal : Color(.darkText)))
                                     }
                                     .frame(width: 60, height: 72)
                                     .background(isSelected ? (isToday ? Color.teal : Color(.darkText)) : Color.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .stroke(isToday && !isSelected ? Color.teal.opacity(0.3) : Color(.systemGray6), lineWidth: isSelected ? 0 : 1)
-                                    )
+                                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(isToday && !isSelected ? Color.teal.opacity(0.3) : Color(.systemGray6), lineWidth: isSelected ? 0 : 1))
                                     .shadow(color: Color.black.opacity(isSelected ? 0.2 : 0.02), radius: 5, y: 3)
                                 }
                             }
@@ -134,42 +106,22 @@ struct AgendaView: View {
                         .padding(.vertical, 10)
                     }
                     
-                    // MARK: - Linha do Tempo (Timeline)
+                    // MARK: - Timeline
                     ZStack(alignment: .topLeading) {
+                        Rectangle().fill(Color(.systemGray5)).frame(width: 2).padding(.leading, 63).padding(.top, 24)
                         
-                        // Eixo Y (Linha Decorativa)
-                        Rectangle()
-                            .fill(Color(.systemGray5))
-                            .frame(width: 2)
-                            .padding(.leading, 63)
-                            .padding(.top, 24)
-                        
-                        // Slots de Horário
                         VStack(spacing: 24) {
                             ForEach(viewModel.timeSlots, id: \.self) { time in
-                                
                                 let sessoesNoHorario = viewModel.sessoesPara(horario: time)
                                 let isOccupied = !sessoesNoHorario.isEmpty
                                 let isConflict = sessoesNoHorario.count > 1
                                 
                                 HStack(alignment: .top, spacing: 16) {
-                                    
-                                    // Indicador de Hora
                                     HStack(spacing: 0) {
-                                        Text(time)
-                                            .font(.system(size: 13, weight: .semibold))
-                                            .foregroundColor(isConflict ? .red : .secondary)
-                                            .frame(width: 45, alignment: .trailing)
-                                        
-                                        Circle()
-                                            .fill(isConflict ? Color.red : (isOccupied ? Color.teal : Color(.systemGray5)))
-                                            .frame(width: 12, height: 12)
-                                            .overlay(Circle().stroke(Color(.systemGroupedBackground), lineWidth: 3))
-                                            .padding(.leading, 10)
-                                            .offset(y: 4)
+                                        Text(time).font(.system(size: 13, weight: .semibold)).foregroundColor(isConflict ? .red : .secondary).frame(width: 45, alignment: .trailing)
+                                        Circle().fill(isConflict ? Color.red : (isOccupied ? Color.teal : Color(.systemGray5))).frame(width: 12, height: 12).padding(.leading, 10).offset(y: 4)
                                     }
                                     
-                                    // Cartões de Sessão
                                     if sessoesNoHorario.isEmpty {
                                         EmptySlotCard {
                                             self.horarioSugerido = time
@@ -214,30 +166,25 @@ struct AgendaView: View {
             .navigationTitle("Agenda")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                viewModel.carregarDados()
+                // 2. Passamos o ID do usuário para o carregamento inicial
+                if let uid = authManager.usuarioID {
+                    viewModel.carregarDados(userId: uid)
+                }
+                
                 if let conflictDay = router.conflictDay {
                     viewModel.pularParaData(conflictDay)
                     router.conflictDay = nil
                 }
             }
             
-            // MARK: - Roteamento e Modais
-            
             .navigationDestination(isPresented: $navegarParaProntuario) {
-                if let paciente = pacienteSelecionado {
-                    PatientDetailView(paciente: paciente)
-                }
+                if let paciente = pacienteSelecionado { PatientDetailView(paciente: paciente) }
             }
             
             .sheet(isPresented: $mostrarNovaSessao, onDismiss: {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                    viewModel.carregarDados()
-                }
+                if let uid = authManager.usuarioID { viewModel.carregarDados(userId: uid) }
             }) {
-                NewSessionView(
-                    dataSugerida: viewModel.selectedDate,
-                    horarioSugerido: horarioSugerido
-                )
+                NewSessionView(dataSugerida: viewModel.selectedDate, horarioSugerido: horarioSugerido)
             }
             
             .sheet(isPresented: $mostrarAcoesRapidas) {
@@ -246,20 +193,15 @@ struct AgendaView: View {
                         sessao: sessao,
                         paciente: paciente,
                         onUpdateStatus: { novoStatus, novaData in
-                            withAnimation {
-                                viewModel.atualizarStatus(da: sessao, para: novoStatus, novaData: novaData)
+                            // 3. Passamos o ID do usuário na atualização de status
+                            if let uid = authManager.usuarioID {
+                                withAnimation { viewModel.atualizarStatus(da: sessao, para: novoStatus, novaData: novaData, userId: uid) }
                             }
                         },
-                        onOpenProfile: {
-                            self.navegarParaProntuario = true
-                        }
+                        onOpenProfile: { self.navegarParaProntuario = true }
                     )
                 }
             }
         }
     }
-}
-
-#Preview {
-    AgendaView()
 }

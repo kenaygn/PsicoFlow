@@ -29,4 +29,17 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
     func atualizarPaciente(_ paciente: Patient, userId: String) async throws {
         try patientsCollection(userId: userId).document(paciente.id).setData(from: paciente, merge: true)
     }
+    
+    /// Cria um túnel em tempo real com o Firestore para os pacientes (Offline-First)
+    func escutarPacientes(userId: String, onChange: @escaping ([Patient]) -> Void) -> ListenerRegistration {
+        return patientsCollection(userId: userId).addSnapshotListener { snapshot, error in
+            guard let documents = snapshot?.documents else {
+                print("Erro ao ouvir pacientes: \(error?.localizedDescription ?? "Desconhecido")")
+                return
+            }
+            
+            let pacientes = documents.compactMap { try? $0.data(as: Patient.self) }
+            onChange(pacientes)
+        }
+    }
 }

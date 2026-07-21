@@ -7,11 +7,10 @@
 
 import SwiftUI
 
-/// Formulário de agendamento que permite a criação de sessões avulsas ou contratos recorrentes.
 struct NewSessionView: View {
-    
     @StateObject private var viewModel: NewSessionViewModel
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authManager: AuthManager
     
     init(dataSugerida: Date = Date(), horarioSugerido: String = "08:00") {
         _viewModel = StateObject(wrappedValue: NewSessionViewModel(
@@ -23,8 +22,6 @@ struct NewSessionView: View {
     var body: some View {
         NavigationStack {
             Form {
-                
-                // MARK: - Seleção de Paciente
                 Section(header: Text("Informações do Paciente")) {
                     if viewModel.pacientesDisponiveis.isEmpty {
                         Text("Nenhum paciente ativo cadastrado.")
@@ -43,17 +40,10 @@ struct NewSessionView: View {
                     }
                 }
                 
-                // MARK: - Configuração de Horário
-                Section(
-                    header: Text("Agendamento"),
-                    footer: Text(viewModel.isFixedSession ? "Cria as sessões automaticamente toda semana neste mesmo dia e horário." : "Cria apenas um evento único no calendário.")
-                ) {
-                    
+                Section(header: Text("Agendamento")) {
                     Toggle("Terapia Semanal (Fixa)", isOn: $viewModel.isFixedSession.animation())
                         .tint(.teal)
                     
-                    // Note: A alternância entre Picker de semana e DatePicker garante a integridade dos dados
-                    // dependendo se a sessão é um contrato (Fixed) ou um evento único (Single).
                     if viewModel.isFixedSession {
                         Picker("Dia da Semana", selection: $viewModel.selectedWeekday) {
                             Text("Domingo").tag(1)
@@ -71,7 +61,7 @@ struct NewSessionView: View {
                     
                     Picker("Horário", selection: $viewModel.selectedTime) {
                         if viewModel.horariosLivres.isEmpty {
-                            Text("Agenda Lotada").tag("")
+                            Text("Buscando...").tag("")
                         } else {
                             ForEach(viewModel.horariosLivres, id: \.self) { horario in
                                 Text(horario).tag(horario)
@@ -84,43 +74,38 @@ struct NewSessionView: View {
             .navigationTitle("Agendamento")
             .navigationBarTitleDisplayMode(.inline)
             
-            // MARK: - Toolbar
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") {
-                        dismiss()
-                    }
-                    .foregroundColor(.teal)
+                    Button("Cancelar") { dismiss() }.foregroundColor(.teal)
                 }
-                
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Agendar") {
-                        viewModel.salvarSessao()
-                        dismiss()
+                        if let uid = authManager.usuarioID {
+                            viewModel.salvarSessao(userId: uid)
+                            dismiss()
+                        }
                     }
                     .foregroundColor(.teal)
-                    .disabled(viewModel.pacientesDisponiveis.isEmpty)
+                    .disabled(viewModel.pacientesDisponiveis.isEmpty || viewModel.selectedTime.isEmpty)
                 }
             }
-            
-            // MARK: - Reatividade
-            // Recalcula a disponibilidade da agenda sempre que houver alteração nos parâmetros de tempo.
+            // Dispara as buscas assíncronas
             .onAppear {
-                viewModel.atualizarSelecaoDeHorario()
+                if let uid = authManager.usuarioID {
+                    viewModel.carregarPacientes(userId: uid)
+                    viewModel.carregarHorariosLivres(userId: uid)
+                }
             }
+            // Monitora alterações para atualizar horários do Firebase
             .onChange(of: viewModel.selectedDate) { _ in
-                viewModel.atualizarSelecaoDeHorario()
+                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
             }
             .onChange(of: viewModel.selectedWeekday) { _ in
-                viewModel.atualizarSelecaoDeHorario()
+                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
             }
             .onChange(of: viewModel.isFixedSession) { _ in
-                viewModel.atualizarSelecaoDeHorario()
+                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
             }
         }
     }
-}
-
-#Preview {
-    NewSessionView()
 }

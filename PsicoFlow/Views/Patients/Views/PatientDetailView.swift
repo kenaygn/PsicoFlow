@@ -10,6 +10,7 @@ import SwiftUI
 /// Exibe o perfil completo do paciente e gerencia a navegação entre suas evoluções, finanças e sessões.
 struct PatientDetailView: View {
     
+    @EnvironmentObject var authManager: AuthManager
     @StateObject private var viewModel: PatientDetailViewModel
     
     @State private var abaSelecionada = 0
@@ -50,17 +51,15 @@ struct PatientDetailView: View {
                             .clipShape(Capsule())
                     }
                     
-                    // Botões de Ação Rápida
                     HStack(spacing: 16) {
-                        CircleActionButton(icon: "phone.fill", color: .teal) { print("Ligar") }
-                        CircleActionButton(icon: "message.fill", color: .green) { print("WhatsApp") }
-                        CircleActionButton(icon: "envelope.fill", color: .blue) { print("Email") }
+                        CircleActionButton(icon: "phone.fill", color: .teal) { }
+                        CircleActionButton(icon: "message.fill", color: .green) { }
+                        CircleActionButton(icon: "envelope.fill", color: .blue) { }
                     }
                     .padding(.top, 8)
                 }
                 .padding(.top, 24)
                 
-                // MARK: - Controle de Abas
                 Picker("Abas", selection: $abaSelecionada) {
                     Text("Evolução").tag(0)
                     Text("Faturação").tag(1)
@@ -69,21 +68,24 @@ struct PatientDetailView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 20)
                 
-                // MARK: - Conteúdo da Aba
                 VStack {
                     if abaSelecionada == 0 {
                         EvolutionTabView(
                             evolucoes: viewModel.evolucoes,
                             adicionarEvolucao: { textoDigitado in
-                                viewModel.adicionarEvolucao(texto: textoDigitado)
+                                if let uid = authManager.usuarioID {
+                                    viewModel.adicionarEvolucao(texto: textoDigitado, userId: uid)
+                                }
                             }
                         )
                     } else if abaSelecionada == 1 {
                         BillingTabView(
                             pagamentos: viewModel.pagamentos,
                             onTogglePagamento: { idPagamento in
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    viewModel.togglePagamento(pagamentoID: idPagamento)
+                                if let uid = authManager.usuarioID {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        viewModel.togglePagamento(pagamentoID: idPagamento, userId: uid)
+                                    }
                                 }
                             }
                         )
@@ -92,12 +94,8 @@ struct PatientDetailView: View {
                             sessoesFixas: viewModel.sessoesFixas,
                             sessoesAvulsas: viewModel.sessoesAvulsasFuturas,
                             converterDia: { dia in viewModel.nomeDoDiaDaSemana(dia) },
-                            onEditFixed: { fixa in
-                                self.itemSessaoParaEditar = .fixa(fixa)
-                            },
-                            onEditAvulsa: { avulsa in
-                                self.itemSessaoParaEditar = .avulsa(avulsa)
-                            },
+                            onEditFixed: { fixa in self.itemSessaoParaEditar = .fixa(fixa) },
+                            onEditAvulsa: { avulsa in self.itemSessaoParaEditar = .avulsa(avulsa) },
                             onAddFixed: { mostrarNovoAgendamento = true },
                             onAddAvulsa: { mostrarNovoAgendamento = true }
                         )
@@ -107,38 +105,33 @@ struct PatientDetailView: View {
             .padding(.bottom, 40)
         }
         .onAppear {
-            viewModel.carregarDadosCompletos()
+            if let uid = authManager.usuarioID {
+                viewModel.carregarDadosCompletos(userId: uid)
+            }
         }
-        .onTapGesture {
-            esconderTeclado()
-        }
+        .onTapGesture { esconderTeclado() }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Perfil Clínico")
         .navigationBarTitleDisplayMode(.inline)
         
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Editar") {
-                    mostrarModalEdicao = true
-                }
-                .fontWeight(.semibold)
-                .foregroundColor(.teal)
+                Button("Editar") { mostrarModalEdicao = true }.fontWeight(.semibold).foregroundColor(.teal)
             }
         }
         .sheet(isPresented: $mostrarModalEdicao) {
-            // Note: O Binding com a viewModel garante que a UI reflita a edição imediatamente
             EditPatientView(pacienteAtual: $viewModel.paciente)
                 .onDisappear {
-                    viewModel.carregarDadosCompletos()
+                    if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
                 }
         }
         .sheet(item: $itemSessaoParaEditar, onDismiss: {
-            viewModel.carregarDadosCompletos()
+            if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
         }) { itemParaEdit in
             EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.nome)
         }
         .sheet(isPresented: $mostrarNovoAgendamento, onDismiss: {
-            viewModel.carregarDadosCompletos()
+            if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
         }) {
             NewSessionView()
         }

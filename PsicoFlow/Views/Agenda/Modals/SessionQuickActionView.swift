@@ -9,12 +9,15 @@ import SwiftUI
 
 /// Modal de acesso rápido (Bottom Sheet) para gerenciamento de status de uma sessão.
 struct SessionQuickActionView: View {
-        
+    
     let paciente: Patient
     let onUpdateStatus: (SessionStatus, Date?) -> Void
     let onOpenProfile: () -> Void
     
+    // 1. Injetamos o gerenciador de autenticação
+    @EnvironmentObject var authManager: AuthManager
     @Environment(\.dismiss) var dismiss
+    
     @StateObject private var viewModel: SessionQuickActionViewModel
     
     @State private var mostrandoAdiar = false
@@ -35,7 +38,7 @@ struct SessionQuickActionView: View {
     var body: some View {
         VStack(spacing: 24) {
             
-            // MARK: - Cabeçalho do Paciente
+            // MARK: - Cabeçalho
             VStack(spacing: 8) {
                 Text(String(paciente.nome.prefix(1)))
                     .font(.system(size: 28, weight: .bold))
@@ -59,11 +62,9 @@ struct SessionQuickActionView: View {
             }
             .padding(.top, 24)
             
-            // MARK: - Controles de Status (Animados)
+            // MARK: - Controles
             ZStack {
                 if mostrandoAdiar {
-                    
-                    // MARK: Modo Reagendamento
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Reagendar para:")
                             .font(.system(size: 14, weight: .bold))
@@ -75,8 +76,9 @@ struct SessionQuickActionView: View {
                                 .environment(\.locale, Locale(identifier: "pt_BR"))
                             
                             Picker("Horário", selection: $viewModel.novaHoraStr) {
+                                // Exibe carregando ou lista vazia
                                 if viewModel.horariosLivres.isEmpty {
-                                    Text("Lotado").tag("")
+                                    Text("Buscando...").tag("")
                                 } else {
                                     ForEach(viewModel.horariosParaOPicker, id: \.self) { horario in
                                         Text(horario).tag(horario)
@@ -118,47 +120,38 @@ struct SessionQuickActionView: View {
                             .padding(.vertical, 12)
                             .background(Color.teal)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .disabled(viewModel.horariosLivres.isEmpty || viewModel.novaHoraStr.isEmpty)
+                            .disabled(viewModel.novaHoraStr.isEmpty)
                         }
                     }
                     .padding(.horizontal, 20)
-                    .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
-                    
                 } else {
-                    
-                    // MARK: Botões Padrão de Status
                     HStack(spacing: 12) {
                         actionButton(title: "Realizada", icon: "checkmark.circle.fill", color: .green) {
                             onUpdateStatus(.realizada, nil)
                             dismiss()
                         }
-                        
                         actionButton(title: "Adiada", icon: "calendar.badge.clock", color: .orange) {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
                                 mostrandoAdiar = true
                                 alturaModal = .height(420)
+                                // Dispara a primeira busca ao abrir
+                                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
                             }
                         }
-                        
                         actionButton(title: "Cancelada", icon: "xmark.circle.fill", color: .red) {
                             onUpdateStatus(.cancelada, nil)
                             dismiss()
                         }
                     }
                     .padding(.horizontal, 20)
-                    .transition(.opacity)
                 }
             }
             
-            Divider()
-                .padding(.horizontal, 20)
+            Divider().padding(.horizontal, 20)
             
-            // MARK: - Acesso ao Prontuário
             Button(action: {
                 dismiss()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    onOpenProfile()
-                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { onOpenProfile() }
             }) {
                 HStack {
                     Image(systemName: "person.text.rectangle")
@@ -172,29 +165,25 @@ struct SessionQuickActionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .padding(.horizontal, 20)
             }
-            
             Spacer()
         }
-        
-        // Note: A alternância dinâmica de detents expande a bottom sheet suavemente
-        // apenas quando o formulário de reagendamento exige mais espaço vertical.
         .presentationDetents([.height(360), .height(420)], selection: $alturaModal)
         .presentationDragIndicator(.visible)
+        // 2. Sempre que a data mudar, busca os novos horários
         .onChange(of: viewModel.novaData) { _ in
-            viewModel.ajustarHorarioSeNecessario()
+            if let uid = authManager.usuarioID {
+                viewModel.carregarHorariosLivres(userId: uid)
+            }
         }
     }
     
     // MARK: - Helpers
-    
     @ViewBuilder
     private func actionButton(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 24))
-                Text(title)
-                    .font(.system(size: 12, weight: .bold))
+                Image(systemName: icon).font(.system(size: 24))
+                Text(title).font(.system(size: 12, weight: .bold))
             }
             .foregroundColor(color)
             .frame(maxWidth: .infinity)

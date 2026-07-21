@@ -34,21 +34,19 @@ class PatientEditSessionViewModel: ObservableObject {
     
     @Published var selectedModalidade: Modalidade
     @Published var selectedTime: String
-    
-    // Estados específicos que variam conforme o tipo de sessão
     @Published var selectedWeekday: Int = 1
     @Published var selectedDate: Date = Date()
+    @Published var horariosLivres: [String] = []
     
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
-    
     private let availabilityService: AgendaAvailabilityService
     
     init(
         item: EditSessionItem,
         nomePaciente: String,
-        fixedSessionRepository: FixedSessionRepositoryProtocol = MockFixedSessionRepository(),
-        sessionRepository: SessionRepositoryProtocol = MockSessionRepository()
+        fixedSessionRepository: FixedSessionRepositoryProtocol = FixedSessionFirebaseRepository(),
+        sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository()
     ) {
         self.itemToEdit = item
         self.nomePaciente = nomePaciente
@@ -60,7 +58,6 @@ class PatientEditSessionViewModel: ObservableObject {
             sessionRepository: sessionRepository
         )
         
-        // Inicialização condicional baseada no tipo de payload recebido
         switch item {
         case .fixa(let fixa):
             self.selectedModalidade = fixa.modalidade
@@ -78,109 +75,103 @@ class PatientEditSessionViewModel: ObservableObject {
         return false
     }
     
-    /// Delega o cálculo de horários livres para o Serviço de Domínio.
-    var horariosLivres: [String] {
-        switch itemToEdit {
-        case .fixa(let fixaAtual):
-            return availabilityService.horariosLivresParaContrato(
-                diaDaSemana: selectedWeekday,
-                ignorandoContratoID: fixaAtual.id
-            )
-            
-        case .avulsa(let avulsaAtual):
-            return availabilityService.horariosLivresParaSessaoAvulsa(
-                data: selectedDate,
-                ignorandoSessaoID: avulsaAtual.id,
-                derivadaDeContratoID: avulsaAtual.sessaoFixaID
-            )
+    /// Busca horários disponíveis de forma assíncrona usando o serviço de domínio.
+    func carregarHorariosLivres(userId: String) {
+        Task {
+            do {
+                switch itemToEdit {
+                case .fixa(let fixaAtual):
+                    self.horariosLivres = try await availabilityService.horariosLivresParaContrato(
+                        diaDaSemana: selectedWeekday,
+                        ignorandoContratoID: fixaAtual.id,
+                        userId: userId
+                    )
+                case .avulsa(let avulsaAtual):
+                    self.horariosLivres = try await availabilityService.horariosLivresParaSessaoAvulsa(
+                        data: selectedDate,
+                        ignorandoSessaoID: avulsaAtual.id,
+                        derivadaDeContratoID: avulsaAtual.sessaoFixaID,
+                        userId: userId
+                    )
+                }
+                atualizarSelecaoDeHorario()
+            } catch {
+                print("Erro ao carregar horários: \(error.localizedDescription)")
+            }
         }
     }
     
-    /// Garante a integridade dos dados selecionados caso o usuário mude o dia/data
-    /// e o horário anteriormente selecionado fique indisponível.
     func atualizarSelecaoDeHorario() {
         if !horariosLivres.contains(selectedTime) {
             selectedTime = horariosLivres.first ?? ""
         }
     }
     
-    /// Persiste as modificações no respectivo repositório.
-    func salvarEdicao() {
-        switch itemToEdit {
-        case .fixa(let fixa):
-            var atualizada = fixa
-            atualizada.modalidade = selectedModalidade
-            atualizada.diaDaSemana = selectedWeekday
-            atualizada.horaInicio = selectedTime
-            fixedSessionRepository.atualizarSessaoFixa(atualizada)
-            propagarAlteracoesParaSessoesFuturas(regraAtualizada: atualizada)
-            
-        case .avulsa(let avulsa):
-            var atualizada = avulsa
-            atualizada.modalidade = selectedModalidade
-            atualizada.dataDaSessão = selectedDate
-            atualizada.horaInicio = selectedTime
-            
-            // Restaura o status para agendada caso o usuário esteja reagendando ativamente uma sessão adiada
-            if atualizada.status == .adiada {
-                atualizada.status = .agendada
+    /// Persiste as modificações no Firebase de forma assíncrona.
+    func salvarEdicao(userId: String) {
+        Task {
+            do {
+                switch itemToEdit {
+                case .fixa(let fixa):
+                    var atualizada = fixa
+                    atualizada.modalidade = selectedModalidade
+                    atualizada.diaDaSemana = selectedWeekday
+                    atualizada.horaInicio = selectedTime
+                    try await fixedSessionRepository.atualizarSessaoFixa(atualizada, userId: userId)
+                    try await propagarAlteracoesParaSessoesFuturas(regraAtualizada: atualizada, userId: userId)
+                    
+                case .avulsa(let avulsa):
+                    var atualizada = avulsa
+                    atualizada.modalidade = selectedModalidade
+                    atualizada.dataDaSessão = selectedDate
+                    atualizada.horaInicio = selectedTime
+                    if atualizada.status == .adiada { atualizada.status = .agendada }
+                    try await sessionRepository.atualizarSessao(atualizada, userId: userId)
+                }
+            } catch {
+                print("Erro ao salvar edição: \(error.localizedDescription)")
             }
-            sessionRepository.atualizarSessao(atualizada)
         }
     }
     
-    /// Aplica as alterações de horário, modalidade e dia da semana de um contrato (Sessão Fixa)
-    /// a todas as sessões pontuais vinculadas a ele, garantindo a integridade do histórico passado.
-    private func propagarAlteracoesParaSessoesFuturas(regraAtualizada: FixedSession) {
+    private func propagarAlteracoesParaSessoesFuturas(regraAtualizada: FixedSession, userId: String) async throws {
         let calendar = Calendar.current
         let inicioDoDiaAtual = calendar.startOfDay(for: Date())
         
-        let sessoesFilhasFuturas = sessionRepository.fetchSessoes().filter {
-            $0.sessaoFixaID == regraAtualizada.id &&
-            $0.dataDaSessão >= inicioDoDiaAtual
-        }
-        print(sessoesFilhasFuturas)
+        let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
+        let sessoesFilhasFuturas = sessoes.filter { $0.sessaoFixaID == regraAtualizada.id && $0.dataDaSessão >= inicioDoDiaAtual }
         
         for sessao in sessoesFilhasFuturas {
             var sessaoModificada = sessao
-            
             sessaoModificada.horaInicio = regraAtualizada.horaInicio
             sessaoModificada.modalidade = regraAtualizada.modalidade
             
             var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: sessao.dataDaSessão)
             components.weekday = regraAtualizada.diaDaSemana
             
-            if let novaDataCorreta = calendar.date(from: components) {
-                sessaoModificada.dataDaSessão = novaDataCorreta
-            }
-            
-            sessionRepository.atualizarSessao(sessaoModificada)
+            if let novaData = calendar.date(from: components) { sessaoModificada.dataDaSessão = novaData }
+            try await sessionRepository.atualizarSessao(sessaoModificada, userId: userId)
         }
     }
     
-    /// Exclui a sessão selecionada. Se for um contrato (Fixa), exclui também
-    /// as projeções futuras, mantendo o histórico passado intacto.
-    func deletarSessao() {
-        switch itemToEdit {
-        case .fixa(let fixa):
-            // 1. Deleta a regra matriz
-            fixedSessionRepository.deletarSessaoFixa(id: fixa.id)
-            
-            // 2. Busca e deleta as filhas futuras
-            let hoje = Calendar.current.startOfDay(for: Date())
-            let sessoesFuturas = sessionRepository.fetchSessoes().filter {
-                $0.sessaoFixaID == fixa.id && $0.dataDaSessão >= hoje
+    func deletarSessao(userId: String) {
+        Task {
+            do {
+                switch itemToEdit {
+                case .fixa(let fixa):
+                    try await fixedSessionRepository.deletarSessaoFixa(id: fixa.id, userId: userId)
+                    let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
+                    let hoje = Calendar.current.startOfDay(for: Date())
+                    
+                    for sessao in sessoes.filter({ $0.sessaoFixaID == fixa.id && $0.dataDaSessão >= hoje }) {
+                        try await sessionRepository.deletarSessao(id: sessao.id, userId: userId)
+                    }
+                case .avulsa(let avulsa):
+                    try await sessionRepository.deletarSessao(id: avulsa.id, userId: userId)
+                }
+            } catch {
+                print("Erro ao deletar sessão: \(error.localizedDescription)")
             }
-            
-            for sessao in sessoesFuturas {
-                sessionRepository.deletarSessao(id: sessao.id)
-            }
-            print("🗑️ Sessão Fixa e suas projeções futuras foram excluídas.")
-            
-        case .avulsa(let avulsa):
-            // Deleta apenas a sessão única
-            sessionRepository.deletarSessao(id: avulsa.id)
-            print("🗑️ Sessão Avulsa excluída.")
         }
-    }
+    }    
 }

@@ -8,22 +8,25 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseFirestore
 
-/// ViewModel responsável por gerenciar o estado da lista de pacientes.
 class PatientsViewModel: ObservableObject {
         
     @Published var pacientes: [Patient] = []
     @Published var searchText: String = ""
     
     private let repository: PatientRepositoryProtocol
+    private var pacientesListener: ListenerRegistration?
         
-    init(repository: PatientRepositoryProtocol = MockPatientRepository()) {
+    init(repository: PatientRepositoryProtocol = PatientFirebaseRepository()) {
         self.repository = repository
-        carregarPacientes()
+    }
+    
+    deinit {
+        pacientesListener?.remove()
     }
         
     /// Retorna a lista de pacientes filtrada com base no texto de busca atual.
-    /// Utiliza busca *case-insensitive* para melhorar a experiência do usuário.
     var pacientesFiltrados: [Patient] {
         if searchText.isEmpty {
             return pacientes
@@ -32,23 +35,51 @@ class PatientsViewModel: ObservableObject {
         }
     }
         
-    /// Busca a lista atualizada de pacientes no repositório e atualiza o estado da View.
-    func carregarPacientes() {
-        // Note: Em uma implementação com banco de dados real (operações assíncronas),
-        // será necessário atualizar este método para utilizar async/await ou Combine,
-        // além de tratar possíveis estados de carregamento (Loading) e erros (Error Handling).
-        self.pacientes = repository.fetchPacientes()
+    /// Inicia a escuta em tempo real (Offline-First) dos pacientes no Firebase.
+    func carregarPacientes(userId: String) {
+        guard !userId.isEmpty else { return }
+        
+        // Remove listener pré-existente para evitar duplicidades
+        pacientesListener?.remove()
+        
+        if let firebaseRepo = repository as? PatientFirebaseRepository {
+            pacientesListener = firebaseRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
+                guard let self = self else { return }
+                
+                // Atualiza a UI de forma fluida usando animação
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    self.pacientes = novosPacientes
+                }
+            }
+        }
     }
     
-    /// Envia o paciente modificado para o repositório e recarrega o estado.
-    func atualizarPaciente(_ pacienteEditado: Patient) {
-        repository.atualizarPaciente(pacienteEditado)
-        carregarPacientes()
+    /// Envia o paciente modificado para o repositório (Atualização Otimista).
+    func atualizarPaciente(_ pacienteEditado: Patient, userId: String) {
+        // Atualização otimista imediata na lista local
+        if let index = pacientes.firstIndex(where: { $0.id == pacienteEditado.id }) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                pacientes[index] = pacienteEditado
+            }
+        }
+        
+        Task {
+            do {
+                try await repository.atualizarPaciente(pacienteEditado, userId: userId)
+            } catch {
+                print("Erro ao atualizar paciente: \(error.localizedDescription)")
+            }
+        }
     }
     
-    /// Persiste um novo paciente no repositório e atualiza a listagem.
-    func adicionarPaciente(_ novoPaciente: Patient) {
-        repository.salvarPaciente(novoPaciente)
-        carregarPacientes()
+    /// Persiste um novo paciente no repositório. O listener atualizará a listagem automaticamente.
+    func adicionarPaciente(_ novoPaciente: Patient, userId: String) {
+        Task {
+            do {
+                try await repository.salvarPaciente(novoPaciente, userId: userId)
+            } catch {
+                print("Erro ao salvar paciente: \(error.localizedDescription)")
+            }
+        }
     }
 }
