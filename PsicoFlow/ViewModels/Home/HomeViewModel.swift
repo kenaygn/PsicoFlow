@@ -31,27 +31,32 @@ class HomeViewModel: ObservableObject {
     private var sessoesListener: ListenerRegistration?
     private var pacientesListener: ListenerRegistration?
     private var pagamentosListener: ListenerRegistration?
+    private var userListener: ListenerRegistration?
     
     private var financeAnalyzer = FinanceAnalyzerService()
     
     private let patientRepository: PatientRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
     private let paymentRepository: PaymentRepositoryProtocol
+    private let userRepository: UserRepositoryProtocol
     
     init(
         patientRepository: PatientRepositoryProtocol = PatientFirebaseRepository(),
         sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository(),
-        paymentRepository: PaymentRepositoryProtocol = PaymentFirebaseRepository()
+        paymentRepository: PaymentRepositoryProtocol = PaymentFirebaseRepository(),
+        userRepository: UserRepositoryProtocol = UserFirebaseRepository()
     ) {
         self.patientRepository = patientRepository
         self.sessionRepository = sessionRepository
         self.paymentRepository = paymentRepository
+        self.userRepository = userRepository
     }
     
     deinit {
         sessoesListener?.remove()
         pacientesListener?.remove()
         pagamentosListener?.remove()
+        userListener?.remove()
     }
     
     // MARK: - Carregamento Offline-First (Tempo Real)
@@ -63,6 +68,7 @@ class HomeViewModel: ObservableObject {
         sessoesListener?.remove()
         pacientesListener?.remove()
         pagamentosListener?.remove()
+        userListener?.remove()
         
         // 1. Escuta Sessões
         if let sessionRepo = sessionRepository as? SessionFirebaseRepository {
@@ -96,12 +102,21 @@ class HomeViewModel: ObservableObject {
                 }
             }
         }
+        
+        if let userRepo = userRepository as? UserFirebaseRepository {
+            userListener = userRepo.escutarUsuario(uid: userId) { [weak self] usuarioAtualizado in
+                guard let self = self else { return }
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    self.isUsuarioPremium = usuarioAtualizado?.premium ?? false
+                }
+            }
+        }
     }
     
     var limitePlanoFreeAtingido: Bool {
-            if isUsuarioPremium { return false } // Premium não tem limite!
-            return pacientes.count >= 5
-        }
+        if isUsuarioPremium { return false } // Premium não tem limite!
+        return pacientes.count >= 5
+    }
     
     private func processarDadosLocais(userId: String) {
         var sessoesDeHoje = todasSessoes

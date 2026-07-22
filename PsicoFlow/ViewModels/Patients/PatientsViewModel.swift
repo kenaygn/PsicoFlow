@@ -14,16 +14,25 @@ class PatientsViewModel: ObservableObject {
     
     @Published var pacientes: [Patient] = []
     @Published var searchText: String = ""
+    @Published var isUsuarioPremium: Bool = false
     
     private let repository: PatientRepositoryProtocol
-    private var pacientesListener: ListenerRegistration?
+    private let userRepository: UserRepositoryProtocol
     
-    init(repository: PatientRepositoryProtocol = PatientFirebaseRepository()) {
+    private var pacientesListener: ListenerRegistration?
+    private var userListener: ListenerRegistration?
+    
+    init(
+        repository: PatientRepositoryProtocol = PatientFirebaseRepository(),
+        userRepository: UserRepositoryProtocol = UserFirebaseRepository()
+    ) {
         self.repository = repository
+        self.userRepository = userRepository
     }
     
     deinit {
         pacientesListener?.remove()
+        userListener?.remove()
     }
     
     /// Retorna a lista de pacientes filtrada com base no texto de busca atual.
@@ -37,6 +46,7 @@ class PatientsViewModel: ObservableObject {
     
     /// Verifica se o usuário atingiu o limite de 5 pacientes do plano gratuito.
     var limitePlanoFreeAtingido: Bool {
+        if isUsuarioPremium { return false } // 👈 Regra dinâmica
         return pacientes.count >= 5
     }
     
@@ -46,6 +56,7 @@ class PatientsViewModel: ObservableObject {
         
         // Remove listener pré-existente para evitar duplicidades
         pacientesListener?.remove()
+        userListener?.remove()
         
         if let firebaseRepo = repository as? PatientFirebaseRepository {
             pacientesListener = firebaseRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
@@ -54,6 +65,15 @@ class PatientsViewModel: ObservableObject {
                 // Atualiza a UI de forma fluida usando animação
                 withAnimation(.easeInOut(duration: 0.4)) {
                     self.pacientes = novosPacientes
+                }
+            }
+        }
+        
+        if let userRepo = userRepository as? UserFirebaseRepository {
+            userListener = userRepo.escutarUsuario(uid: userId) { [weak self] usuarioAtualizado in
+                guard let self = self else { return }
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    self.isUsuarioPremium = usuarioAtualizado?.premium ?? false
                 }
             }
         }
