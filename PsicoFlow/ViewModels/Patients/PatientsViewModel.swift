@@ -11,13 +11,13 @@ import Combine
 import FirebaseFirestore
 
 class PatientsViewModel: ObservableObject {
-        
+    
     @Published var pacientes: [Patient] = []
     @Published var searchText: String = ""
     
     private let repository: PatientRepositoryProtocol
     private var pacientesListener: ListenerRegistration?
-        
+    
     init(repository: PatientRepositoryProtocol = PatientFirebaseRepository()) {
         self.repository = repository
     }
@@ -25,7 +25,7 @@ class PatientsViewModel: ObservableObject {
     deinit {
         pacientesListener?.remove()
     }
-        
+    
     /// Retorna a lista de pacientes filtrada com base no texto de busca atual.
     var pacientesFiltrados: [Patient] {
         if searchText.isEmpty {
@@ -34,7 +34,12 @@ class PatientsViewModel: ObservableObject {
             return pacientes.filter { $0.nome.localizedCaseInsensitiveContains(searchText) }
         }
     }
-        
+    
+    /// Verifica se o usuário atingiu o limite de 5 pacientes do plano gratuito.
+    var limitePlanoFreeAtingido: Bool {
+        return pacientes.count >= 5
+    }
+    
     /// Inicia a escuta em tempo real (Offline-First) dos pacientes no Firebase.
     func carregarPacientes(userId: String) {
         guard !userId.isEmpty else { return }

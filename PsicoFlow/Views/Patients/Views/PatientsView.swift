@@ -15,6 +15,7 @@ struct PatientsView: View {
     
     @StateObject private var viewModel = PatientsViewModel()
     @State private var mostrarModalAdicionar = false
+    @State private var mostrarModalUpgrade = false
     
     var body: some View {
         NavigationStack {
@@ -57,7 +58,16 @@ struct PatientsView: View {
             .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always))
             .toolbar {
                 ToolbarItem {
-                    Button(action: { mostrarModalAdicionar.toggle() }) {
+                    Button(action: {
+                        
+                        let isPremium = authManager.usuarioAtual?.premium ?? false
+                        
+                        if viewModel.limitePlanoFreeAtingido && !isPremium {
+                            mostrarModalUpgrade = true
+                        } else {
+                            mostrarModalAdicionar = true
+                        }
+                    }) {
                         Image(systemName: "plus")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.teal)
@@ -72,6 +82,19 @@ struct PatientsView: View {
                     }
                 }
             }
+            .onChange(of: viewModel.pacientes.count) { oldValue, newValue in
+                let isPremium = authManager.usuarioAtual?.premium ?? false
+                
+                if oldValue == 4 && newValue == 5 && !isPremium {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        mostrarModalUpgrade = true
+                    }
+                }
+            }
+            .fullScreenCover(isPresented: $mostrarModalUpgrade) {
+                UpgradePlanView(limiteAtingido: true)
+            }
         }
     }
 }
+

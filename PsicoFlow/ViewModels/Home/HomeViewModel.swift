@@ -13,12 +13,13 @@ import FirebaseFirestore
 class HomeViewModel: ObservableObject {
     
     enum HomeSlide: Hashable {
-        case conflito, proximaSessao, resumo, pendencias
+        case conflito, proximaSessao, resumo, pendencias, premium
     }
     
     @Published var sessoesHoje: [Session] = []
     @Published var pacientes: [Patient] = []
     @Published var valoresPendentes: Double = 0.0
+    @Published var isUsuarioPremium: Bool = false
     
     @Published var mensagemConflito: String = ""
     @Published var mostrarAlertaConflito: Bool = false
@@ -96,6 +97,11 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
+    
+    var limitePlanoFreeAtingido: Bool {
+            if isUsuarioPremium { return false } // Premium não tem limite!
+            return pacientes.count >= 5
+        }
     
     private func processarDadosLocais(userId: String) {
         var sessoesDeHoje = todasSessoes
@@ -246,6 +252,7 @@ class HomeViewModel: ObservableObject {
         if proximaSessao != nil { slides.append(.proximaSessao) } else { slides.append(.resumo) }
         if primeiraDataComConflito != nil { slides.append(.conflito) }
         if primeiraPendenciaAtrasada != nil { slides.append(.pendencias) }
+        if !isUsuarioPremium { slides.append(.premium) }
         return slides
     }
     

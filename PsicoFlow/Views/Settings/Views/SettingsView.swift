@@ -16,6 +16,7 @@ struct SettingsView: View {
     
     @State private var mostrarAlertaSair = false
     @State private var mostrarAlertaExcluir = false
+    @State private var mostrarModalUpgrade = false
     
     var body: some View {
         
@@ -48,7 +49,9 @@ struct SettingsView: View {
                         }
                     }
                 } else {
-                    PremiumCard()
+                    PremiumCard(){
+                        mostrarModalUpgrade = true
+                    }
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                         .padding(.vertical, 8)
@@ -237,6 +240,10 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("Esta ação é irreversível. Todos os seus dados, configurações e informações vinculadas ao Psyes serão apagados permanentemente.")
+            }
+            
+            .fullScreenCover(isPresented: $mostrarModalUpgrade) {
+                UpgradePlanView(limiteAtingido: false)
             }
         }
     }

@@ -21,6 +21,7 @@ struct HomeView: View {
     @State private var pacienteSelecionado: Patient? = nil
     @State private var navegarParaProntuario: Bool = false
     @State private var navegarParaDiaComConflito: Bool = false
+    @State private var mostrarModalUpgrade: Bool = false
     
     @State private var slideAtual: HomeViewModel.HomeSlide = .proximaSessao
     let timer = Timer.publish(every: 7, on: .main, in: .common).autoconnect()
@@ -150,15 +151,24 @@ struct HomeView: View {
                         dismissButton: .default(Text("Entendi"))
                     )
                 }
+                .fullScreenCover(isPresented: $mostrarModalUpgrade) {
+                    UpgradePlanView(limiteAtingido: viewModel.limitePlanoFreeAtingido)
+                }
             }
             .onAppear {
                 // 3. Carregamos os dados passando o userId logado
                 if let uid = authManager.usuarioID {
                     viewModel.carregarDados(userId: uid)
                 }
+                
+                viewModel.isUsuarioPremium = authManager.usuarioAtual?.premium ?? false
+                
                 if let primeiro = viewModel.slidesAtivos.first {
                     slideAtual = primeiro
                 }
+            }
+            .onChange(of: authManager.usuarioAtual?.premium) { oldValue, newValue in
+                viewModel.isUsuarioPremium = newValue ?? false
             }
             .onReceive(timer) { _ in
                 guard viewModel.slidesAtivos.count > 1 else { return }
@@ -222,6 +232,11 @@ extension HomeView {
                 }
                 .padding(.horizontal, 20)
             }
+        case .premium:
+            PremiumHomeCard(limiteAtingido: viewModel.limitePlanoFreeAtingido) {
+                mostrarModalUpgrade = true
+            }
+            .padding(.horizontal, 20)
         }
     }
 }

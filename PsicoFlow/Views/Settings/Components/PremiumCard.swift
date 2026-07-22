@@ -11,6 +11,7 @@ import SwiftUI
 struct PremiumCard: View {
     
     @State private var isAnimating: Bool = false
+    var action: () -> Void
     
     var body: some View {
         ZStack {
@@ -70,6 +71,9 @@ struct PremiumCard: View {
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.9))
                     }
+                    Text("com 1 mês de teste grátis")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.7))
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 
@@ -82,7 +86,7 @@ struct PremiumCard: View {
                     .padding(.horizontal, 8)
                 
                 Button(action: {
-                    print("Abrir Paywall")
+                    action()
                 }) {
                     Text("Aproveitar Desconto")
                         .font(.headline)
@@ -117,5 +121,7 @@ struct PremiumCard: View {
 }
 
 #Preview {
-    PremiumCard()
+    PremiumCard(){
+        print("test")
+    }
 }
