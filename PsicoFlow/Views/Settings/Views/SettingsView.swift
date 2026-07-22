@@ -35,7 +35,7 @@ struct SettingsView: View {
                                 .font(.title2)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Plano Psyes Pro")
+                                Text("Psyes Pro")
                                     .font(.headline)
                                 Text("Assinatura ativa")
                                     .font(.subheadline)
@@ -43,18 +43,20 @@ struct SettingsView: View {
                             }
                             Spacer()
                             
-                            Text("Gerenciar")
-                                .font(.subheadline)
-                                .foregroundColor(.teal)
+                            //                            Text("Gerenciar")
+                            //                                .font(.subheadline)
+                            //                                .foregroundColor(.teal)
                         }
                     }
+                }else if user.nome == "Carregando..."{
+                    
                 } else {
                     PremiumCard(){
                         mostrarModalUpgrade = true
                     }
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                        .padding(.vertical, 8)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .padding(.vertical, 8)
                 }
                 
                 // MARK: - 2. Conta do Usuário
@@ -186,7 +188,7 @@ struct SettingsView: View {
                     }
                     
                     Button(action: {
-                            mostrarAlertaExcluir = true
+                        mostrarAlertaExcluir = true
                     }) {
                         Text("Excluir Conta")
                             .foregroundColor(.red)
