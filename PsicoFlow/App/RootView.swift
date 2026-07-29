@@ -12,6 +12,8 @@ import SwiftUI
 struct RootView: View {
     @Environment(\.scenePhase) var scenePhase
     
+    @StateObject private var networkMonitor = NetworkMonitor()
+    
     @AppStorage("viuOnboarding") private var viuOnboarding: Bool = false
     
     @StateObject private var authManager = AuthManager()
@@ -28,7 +30,10 @@ struct RootView: View {
     
     var body: some View {
         Group {
-            if !viuOnboarding {
+            if !networkMonitor.isConnected {
+                NoInternetView()
+                
+            } else if !viuOnboarding {
                 // ESTADO 1: Onboarding
                 OnboardingView(viuOnboarding: $viuOnboarding)
                 
@@ -63,9 +68,10 @@ struct RootView: View {
                     }
             }
         }
+        .animation(.default, value: networkMonitor.isConnected)
         .animation(.default, value: viuOnboarding)
         .animation(.default, value: authManager.usuarioLogado)
-        .animation(.default, value: authManager.carregandoDados) // Animação do carregamento
+        .animation(.default, value: authManager.carregandoDados)
         .animation(.default, value: precisaCompletarPerfil)
         .animation(.default, value: estaDesbloqueado)
         .onChange(of: scenePhase) { novaFase in
