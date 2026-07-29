@@ -18,6 +18,9 @@ struct EditPatientView: View {
     
     @StateObject private var viewModel: PatientFormViewModel
     
+    @State private var mostrarAlertaExclusao = false
+    @State private var textoConfirmacao = ""
+    
     init(pacienteAtual: Binding<Patient>) {
         self._pacienteAtual = pacienteAtual
         self._viewModel = StateObject(wrappedValue: PatientFormViewModel(paciente: pacienteAtual.wrappedValue))
@@ -67,6 +70,30 @@ struct EditPatientView: View {
                     TextEditor(text: $viewModel.observacoes)
                         .frame(minHeight: 80)
                 }
+                
+                // MARK: - Zona de Risco (Exclusão)
+                Section {
+                    Button(action: {
+                        mostrarAlertaExclusao = true
+                    }) {
+                        HStack {
+                            Spacer()
+                            if viewModel.estaExcluindo {
+                                ProgressView()
+                            } else {
+                                Text("Excluir Definitivamente")
+                                    .fontWeight(.bold)
+                            }
+                            Spacer()
+                        }
+                        .foregroundColor(viewModel.status == .ativo ? .gray : .red)
+                    }
+                    .disabled(viewModel.status == .ativo || viewModel.estaExcluindo)
+                } footer: {
+                    if viewModel.status == .ativo {
+                        Text("Para excluir este paciente, você deve alterar o status para inativo primeiro.")
+                    }
+                }
             }
             .navigationTitle("Editar Paciente")
             .navigationBarTitleDisplayMode(.inline)
@@ -79,7 +106,6 @@ struct EditPatientView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
                         if let uid = authManager.usuarioID {
-                            // Atualiza via Firebase passando o ID do usuário logado
                             viewModel.salvar(userId: uid)
                             pacienteAtual = viewModel.obterPacienteAtualizado(userId: uid)
                             dismiss()
@@ -89,6 +115,33 @@ struct EditPatientView: View {
                     .foregroundColor(viewModel.isFormValid ? .teal : .gray)
                     .disabled(!viewModel.isFormValid)
                 }
+            }
+            .alert("Ação Irreversível", isPresented: $mostrarAlertaExclusao) {
+                
+                TextField("Digite: \(viewModel.nome)", text: $textoConfirmacao)
+                    .textInputAutocapitalization(.words) // Melhor para nomes
+                    .autocorrectionDisabled() // Evita que o corretor altere o nome sem querer
+                
+                Button("Cancelar", role: .cancel) {
+                    textoConfirmacao = ""
+                }
+                
+                Button("Apagar Tudo", role: .destructive) {
+                    if let uid = authManager.usuarioID {
+                        Task {
+                            let sucesso = await viewModel.excluirPaciente(userId: uid)
+                            if sucesso {
+                                dismiss() // Fecha a tela e volta para a lista se deu certo
+                            }
+                        }
+                    }
+                }
+                // O botão só é habilitado se o texto digitado for exatamente igual ao nome do paciente
+                .disabled(textoConfirmacao != viewModel.nome)
+                
+            } message: {
+                // Mensagem personalizada com o nome do paciente!
+                Text("Você está prestes a excluir todos os registros de \(viewModel.nome). Isso apagará para sempre todas as sessões, pagamentos e prontuários vinculados a este paciente.")
             }
         }
     }

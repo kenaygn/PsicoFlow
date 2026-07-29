@@ -30,6 +30,40 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         try patientsCollection(userId: userId).document(paciente.id).setData(from: paciente, merge: true)
     }
     
+    // MARK: - Exclusão em Cascata
+    /// Exclui o paciente e todos os seus registros atrelados de forma atômica (tudo ou nada)
+    func excluirPacienteEmCascata(pacienteID: String, userId: String) async throws {
+        let batch = db.batch()
+        let userDocRef = db.collection("users").document(userId)
+        
+        // 1. Prepara a exclusão do Paciente[cite: 21]
+        let pacienteRef = userDocRef.collection("patients").document(pacienteID)
+        batch.deleteDocument(pacienteRef)
+        
+        // 2. Busca e prepara exclusão das Sessões[cite: 23]
+        let sessoes = try await userDocRef.collection("sessions")
+            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+        for doc in sessoes.documents { batch.deleteDocument(doc.reference) }
+        
+        // 3. Busca e prepara exclusão dos Pagamentos[cite: 22]
+        let pagamentos = try await userDocRef.collection("payments")
+            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+        for doc in pagamentos.documents { batch.deleteDocument(doc.reference) }
+        
+        // 4. Busca e prepara exclusão das Evoluções[cite: 24]
+        let evolucoes = try await userDocRef.collection("evolutions")
+            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+        for doc in evolucoes.documents { batch.deleteDocument(doc.reference) }
+        
+        // 5. Busca e prepara exclusão das Sessões Fixas / Contratos[cite: 25]
+        let sessoesFixas = try await userDocRef.collection("fixed_sessions")
+            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+        for doc in sessoesFixas.documents { batch.deleteDocument(doc.reference) }
+        
+        // 6. Executa a exclusão de todos os documentos ao mesmo tempo!
+        try await batch.commit()
+    }
+    
     /// Cria um túnel em tempo real com o Firestore para os pacientes (Offline-First)
     func escutarPacientes(userId: String, onChange: @escaping ([Patient]) -> Void) -> ListenerRegistration {
         return patientsCollection(userId: userId).addSnapshotListener { snapshot, error in

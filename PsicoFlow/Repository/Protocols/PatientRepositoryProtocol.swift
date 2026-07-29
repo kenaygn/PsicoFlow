@@ -11,4 +11,5 @@ protocol PatientRepositoryProtocol {
     func fetchPacientes(userId: String) async throws -> [Patient]
     func salvarPaciente(_ paciente: Patient, userId: String) async throws
     func atualizarPaciente(_ paciente: Patient, userId: String) async throws
+    func excluirPacienteEmCascata(pacienteID: String, userId: String) async throws
 }

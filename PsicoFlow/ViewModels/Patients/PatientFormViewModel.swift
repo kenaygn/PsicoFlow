@@ -19,6 +19,8 @@ class PatientFormViewModel: ObservableObject {
     @Published var status: PatientStatus = .ativo
     @Published var observacoes: String = ""
     
+    @Published var estaExcluindo: Bool = false
+    
     private var pacienteOriginal: Patient?
     
     private let patientRepository: PatientRepositoryProtocol
@@ -103,6 +105,28 @@ class PatientFormViewModel: ObservableObject {
             } catch {
                 print("Erro ao processar salvamento do paciente: \(error.localizedDescription)")
             }
+        }
+    }
+    
+    func excluirPaciente(userId: String) async -> Bool {
+        // Pega o ID do paciente original (que veio da tela anterior)
+        guard let id = pacienteOriginal?.id else { return false }
+        
+        self.estaExcluindo = true
+        
+        do {
+            // Fazemos o cast para o FirebaseRepository para acessar a função de cascata que criamos
+            if let repo = patientRepository as? PatientFirebaseRepository {
+                try await repo.excluirPacienteEmCascata(pacienteID: id, userId: userId)
+                
+                self.estaExcluindo = false
+                return true // Retorna true para a View fechar a tela
+            }
+            return false
+        } catch {
+            print("Erro ao excluir paciente em cascata: \(error.localizedDescription)")
+            self.estaExcluindo = false
+            return false
         }
     }
 }
