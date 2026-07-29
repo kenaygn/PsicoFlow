@@ -17,7 +17,6 @@ class SystemUpdateManager {
     private let generatorService: SessionGeneratorService
     
     private init() {
-        // 1. Instanciando os repositórios reais do Firebase
         let patientRepo = PatientFirebaseRepository()
         let paymentRepo = PaymentFirebaseRepository()
         let fixedSessionRepo = FixedSessionFirebaseRepository()
@@ -35,21 +34,19 @@ class SystemUpdateManager {
         )
     }
     
-    // 2. Receber o userId para repassar aos serviços
     func runStartupChecks(userId: String) {
         guard !userId.isEmpty else { return }
         
-        print("🔄 [System Manager] A executar verificações de sistema...")
+        print("[System Manager] A executar verificações de sistema...")
         
-        // 3. Rodar as verificações em uma Task assíncrona
         Task {
             do {
                 try await faturamentoService.gerarCobrancasAtuaisEFuturas(userId: userId)
                 try await generatorService.projetarSessoesFuturas(userId: userId)
                 
-                print("✅ [System Manager] Verificações concluídas.")
+                print("[System Manager] Verificações concluídas.")
             } catch {
-                print("❌ [System Manager] Erro durante as verificações: \(error.localizedDescription)")
+                print("[System Manager] Erro durante as verificações: \(error.localizedDescription)")
             }
         }
     }

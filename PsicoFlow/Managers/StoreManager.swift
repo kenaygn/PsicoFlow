@@ -34,7 +34,7 @@ class StoreManager: ObservableObject {
         transactionListener?.cancel()
     }
     
-    // 1. Busca as informações do plano direto da Apple
+    // Busca as informações do plano direto da Apple
     func carregarProdutos() async {
         do {
             let storeProducts = try await Product.products(for: productIDs)
@@ -44,7 +44,7 @@ class StoreManager: ObservableObject {
         }
     }
     
-    // 2. Aciona o modal de pagamento do iOS
+    // Aciona o modal de pagamento do iOS
     func comprar(_ product: Product) async throws -> Transaction? {
         estaComprando = true
         defer { estaComprando = false }
@@ -89,8 +89,9 @@ class StoreManager: ObservableObject {
             usuarioModificado.premium = false
             try? await userRepository.updateUser(user: usuarioModificado)
             
-            // Dispara o gatilho para a sua interface subir a tela de aviso!
-            self.assinaturaExpirou = true
+            await MainActor.run {
+                self.assinaturaExpirou = true
+            }
             print("Assinatura expirada. Firebase atualizado para Free.")
         }
         // CENÁRIO B: Assinatura renovou automaticamente por fora (ou assinou em outro aparelho)
@@ -101,7 +102,7 @@ class StoreManager: ObservableObject {
         }
     }
     
-    // 3. Verifica se a transação é verdadeira
+    // Verifica se a transação é verdadeira
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified:
@@ -111,17 +112,15 @@ class StoreManager: ObservableObject {
         }
     }
     
-    // 4. Escuta compras feitas por fora
+    // Escuta compras feitas por fora
     private func escutarTransacoes() -> Task<Void, Error> {
-        return Task.detached {
+        return Task {
             for await result in Transaction.updates {
                 do {
-                    // Como estamos em um escopo isolado, chamamos o checkVerified da classe
-                    // Se atualizar no background, nós disparamos uma notificação para o app saber
-                    let transaction = try await self.checkVerified(result)
+                    let transaction = try self.checkVerified(result)
                     await transaction.finish()
                     
-                    // Dispara um aviso global para a tela principal chamar o `sincronizarStatusComApple`
+                    // Dispara o aviso global com segurança na Main Thread
                     NotificationCenter.default.post(name: NSNotification.Name("AtualizarStoreKit"), object: nil)
                     
                 } catch {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 /// O Controlador de Tráfego Global do aplicativo.
 /// Decide qual experiência o usuário deve ver com base no seu estado atual.
@@ -17,6 +18,8 @@ struct RootView: View {
     @AppStorage("viuOnboarding") private var viuOnboarding: Bool = false
     
     @StateObject private var authManager = AuthManager()
+    
+    @StateObject private var storeManager = StoreManager()
     
     @AppStorage("usarFaceID") private var appExigeFaceID = false
     @State private var estaDesbloqueado = false
@@ -65,6 +68,12 @@ struct RootView: View {
                     .environmentObject(authManager)
                     .onAppear {
                         estaDesbloqueado = true
+                        
+                        if let usuario = authManager.usuarioAtual {
+                            Task {
+                                await storeManager.sincronizarStatusComApple(usuarioAtual: usuario, userRepository: UserFirebaseRepository())
+                            }
+                        }
                     }
             }
         }
@@ -75,12 +84,28 @@ struct RootView: View {
         .animation(.default, value: precisaCompletarPerfil)
         .animation(.default, value: estaDesbloqueado)
         .onChange(of: scenePhase) { novaFase in
-            // Quando o usuário minimiza o app (arrasta para cima) ou trava a tela do celular
             if novaFase == .background {
-                // Se a segurança estiver ativada, nós retiramos o status de desbloqueado.
                 if appExigeFaceID {
                     estaDesbloqueado = false
                 }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AtualizarStoreKit")).receive(on: RunLoop.main)) { _ in
+            if let usuario = authManager.usuarioAtual {
+                Task {
+                    await storeManager.sincronizarStatusComApple(usuarioAtual: usuario, userRepository: UserFirebaseRepository())
+                }
+            }
+        }
+        .alert("Sua assinatura expirou", isPresented: $storeManager.assinaturaExpirou) {
+            Button("Entendi", role: .cancel) { }
+        } message: {
+            Text("Seu plano Psyes Pro chegou ao fim. Algumas funcionalidades e pacientes excedentes foram bloqueados. Acesse os Ajustes para renovar e destravar seu acesso.")
+        }
+        
+        .onChange(of: storeManager.assinaturaExpirou) { _ , expirou in
+            if expirou {
+                authManager.usuarioAtual?.premium = false
             }
         }
     }

@@ -60,7 +60,7 @@ class AuthManager: ObservableObject {
         do {
             self.usuarioAtual = try await userRepository.fetchUser(uid: uid)
         } catch {
-            print("Erro ao buscar dados do usuário no Firestore: \(error.localizedDescription)")
+            print("Erro ao buscar dados: \(error.localizedDescription)")
             self.usuarioAtual = nil
         }
     }
