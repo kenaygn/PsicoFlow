@@ -76,6 +76,16 @@ struct PatientDetailView: View {
                                 if let uid = authManager.usuarioID {
                                     viewModel.adicionarEvolucao(texto: textoDigitado, userId: uid)
                                 }
+                            },
+                            atualizarEvolucao: { evolucaoAtualizada in
+                                if let uid = authManager.usuarioID {
+                                    viewModel.atualizarEvolucao(evolucaoAtualizada: evolucaoAtualizada, userId: uid)
+                                }
+                            },
+                            deletarEvolucao: { idParaDeletar in
+                                if let uid = authManager.usuarioID {
+                                    viewModel.deletarEvolucao(id: idParaDeletar, userId: uid)
+                                }
                             }
                         )
                     } else if abaSelecionada == 1 {

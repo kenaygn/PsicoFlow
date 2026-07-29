@@ -10,4 +10,6 @@ import Foundation
 protocol EvolutionRepositoryProtocol {
     func fetchEvolucoes(paraPacienteID pacienteID: String, userId: String) async throws -> [Evolution]
     func salvarEvolucao(_ evolucao: Evolution, userId: String) async throws
+    func atualizarEvolucao(_ evolucao: Evolution, userId: String) async throws
+    func deletarEvolucao(id: String, userId: String) async throws
 }

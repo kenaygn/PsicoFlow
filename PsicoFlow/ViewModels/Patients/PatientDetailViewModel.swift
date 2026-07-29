@@ -52,7 +52,13 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarEvolucoes(userId: String) async {
         do {
-            self.evolucoes = try await evolutionRepository.fetchEvolucoes(paraPacienteID: paciente.id, userId: userId)
+            let dados = try await evolutionRepository.fetchEvolucoes(paraPacienteID: paciente.id, userId: userId)
+            
+            await MainActor.run {
+                withAnimation(.spring()) {
+                    self.evolucoes = dados
+                }
+            }
         } catch {
             print("Erro ao carregar evoluções: \(error.localizedDescription)")
         }
@@ -61,34 +67,43 @@ class PatientDetailViewModel: ObservableObject {
     func carregarPagamentos(userId: String) async {
         do {
             let dados = try await paymentRepository.fetchPagamentos(userId: userId)
-            self.pagamentos = dados.filter { $0.pacienteID == paciente.id }.sorted { $0.mesReferencia > $1.mesReferencia }
+            
+            await MainActor.run {
+                withAnimation(.spring()) {
+                    self.pagamentos = dados.filter { $0.pacienteID == paciente.id }.sorted { $0.mesReferencia > $1.mesReferencia }
+                }
+            }
         } catch {
             print("Erro ao carregar pagamentos: \(error.localizedDescription)")
         }
     }
     
-    /// Busca contratos recorrentes e sessões únicas futuras no Firebase.
     func carregarSessoesConfiguradas(userId: String) async {
         do {
             let fixas = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
-            self.sessoesFixas = fixas.filter { $0.pacienteID == paciente.id }
-            
             let todasSessoes = try await sessionRepository.fetchSessoes(userId: userId)
             let hoje = Calendar.current.startOfDay(for: Date())
             
-            self.sessoesAvulsasFuturas = todasSessoes.filter { sessao in
-                sessao.pacienteID == paciente.id &&
-                sessao.sessaoFixaID == nil &&
-                (sessao.status == .agendada || sessao.status == .adiada) &&
-                Calendar.current.startOfDay(for: sessao.dataDaSessão) >= hoje
+            await MainActor.run {
+                withAnimation(.spring()) {
+                    self.sessoesFixas = fixas.filter { $0.pacienteID == paciente.id }
+                    
+                    self.sessoesAvulsasFuturas = todasSessoes.filter { sessao in
+                        sessao.pacienteID == paciente.id &&
+                        sessao.sessaoFixaID == nil &&
+                        (sessao.status == .agendada || sessao.status == .adiada) &&
+                        Calendar.current.startOfDay(for: sessao.dataDaSessão) >= hoje
+                    }
+                    .sorted { $0.dataDaSessão < $1.dataDaSessão }
+                }
             }
-            .sorted { $0.dataDaSessão < $1.dataDaSessão }
         } catch {
             print("Erro ao carregar sessões configuradas: \(error.localizedDescription)")
         }
     }
-        
-    /// Alterna o status de pagamento de uma mensalidade e persiste no Firebase.
+    
+    // MARK: - Ações Locais e Firebase (Com Animação)
+    
     func togglePagamento(pagamentoID: String, userId: String) {
         if let index = pagamentos.firstIndex(where: { $0.id == pagamentoID }) {
             var pagamentoAtualizado = pagamentos[index]
@@ -98,7 +113,12 @@ class PatientDetailViewModel: ObservableObject {
             Task {
                 do {
                     try await paymentRepository.atualizarPagamento(pagamentoAtualizado, userId: userId)
-                    self.pagamentos[index] = pagamentoAtualizado
+                    
+                    await MainActor.run {
+                        withAnimation(.spring()) {
+                            self.pagamentos[index] = pagamentoAtualizado
+                        }
+                    }
                 } catch {
                     print("Erro ao atualizar pagamento: \(error.localizedDescription)")
                 }
@@ -106,7 +126,6 @@ class PatientDetailViewModel: ObservableObject {
         }
     }
     
-    /// Cria e persiste uma nova evolução clínica no Firebase.
     func adicionarEvolucao(texto: String, userId: String) {
         let novaEvolucao = Evolution(
             id: UUID().uuidString,
@@ -119,13 +138,53 @@ class PatientDetailViewModel: ObservableObject {
         Task {
             do {
                 try await evolutionRepository.salvarEvolucao(novaEvolucao, userId: userId)
-                self.evolucoes.insert(novaEvolucao, at: 0)
+                
+                await MainActor.run {
+                    withAnimation(.spring()) {
+                        self.evolucoes.insert(novaEvolucao, at: 0)
+                    }
+                }
             } catch {
                 print("Erro ao salvar evolução: \(error.localizedDescription)")
             }
         }
     }
+    
+    func atualizarEvolucao(evolucaoAtualizada: Evolution, userId: String) {
+        Task {
+            do {
+                try await evolutionRepository.atualizarEvolucao(evolucaoAtualizada, userId: userId)
+                
+                await MainActor.run {
+                    withAnimation(.spring()) {
+                        if let index = self.evolucoes.firstIndex(where: { $0.id == evolucaoAtualizada.id }) {
+                            self.evolucoes[index] = evolucaoAtualizada
+                        }
+                    }
+                }
+            } catch {
+                print("Erro ao atualizar evolução: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func deletarEvolucao(id: String, userId: String) {
+        Task {
+            do {
+                try await evolutionRepository.deletarEvolucao(id: id, userId: userId)
+                
+                await MainActor.run {
+                    withAnimation(.spring()) {
+                        self.evolucoes.removeAll { $0.id == id }
+                    }
+                }
+            } catch {
+                print("Erro ao deletar evolução: \(error.localizedDescription)")
+            }
+        }
+    }
         
+    // MARK: - Helpers
     func nomeDoDiaDaSemana(_ dia: Int) -> String {
         let diasEmPortugues = [
             "Domingo", "Segunda-feira", "Terça-feira",

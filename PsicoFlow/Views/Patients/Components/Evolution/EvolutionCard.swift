@@ -7,10 +7,11 @@
 
 import SwiftUI
 
-/// Componente visual que exibe um registro individual do prontuário ou evolução clínica.
 struct EvolutionCardView: View {
         
     let evolucao: Evolution
+    var onEdit: () -> Void
+    var onDelete: () -> Void
     
     /// - Note: Para listas com milhares de evoluções, considere mover este
     ///         DateFormatter para uma constante estática para evitar recriação.
@@ -37,7 +38,6 @@ struct EvolutionCardView: View {
                 
                 Spacer()
                 
-                // TODO: Tornar este Badge dinâmico para suportar futuras mídias (ex: Áudio, Anexos).
                 Text("TEXTO")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.teal)
@@ -45,6 +45,20 @@ struct EvolutionCardView: View {
                     .padding(.vertical, 4)
                     .background(Color.teal.opacity(0.1))
                     .clipShape(Capsule())
+                
+                Menu {
+                    Button(action: onEdit) {
+                        Label("Editar", systemImage: "pencil")
+                    }
+                    Button(role: .destructive, action: onDelete) {
+                        Label("Excluir", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundColor(.gray)
+                        .padding(.leading, 8)
+                        .padding(.vertical, 4)
+                }
             }
             
             // MARK: - Conteúdo Clínico

@@ -26,4 +26,12 @@ class EvolutionFirebaseRepository: EvolutionRepositoryProtocol {
     func salvarEvolucao(_ evolucao: Evolution, userId: String) async throws {
         try collection(userId: userId).document(evolucao.id).setData(from: evolucao)
     }
+    
+    func atualizarEvolucao(_ evolucao: Evolution, userId: String) async throws {
+        try collection(userId: userId).document(evolucao.id).setData(from: evolucao, merge: true)
+    }
+    
+    func deletarEvolucao(id: String, userId: String) async throws {
+        try await collection(userId: userId).document(id).delete()
+    }
 }

@@ -7,15 +7,19 @@
 
 import SwiftUI
 
-/// Aba responsável pela exibição do histórico clínico do paciente
-/// e pela inserção rápida de novas evoluções através de um formulário inline.
 struct EvolutionTabView: View {
         
     var evolucoes: [Evolution]
     var adicionarEvolucao: ((String) -> Void)
+    var atualizarEvolucao: ((Evolution) -> Void)
+    var deletarEvolucao: ((String) -> Void)
     
-    @State private var isAddingNova = false
-    @State private var novaEvolucaoTexto = ""
+    @State private var isShowingForm = false
+    @State private var textoFormulario = ""
+    @State private var evolucaoEmEdicao: Evolution? = nil
+    
+    @State private var mostrarAlertaExclusao = false
+    @State private var evolucaoParaExcluir: Evolution? = nil
     
     var body: some View {
         VStack(spacing: 16) {
@@ -25,17 +29,14 @@ struct EvolutionTabView: View {
                 Text("Histórico Clínico")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
-                
                 Spacer()
-                
-                // TODO: Implementar busca no histórico de evoluções
             }
             .padding(.bottom, 4)
             
-            // MARK: - Formulário Inline
-            if isAddingNova {
+            // MARK: - Formulário Inline (Serve para Criar e Editar)
+            if isShowingForm {
                 VStack(spacing: 16) {
-                    TextEditor(text: $novaEvolucaoTexto)
+                    TextEditor(text: $textoFormulario)
                         .frame(minHeight: 120)
                         .padding(12)
                         .background(Color(.systemGray6))
@@ -47,10 +48,7 @@ struct EvolutionTabView: View {
                     
                     HStack(spacing: 12) {
                         Button("Cancelar") {
-                            withAnimation(.spring()) {
-                                isAddingNova = false
-                                novaEvolucaoTexto = ""
-                            }
+                            fecharFormulario()
                         }
                         .font(.system(size: 15, weight: .semibold))
                         .frame(maxWidth: .infinity)
@@ -60,11 +58,15 @@ struct EvolutionTabView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         
                         Button("Guardar") {
-                            adicionarEvolucao(novaEvolucaoTexto)
-                            withAnimation(.spring()) {
-                                isAddingNova = false
-                                novaEvolucaoTexto = ""
+                            if var evoParaAtualizar = evolucaoEmEdicao {
+                                // MODO EDIÇÃO
+                                evoParaAtualizar.conteudo = textoFormulario
+                                atualizarEvolucao(evoParaAtualizar)
+                            } else {
+                                // MODO CRIAÇÃO
+                                adicionarEvolucao(textoFormulario)
                             }
+                            fecharFormulario()
                         }
                         .font(.system(size: 15, weight: .semibold))
                         .frame(maxWidth: .infinity)
@@ -81,11 +83,13 @@ struct EvolutionTabView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
             
-            // MARK: - Ações
-            if !isAddingNova {
+            // MARK: - Botão Novo Registro
+            if !isShowingForm {
                 Button(action: {
                     withAnimation(.spring()) {
-                        isAddingNova = true
+                        evolucaoEmEdicao = nil
+                        textoFormulario = ""
+                        isShowingForm = true
                     }
                 }) {
                     HStack {
@@ -102,18 +106,17 @@ struct EvolutionTabView: View {
                 }
             }
             
-            // MARK: - Lista de Evoluções e Estado Vazio
-            if evolucoes.isEmpty && !isAddingNova {
+            // MARK: - Lista de Evoluções
+            if evolucoes.isEmpty && !isShowingForm {
+                // ... (Estado vazio continua idêntico)
                 VStack(spacing: 12) {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.system(size: 40))
                         .foregroundColor(Color(.systemGray4))
                         .padding(.top, 40)
-                    
                     Text("Nenhuma evolução registrada.")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(.darkGray))
-                    
                     Text("Clique em 'Novo Registro' para iniciar o prontuário deste paciente.")
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
@@ -122,15 +125,45 @@ struct EvolutionTabView: View {
                 }
                 .padding(.bottom, 60)
             } else {
-                // Note: A ordenação ocorre a cada renderização da View.
-                //       Considere ordenar o array `evolucoes` diretamente na ViewModel
-                //       para melhorar a performance caso o histórico clínico seja muito longo.
                 ForEach(evolucoes.sorted(by: { $0.data > $1.data })) { evolucao in
-                    EvolutionCardView(evolucao: evolucao)
+                    EvolutionCardView(
+                        evolucao: evolucao,
+                        onEdit: {
+                            withAnimation(.spring()) {
+                                evolucaoEmEdicao = evolucao
+                                textoFormulario = evolucao.conteudo
+                                isShowingForm = true
+                            }
+                        },
+                        onDelete: {
+                            evolucaoParaExcluir = evolucao
+                            mostrarAlertaExclusao = true
+                        }
+                    )
                 }
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 16)
+        
+        // Alerta de Exclusão (Para evitar acidentes clínicos)
+        .alert("Excluir Prontuário", isPresented: $mostrarAlertaExclusao) {
+            Button("Cancelar", role: .cancel) { }
+            Button("Excluir", role: .destructive) {
+                if let evo = evolucaoParaExcluir {
+                    deletarEvolucao(evo.id)
+                }
+            }
+        } message: {
+            Text("Tem certeza que deseja excluir esta anotação clínica? Esta ação não pode ser desfeita.")
+        }
+    }
+    
+    private func fecharFormulario() {
+        withAnimation(.spring()) {
+            isShowingForm = false
+            textoFormulario = ""
+            evolucaoEmEdicao = nil
+        }
     }
 }
