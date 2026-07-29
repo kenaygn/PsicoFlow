@@ -55,6 +55,7 @@ class StoreManager: ObservableObject {
         case .success(let verification):
             let transaction = try checkVerified(verification)
             await transaction.finish()
+            NotificationCenter.default.post(name: NSNotification.Name("AtualizarStoreKit"), object: nil)
             return transaction
             
         case .userCancelled, .pending:

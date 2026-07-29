@@ -40,6 +40,7 @@ struct HomeView: View {
                     }
                     .tabViewStyle(.page(indexDisplayMode: viewModel.slidesAtivos.count == 1 ? .never : .automatic))
                     .indexViewStyle(.page(backgroundDisplayMode: .always))
+                    .id(viewModel.slidesAtivos.count)
                     .frame(height: 208)
                     .padding(.vertical, -20)
                     .padding(.horizontal, -20)
@@ -170,6 +171,17 @@ struct HomeView: View {
             .onChange(of: authManager.usuarioAtual?.premium) { oldValue, newValue in
                 viewModel.isUsuarioPremium = newValue ?? false
             }
+            
+            .onChange(of: viewModel.slidesAtivos) { velhosSlides, novosSlides in
+                // Se a nova lista de slides não contém mais o slide que estamos olhando
+                if !novosSlides.contains(slideAtual) {
+                    // Volta a visualização para o primeiro slide disponível com segurança
+                    if let primeiro = novosSlides.first {
+                        slideAtual = primeiro
+                    }
+                }
+            }
+            
             .onReceive(timer) { _ in
                 guard viewModel.slidesAtivos.count > 1 else { return }
                 

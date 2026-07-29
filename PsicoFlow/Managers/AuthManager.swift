@@ -56,7 +56,7 @@ class AuthManager: ObservableObject {
     }
     
     /// Busca o documento do usuário no Firestore e atualiza a interface
-    private func buscarDadosDoUsuario(uid: String) async {
+    func buscarDadosDoUsuario(uid: String) async {
         do {
             self.usuarioAtual = try await userRepository.fetchUser(uid: uid)
         } catch {

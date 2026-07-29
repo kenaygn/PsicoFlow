@@ -94,6 +94,10 @@ struct RootView: View {
             if let usuario = authManager.usuarioAtual {
                 Task {
                     await storeManager.sincronizarStatusComApple(usuarioAtual: usuario, userRepository: UserFirebaseRepository())
+                    
+                    if let uid = authManager.usuarioID {
+                        await authManager.buscarDadosDoUsuario(uid: uid)
+                    }
                 }
             }
         }

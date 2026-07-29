@@ -24,6 +24,7 @@ class PatientFormViewModel: ObservableObject {
     @Published var mostrarAlertaLimite: Bool = false
     
     private var pacienteOriginal: Patient?
+    private let idGerado: String = UUID().uuidString
     
     private let patientRepository: PatientRepositoryProtocol
     private let sessionGenerator: SessionGeneratorService
@@ -73,7 +74,7 @@ class PatientFormViewModel: ObservableObject {
         let valorConvertido = Double(valorTexto.replacingOccurrences(of: ",", with: ".")) ?? 0.0
         
         return Patient(
-            id: pacienteOriginal?.id ?? UUID().uuidString,
+            id: pacienteOriginal?.id ?? idGerado,
             psicologoID: userId,
             nome: nome,
             email: email,
