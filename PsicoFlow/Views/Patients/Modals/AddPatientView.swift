@@ -52,16 +52,29 @@ struct AddPatientView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
-                        // 2. Utilizamos o ID do usuário autenticado para salvar
                         if let uid = authManager.usuarioID {
-                            viewModel.salvar(userId: uid)
-                            dismiss()
+                            let isPremium = authManager.usuarioAtual?.premium ?? false
+                            
+                            Task {
+                                let sucesso = await viewModel.salvar(userId: uid, isPremium: isPremium)
+                                
+                                if sucesso {
+                                    let novoPaciente = viewModel.obterPacienteAtualizado(userId: uid)
+                                    onSave(novoPaciente)
+                                    dismiss()
+                                }
+                            }
                         }
                     }
                     .fontWeight(.bold)
                     .foregroundColor(viewModel.isFormValid ? .teal : .gray)
                     .disabled(!viewModel.isFormValid)
                 }
+            }
+            .alert("Limite de Pacientes", isPresented: $viewModel.mostrarAlertaLimite) {
+                Button("Entendi", role: .cancel) { }
+            } message: {
+                Text("Você atingiu o limite de 5 pacientes ativos do plano gratuito. Assine o Psyes Pro para adicionar novos pacientes.")
             }
         }
     }

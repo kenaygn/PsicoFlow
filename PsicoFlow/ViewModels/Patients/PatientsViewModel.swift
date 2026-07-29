@@ -44,10 +44,15 @@ class PatientsViewModel: ObservableObject {
         }
     }
     
+    /// Conta quantos pacientes estão com o status ativo no momento.
+    var numeroDePacientesAtivos: Int {
+        return pacientes.filter { $0.status == .ativo }.count
+    }
+    
     /// Verifica se o usuário atingiu o limite de 5 pacientes do plano gratuito.
     var limitePlanoFreeAtingido: Bool {
         if isUsuarioPremium { return false } // 👈 Regra dinâmica
-        return pacientes.count >= 5
+        return numeroDePacientesAtivos >= 5 // 👈 Agora usa apenas os ativos
     }
     
     /// Inicia a escuta em tempo real (Offline-First) dos pacientes no Firebase.

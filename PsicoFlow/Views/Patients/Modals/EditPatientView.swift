@@ -106,9 +106,16 @@ struct EditPatientView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
                         if let uid = authManager.usuarioID {
-                            viewModel.salvar(userId: uid)
-                            pacienteAtual = viewModel.obterPacienteAtualizado(userId: uid)
-                            dismiss()
+                            let isPremium = authManager.usuarioAtual?.premium ?? false
+                            
+                            Task {
+                                let sucesso = await viewModel.salvar(userId: uid, isPremium: isPremium)
+                                
+                                if sucesso {
+                                    pacienteAtual = viewModel.obterPacienteAtualizado(userId: uid)
+                                    dismiss()
+                                }
+                            }
                         }
                     }
                     .fontWeight(.bold)
@@ -116,6 +123,13 @@ struct EditPatientView: View {
                     .disabled(!viewModel.isFormValid)
                 }
             }
+            
+            .alert("Limite de Pacientes", isPresented: $viewModel.mostrarAlertaLimite) {
+                Button("Entendi", role: .cancel) { }
+            } message: {
+                Text("Você atingiu o limite de 5 pacientes ativos do plano gratuito. Assine o Psyes Pro para gerenciar mais pacientes simultaneamente.")
+            }
+            
             .alert("Ação Irreversível", isPresented: $mostrarAlertaExclusao) {
                 
                 TextField("Digite: \(viewModel.nome)", text: $textoConfirmacao)

@@ -21,6 +21,8 @@ class PatientFormViewModel: ObservableObject {
     
     @Published var estaExcluindo: Bool = false
     
+    @Published var mostrarAlertaLimite: Bool = false
+    
     private var pacienteOriginal: Patient?
     
     private let patientRepository: PatientRepositoryProtocol
@@ -84,37 +86,57 @@ class PatientFormViewModel: ObservableObject {
         )
     }
     
-    func salvar(userId: String) {
+    func salvar(userId: String, isPremium: Bool) async -> Bool {
+        
+        let isNovoAtivo = pacienteOriginal == nil && status == .ativo
+        let isReativando = pacienteOriginal?.status == .inativo && status == .ativo
+        let isAtivando = isNovoAtivo || isReativando
+        
+        if isAtivando && !isPremium {
+            do {
+                let todosPacientes = try await patientRepository.fetchPacientes(userId: userId)
+                let totalAtivos = todosPacientes.filter { $0.status == .ativo }.count
+                
+                if totalAtivos >= 5 {
+                    self.mostrarAlertaLimite = true
+                    return false
+                }
+            } catch {
+                print("Erro ao verificar limite de pacientes: \(error.localizedDescription)")
+                return false
+            }
+        }
+        
         let pacienteAtualizado = obterPacienteAtualizado(userId: userId)
         let statusAntigo = pacienteOriginal?.status ?? .ativo
         let isNovoPaciente = pacienteOriginal == nil
         
-        Task {
-            do {
-                try await patientRepository.atualizarPaciente(pacienteAtualizado, userId: userId)
-                
-                try await sessionGenerator.projetarSessoesFuturas(userId: userId)
-                
-                if statusAntigo == .ativo && pacienteAtualizado.status == .inativo {
-                    try await paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id, userId: userId)
-                } else if (statusAntigo == .inativo && pacienteAtualizado.status == .ativo) || isNovoPaciente {
-                    try await paymentService.gerarCobrancasAtuaisEFuturas(userId: userId)
-                }
-                
-                let precoMudou = pacienteOriginal != nil && pacienteOriginal!.valor != pacienteAtualizado.valor
-                
-                if statusAntigo == .ativo && pacienteAtualizado.status == .ativo && precoMudou {
-                    // Chama o serviço para atualizar os pagamentos pendentes no Firebase
-                    try await paymentService.atualizarValorPagamentosPendentes(
-                        pacienteID: pacienteAtualizado.id,
-                        novoValor: pacienteAtualizado.valor,
-                        userId: userId
-                    )
-                }
-                
-            } catch {
-                print("Erro ao processar salvamento do paciente: \(error.localizedDescription)")
+        do {
+            try await patientRepository.atualizarPaciente(pacienteAtualizado, userId: userId)
+            
+            try await sessionGenerator.projetarSessoesFuturas(userId: userId)
+            
+            if statusAntigo == .ativo && pacienteAtualizado.status == .inativo {
+                try await paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id, userId: userId)
+            } else if (statusAntigo == .inativo && pacienteAtualizado.status == .ativo) || isNovoPaciente {
+                try await paymentService.gerarCobrancasAtuaisEFuturas(userId: userId)
             }
+            
+            let precoMudou = pacienteOriginal != nil && pacienteOriginal!.valor != pacienteAtualizado.valor
+            
+            if statusAntigo == .ativo && pacienteAtualizado.status == .ativo && precoMudou {
+                try await paymentService.atualizarValorPagamentosPendentes(
+                    pacienteID: pacienteAtualizado.id,
+                    novoValor: pacienteAtualizado.valor,
+                    userId: userId
+                )
+            }
+            
+            return true
+            
+        } catch {
+            print("Erro ao processar salvamento do paciente: \(error.localizedDescription)")
+            return false
         }
     }
     

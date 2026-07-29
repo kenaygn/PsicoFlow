@@ -81,7 +81,7 @@ struct PatientsView: View {
                     }
                 }
             }
-            .onChange(of: viewModel.pacientes.count) { oldValue, newValue in
+            .onChange(of: viewModel.numeroDePacientesAtivos) { oldValue, newValue in
                 if oldValue == 4 && newValue == 5 && !viewModel.isUsuarioPremium {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                         mostrarModalUpgrade = true
