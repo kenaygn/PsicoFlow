@@ -6,9 +6,14 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct UpgradePlanView: View {
     @Environment(\.dismiss) var dismiss
+    
+    @EnvironmentObject var authManager: AuthManager
+    @StateObject private var storeManager = StoreManager()
+    
     @State private var isAnimating: Bool = false
     var limiteAtingido: Bool = false
     
@@ -41,7 +46,7 @@ struct UpgradePlanView: View {
                 // Conteúdo Principal
                 VStack(spacing: 0) {
                     
-//                     1. Banner de Limite Atingido (Topo)
+                    //                     1. Banner de Limite Atingido (Topo)
                     if limiteAtingido{
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: "exclamationmark.triangle.fill")
@@ -68,14 +73,14 @@ struct UpgradePlanView: View {
                     VStack{
                         // 2. Oferta Especial e Título
                         VStack(spacing: 16) {
-    //                        Text("OFERTA ESPECIAL")
-    //                            .font(.subheadline)
-    //                            .fontWeight(.bold)
-    //                            .padding(.horizontal, 16)
-    //                            .padding(.vertical, 8)
-    //                            .background(Color.white.opacity(0.25))
-    //                            .foregroundColor(.white)
-    //                            .clipShape(Capsule())
+                            //                        Text("OFERTA ESPECIAL")
+                            //                            .font(.subheadline)
+                            //                            .fontWeight(.bold)
+                            //                            .padding(.horizontal, 16)
+                            //                            .padding(.vertical, 8)
+                            //                            .background(Color.white.opacity(0.25))
+                            //                            .foregroundColor(.white)
+                            //                            .clipShape(Capsule())
                             
                             Text("Psyes Pro")
                                 .font(.system(size: 40, weight: .bold))
@@ -148,8 +153,8 @@ struct UpgradePlanView: View {
                         alignment: .topTrailing
                     )
                     .padding(.horizontal, 16)
-
-
+                    
+                    
                     
                     Spacer()
                     
@@ -171,18 +176,54 @@ struct UpgradePlanView: View {
                         }
                         
                         Button(action: {
-                            print("Abrir Paywall / StoreKit")
+                            // Pegamos o produto que foi carregado da Apple
+                            guard let produto = storeManager.produtosDisponiveis.first else { return }
+                            
+                            Task {
+                                do {
+                                    // Chama o Face ID / Pagamento
+                                    if let transacao = try await storeManager.comprar(produto) {
+                                        print("COMPRA REALIZADA COM SUCESSO! ID: \(transacao.id)")
+                                        
+                                        if var usuarioAtualizado = authManager.usuarioAtual {
+                                            
+                                            // Muda o status localmente
+                                            usuarioAtualizado.premium = true
+                                            
+                                            // Chama o repositório para salvar no banco
+                                            let userRepository = UserFirebaseRepository()
+                                            try? await userRepository.updateUser(user: usuarioAtualizado)
+                                            
+                                            print("Usuário atualizado para Premium no Firebase!")
+                                        }
+                                        
+                                        dismiss() // Fecha a tela de vendas
+                                    }
+                                } catch {
+                                    print("Falha na compra: \(error)")
+                                }
+                            }
                         }) {
-                            Text("Iniciar Teste Grátis")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundColor(Color(red: 0.65, green: 0.30, blue: 0.92))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 18)
-                                .background(Color.white)
-                                .cornerRadius(16)
-                                .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
+                            ZStack {
+                                // Se estiver carregando, mostra o spinner
+                                if storeManager.estaComprando {
+                                    ProgressView()
+                                        .tint(Color(red: 0.65, green: 0.30, blue: 0.92))
+                                } else {
+                                    Text("Iniciar Teste Grátis")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(Color(red: 0.65, green: 0.30, blue: 0.92))
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 18)
+                            .background(Color.white)
+                            .cornerRadius(16)
+                            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
                         }
+                        .disabled(storeManager.estaComprando || storeManager.produtosDisponiveis.isEmpty)
+                        .opacity(storeManager.produtosDisponiveis.isEmpty ? 0.5 : 1)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)
