@@ -12,6 +12,7 @@
 
 import Foundation
 import FirebaseAuth
+import FirebaseFirestore
 import GoogleSignIn
 import Combine
 
@@ -107,9 +108,55 @@ class AuthManager: ObservableObject {
     }
     
     func deletarConta() async throws {
-        print("Deletando conta no Firebase...")
+        print("Iniciando exclusão completa da conta e dos dados...")
         guard let user = Auth.auth().currentUser else { return }
+        let uid = user.uid
+        let db = Firestore.firestore()
+        
+        let colecoesParaApagar = [
+            "patients",
+            "sessions",
+            "evolutions",
+            "payments",
+            "fixed_sessions"
+        ]
+        
+        for colecao in colecoesParaApagar {
+            try await apagarColecaoInteira(nomeDaColecao: colecao, uid: uid, db: db)
+        }
+        
+        try await db.collection("users").document(uid).delete()
+        print("Dados do banco de dados excluídos com sucesso.")
+        
         try await user.delete()
+        print("Autenticação excluída com sucesso.")
+        
+        self.usuarioAtual = nil
+        self.usuarioID = nil
+        self.usuarioLogado = false
+    }
+    
+    /// Função auxiliar que busca todos os documentos de uma coleção e os apaga em paralelo
+    private func apagarColecaoInteira(nomeDaColecao: String, uid: String, db: Firestore) async throws {
+        let colecaoRef = db.collection("users").document(uid).collection(nomeDaColecao)
+        let snapshot = try await colecaoRef.getDocuments()
+        
+        // Se a coleção estiver vazia, não faz nada
+        if snapshot.documents.isEmpty { return }
+        
+        // Usa TaskGroup para apagar documentos em paralelo, sendo muito mais rápido
+        // e evitando o limite de 500 operações do WriteBatch.
+        await withTaskGroup(of: Void.self) { group in
+            for document in snapshot.documents {
+                group.addTask {
+                    do {
+                        try await document.reference.delete()
+                    } catch {
+                        print("Erro ao apagar documento \(document.documentID) em \(nomeDaColecao): \(error)")
+                    }
+                }
+            }
+        }
     }
     
     func loginComApple(idToken: String, nonce: String) async throws {

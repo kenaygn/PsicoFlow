@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct SettingsView: View {
     
@@ -17,6 +18,10 @@ struct SettingsView: View {
     @State private var mostrarAlertaSair = false
     @State private var mostrarAlertaExcluir = false
     @State private var mostrarModalUpgrade = false
+    
+    @State private var mostrarAlertaSeguranca = false
+    @State private var mostrarErroGenerico = false
+    @State private var mensagemErro = ""
     
     var body: some View {
         
@@ -233,15 +238,51 @@ struct SettingsView: View {
                 Button("Excluir Tudo", role: .destructive) {
                     Task {
                         do {
-                            UserDefaults.standard.set(false, forKey: "usarFaceID")
+                            // Tenta deletar no Firebase primeiro
                             try await authManager.deletarConta()
-                        } catch {
-                            print("Erro ao deletar a conta: \(error)")
+                            
+                            // Se der certo, remove o Face ID do UserDefaults
+                            UserDefaults.standard.set(false, forKey: "usarFaceID")
+                        } catch let error as NSError {
+                            // 17014: requiresRecentLogin
+                            // 17020: userTokenExpired
+                            // 17004: invalidUserToken
+                            let codigosDeSessaoInvalida = [
+                                AuthErrorCode.requiresRecentLogin.rawValue,
+                                AuthErrorCode.userTokenExpired.rawValue,
+                                AuthErrorCode.invalidUserToken.rawValue
+                            ]
+                            
+                            // Verifica se o erro faz parte dessa lista de segurança
+                            if error.domain == AuthErrorDomain && codigosDeSessaoInvalida.contains(error.code) {
+                                mostrarAlertaSeguranca = true
+                            } else {
+                                // Qualquer outro erro (falta de internet, etc)
+                                mensagemErro = error.localizedDescription
+                                mostrarErroGenerico = true
+                            }
                         }
                     }
                 }
             } message: {
                 Text("Esta ação é irreversível. Todos os seus dados, configurações e informações vinculadas ao Psyes serão apagados permanentemente.")
+            }
+            
+            .alert("Segurança da Conta", isPresented: $mostrarAlertaSeguranca) {
+                Button("Cancelar", role: .cancel) { }
+                
+                Button("Fazer Logout Agora") {
+                    UserDefaults.standard.set(false, forKey: "usarFaceID")
+                    authManager.sairDaConta()
+                }
+            } message: {
+                Text("Para excluir sua conta definitivamente, precisamos confirmar que é realmente você. Por favor, faça logout, entre no aplicativo novamente e repita esta ação.")
+            }
+            
+            .alert("Erro ao Excluir", isPresented: $mostrarErroGenerico) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(mensagemErro)
             }
             
             .fullScreenCover(isPresented: $mostrarModalUpgrade) {

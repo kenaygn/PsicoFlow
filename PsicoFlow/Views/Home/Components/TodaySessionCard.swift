@@ -53,14 +53,34 @@ struct TodaySessionCard: View {
                         .foregroundColor(.white)
                         .clipShape(Capsule())
                 } else {
-                    Text(session.status.rawValue.capitalized)
-                        .font(.system(size: 10, weight: .bold))
-                        .textCase(.uppercase)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(corBadge(status: session.status).opacity(0.15))
-                        .foregroundColor(corBadge(status: session.status))
-                        .clipShape(Capsule())
+                    HStack(spacing: 6) {
+                        
+                        // Botão de Desfazer (Aparece apenas se estiver cancelada)
+                        if session.status == .cancelada {
+                            Button(action: {
+                                // Reverte o status para agendada
+                                onUpdateStatus(.agendada, nil)
+                            }) {
+                                Image(systemName: "arrow.uturn.backward")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.red)
+                                    .padding(6)
+                                    .background(Color.red.opacity(0.15))
+                                    .clipShape(Circle())
+                            }
+                            .buttonStyle(.plain) // Evita que o clique vaze para o Card inteiro
+                        }
+                        
+                        Text(session.status.rawValue.capitalized)
+                            .font(.system(size: 10, weight: .bold))
+                            .textCase(.uppercase)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(corBadge(status: session.status).opacity(0.15))
+                            .foregroundColor(corBadge(status: session.status))
+                            .clipShape(Capsule())
+                        
+                    }
                 }
             }
             
