@@ -91,10 +91,8 @@ class PatientFormViewModel: ObservableObject {
         
         Task {
             do {
-                // 1. Persiste a alteração no banco de dados Firebase
                 try await patientRepository.atualizarPaciente(pacienteAtualizado, userId: userId)
                 
-                // 2. Delega a atualização da agenda e finanças com suporte a async/await
                 try await sessionGenerator.projetarSessoesFuturas(userId: userId)
                 
                 if statusAntigo == .ativo && pacienteAtualizado.status == .inativo {
@@ -102,6 +100,18 @@ class PatientFormViewModel: ObservableObject {
                 } else if (statusAntigo == .inativo && pacienteAtualizado.status == .ativo) || isNovoPaciente {
                     try await paymentService.gerarCobrancasAtuaisEFuturas(userId: userId)
                 }
+                
+                let precoMudou = pacienteOriginal != nil && pacienteOriginal!.valor != pacienteAtualizado.valor
+                
+                if statusAntigo == .ativo && pacienteAtualizado.status == .ativo && precoMudou {
+                    // Chama o serviço para atualizar os pagamentos pendentes no Firebase
+                    try await paymentService.atualizarValorPagamentosPendentes(
+                        pacienteID: pacienteAtualizado.id,
+                        novoValor: pacienteAtualizado.valor,
+                        userId: userId
+                    )
+                }
+                
             } catch {
                 print("Erro ao processar salvamento do paciente: \(error.localizedDescription)")
             }

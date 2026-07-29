@@ -21,13 +21,7 @@ class MonthlyPaymentGeneratorService {
         self.paymentRepository = paymentRepository
     }
     
-    
-    // MARK: - TODO: MIGRAÇÃO PARA BACKEND (FIREBASE CLOUD FUNCTIONS)
-    // TODO: [V2.0] Esta lógica é executada no "Client-Side" (depende de o app ser aberto).
-    // Para garantir que faturas sejam geradas no dia 1º mesmo se o psicólogo ficar meses
-    // sem abrir o app, esta função deve ser migrada para um Cron Job no Firebase (Server-Side).
-    
-    /// Varre os pacientes ativos e gera as faturas para o mês corrente e para o próximo mês.
+    /// gera para o mês corrente e para o próximo mês.
     func gerarCobrancasAtuaisEFuturas(userId: String) async throws {
         let calendar = Calendar.current
         let hoje = Date()
@@ -41,7 +35,6 @@ class MonthlyPaymentGeneratorService {
         let proximoMesStr = formatter.string(from: proximoMes)
         let mesesParaProcessar = [mesAtualStr, proximoMesStr]
         
-        // 1. Buscas assíncronas no Firebase usando o userId
         let pacientesDoBanco = try await patientRepository.fetchPacientes(userId: userId)
         let pacientesAtivos = pacientesDoBanco.filter { $0.status == .ativo }
         let todosPagamentos = try await paymentRepository.fetchPagamentos(userId: userId)
@@ -63,9 +56,8 @@ class MonthlyPaymentGeneratorService {
                         pago: false
                     )
                     
-                    // 2. Persistência assíncrona
                     try await paymentRepository.salvarPagamento(novaCobranca, userId: userId)
-                    print("💰 Mensalidade gerada para o paciente \(paciente.nome) referente a \(mesStr).")
+                    print("Mensalidade gerada para o paciente \(paciente.nome) referente a \(mesStr).")
                 }
             }
         }
@@ -86,20 +78,39 @@ class MonthlyPaymentGeneratorService {
         let proximoMesStr = formatter.string(from: proximoMes)
         let mesesAlvo = [mesAtualStr, proximoMesStr]
         
-        // 3. Busca assíncrona focada no paciente
         let pagamentosDoPaciente = try await paymentRepository.fetchPagamentos(paraPacienteID: pacienteID, userId: userId)
         var totalDeletados = 0
         
         for pagamento in pagamentosDoPaciente {
             if mesesAlvo.contains(pagamento.mesReferencia) && !pagamento.pago {
-                // 4. Deleção assíncrona
                 try await paymentRepository.deletarPagamento(id: pagamento.id, userId: userId)
                 totalDeletados += 1
             }
         }
         
         if totalDeletados > 0 {
-            print("🗑️ [Financeiro] \(totalDeletados) cobranças pendentes foram removidas devido à inativação do paciente.")
+            print("[Financeiro] \(totalDeletados) cobranças pendentes foram removidas devido à inativação do paciente.")
+        }
+    }
+    
+    /// Atualiza o valor de todas as cobranças do mês atual e dos meses futuros que ainda não foram pagas.
+    func atualizarValorPagamentosPendentes(pacienteID: String, novoValor: Double, userId: String) async throws {
+        let pagamentos = try await paymentRepository.fetchPagamentos(paraPacienteID: pacienteID, userId: userId)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM"
+        let mesAtualStr = formatter.string(from: Date())
+        
+        for var pagamento in pagamentos {
+
+            let isMesAtualOuFuturo = pagamento.mesReferencia >= mesAtualStr
+            
+            if isMesAtualOuFuturo && !pagamento.pago {
+                
+                pagamento.valor = novoValor
+                
+                try await paymentRepository.atualizarPagamento(pagamento, userId: userId)
+            }
         }
     }
 }
