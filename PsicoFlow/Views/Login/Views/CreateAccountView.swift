@@ -247,7 +247,7 @@ struct CreateAccountView: View {
         }
         .edgesIgnoringSafeArea(.top)
         
-        .scrollDismissesKeyboard(.immediately)
+        .scrollDismissesKeyboard(.interactively)
         
         .navigationBarBackButtonHidden(true)
         
@@ -268,9 +268,6 @@ struct CreateAccountView: View {
         })
     }
     
-    private func esconderTeclado() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
 }
 
 struct CreateAccountView_Previews: PreviewProvider {
