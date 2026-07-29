@@ -13,7 +13,7 @@ struct InfiniteCarousel: View {
     
     @State private var isAnimating = false
     
-    let larguraDoCard: CGFloat = 260
+    let larguraDoCard: CGFloat = 268
     let espacamento: CGFloat = 16
     
     var larguraTotal: CGFloat {

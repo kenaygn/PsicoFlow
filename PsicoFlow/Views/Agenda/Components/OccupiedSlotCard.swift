@@ -40,7 +40,7 @@ struct OccupiedSlotCard: View {
                 }
                 
                 // MARK: - Detalhes Operacionais
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     
                     if sessao.sessaoFixaID != nil {
                         HStack(spacing: 4) {
