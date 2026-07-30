@@ -35,12 +35,23 @@ class PatientsViewModel: ObservableObject {
         userListener?.remove()
     }
     
-    /// Retorna a lista de pacientes filtrada com base no texto de busca atual.
+    /// Retorna a lista de pacientes filtrada pela busca e ordenada (Ativos primeiro).
     var pacientesFiltrados: [Patient] {
-        if searchText.isEmpty {
-            return pacientes
-        } else {
-            return pacientes.filter { $0.nome.localizedCaseInsensitiveContains(searchText) }
+        let listaFiltrada = searchText.isEmpty ? pacientes : pacientes.filter { $0.nome.localizedCaseInsensitiveContains(searchText) }
+        
+        return listaFiltrada.sorted { (paciente1, paciente2) in
+            // Se o paciente 1 for ativo e o 2 for inativo, o 1 sobe na lista
+            if paciente1.status == .ativo && paciente2.status != .ativo {
+                return true
+            }
+            // Se o paciente 1 for inativo e o 2 for ativo, o 2 sobe na lista
+            else if paciente1.status != .ativo && paciente2.status == .ativo {
+                return false
+            }
+            // Se ambos tiverem o mesmo status (dois ativos ou dois inativos), desempata por ordem alfabética
+            else {
+                return paciente1.nome.localizedCaseInsensitiveCompare(paciente2.nome) == .orderedAscending
+            }
         }
     }
     
@@ -51,8 +62,8 @@ class PatientsViewModel: ObservableObject {
     
     /// Verifica se o usuário atingiu o limite de 5 pacientes do plano gratuito.
     var limitePlanoFreeAtingido: Bool {
-        if isUsuarioPremium { return false } // 👈 Regra dinâmica
-        return numeroDePacientesAtivos >= 5 // 👈 Agora usa apenas os ativos
+        if isUsuarioPremium { return false } //
+        return numeroDePacientesAtivos >= 5 //
     }
     
     /// Inicia a escuta em tempo real (Offline-First) dos pacientes no Firebase.
