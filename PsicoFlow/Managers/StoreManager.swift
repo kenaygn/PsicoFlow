@@ -90,6 +90,9 @@ class StoreManager: ObservableObject {
             usuarioModificado.premium = false
             try? await userRepository.updateUser(user: usuarioModificado)
             
+            let patientRepo = PatientFirebaseRepository()
+            try? await patientRepo.bloquearPacientesExcedentes(userId: usuario.id)
+            
             await MainActor.run {
                 self.assinaturaExpirou = true
             }
@@ -99,6 +102,10 @@ class StoreManager: ObservableObject {
         else if possuiAssinaturaAtiva && !usuario.premium {
             usuarioModificado.premium = true
             try? await userRepository.updateUser(user: usuarioModificado)
+            
+            let patientRepo = PatientFirebaseRepository()
+            try? await patientRepo.desbloquearPacientes(userId: usuario.id)
+            
             print("Assinatura renovada/detectada. Firebase atualizado para Premium.")
         }
     }

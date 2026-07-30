@@ -27,6 +27,8 @@ struct Patient: Identifiable, Codable {
     
     var criadoEm: Date
     
+    var bloqueadoPeloSistema: Bool?
+    
     // Propriedade para facilitar a UI
     var iniciais: String {
         nome.components(separatedBy: " ").prefix(2).compactMap { $0.first }.map { String($0) }.joined().uppercased()

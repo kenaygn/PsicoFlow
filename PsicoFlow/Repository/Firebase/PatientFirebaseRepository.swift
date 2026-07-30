@@ -76,4 +76,62 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
             onChange(pacientes)
         }
     }
+    
+    /// Varre os pacientes do usuário ao perder o plano Pro e bloqueia os excedentes
+    func bloquearPacientesExcedentes(userId: String) async throws {
+        let db = Firestore.firestore()
+        let pacientesRef = db.collection("users").document(userId).collection("patients")
+        
+        let snapshot = try await pacientesRef.whereField("status", isEqualTo: PatientStatus.ativo.rawValue).getDocuments()
+        
+        var pacientesAtivos = snapshot.documents.compactMap { doc -> Patient? in
+            try? doc.data(as: Patient.self)
+        }
+        
+        if pacientesAtivos.count <= 5 {
+            return
+        }
+        
+        pacientesAtivos.sort { $0.criadoEm < $1.criadoEm }
+        
+        let pacientesParaBloquear = Array(pacientesAtivos[5...])
+        
+        let batch = db.batch()
+        
+        for paciente in pacientesParaBloquear {
+            let docRef = pacientesRef.document(paciente.id)
+            batch.updateData([
+                "status": PatientStatus.inativo.rawValue,
+                "bloqueadoPeloSistema": true
+            ], forDocument: docRef)
+        }
+        
+        // Executa a atualização no banco de dados
+        try await batch.commit()
+        print("Bloqueio concluído: \(pacientesParaBloquear.count) pacientes foram inativados pelo sistema.")
+    }
+    
+    /// Varre os pacientes bloqueados pelo sistema e devolve o status Ativo ao recuperar o plano Pro
+    func desbloquearPacientes(userId: String) async throws {
+        let db = Firestore.firestore()
+        let pacientesRef = db.collection("users").document(userId).collection("patients")
+        
+        let snapshot = try await pacientesRef.whereField("bloqueadoPeloSistema", isEqualTo: true).getDocuments()
+        
+        if snapshot.documents.isEmpty {
+            return
+        }
+        
+        let batch = db.batch()
+        
+        for document in snapshot.documents {
+            batch.updateData([
+                "status": PatientStatus.ativo.rawValue,
+                "bloqueadoPeloSistema": false
+            ], forDocument: document.reference)
+        }
+        
+        try await batch.commit()
+        print("Desbloqueio concluído: \(snapshot.documents.count) pacientes foram reativados.")
+    }
 }
