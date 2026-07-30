@@ -21,7 +21,7 @@ class SessionFirebaseRepository: SessionRepositoryProtocol {
     }
     
     func atualizarSessao(_ sessao: Session, userId: String) async throws {
-        try collection(userId: userId).document(sessao.id).setData(from: sessao, merge: true)
+        try collection(userId: userId).document(sessao.id).setData(from: sessao)
     }
     
     func salvarSessao(_ sessao: Session, userId: String) async throws {
