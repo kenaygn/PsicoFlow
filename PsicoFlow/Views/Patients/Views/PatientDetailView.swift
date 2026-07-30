@@ -13,6 +13,8 @@ struct PatientDetailView: View {
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var viewModel: PatientDetailViewModel
     
+    @Environment(\.dismiss) var dismissDetalhes
+    
     @State private var abaSelecionada = 0
     @State private var mostrarModalEdicao = false
     @State private var itemSessaoParaEditar: EditSessionItem? = nil
@@ -130,10 +132,18 @@ struct PatientDetailView: View {
             }
         }
         .sheet(isPresented: $mostrarModalEdicao) {
-            EditPatientView(pacienteAtual: $viewModel.paciente)
-                .onDisappear {
-                    if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
-                }
+            EditPatientView(
+                pacienteAtual: $viewModel.paciente,
+                fecharTelaAnterior: Binding(
+                    get: { false },
+                    set: { seDeveFechar in
+                        if seDeveFechar { dismissDetalhes() }
+                    }
+                )
+            )
+            .onDisappear {
+                if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
+            }
         }
         .sheet(item: $itemSessaoParaEditar, onDismiss: {
             if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }

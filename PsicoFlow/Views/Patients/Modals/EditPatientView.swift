@@ -16,13 +16,16 @@ struct EditPatientView: View {
     
     @Binding var pacienteAtual: Patient
     
+    @Binding var fecharTelaAnterior: Bool
+    
     @StateObject private var viewModel: PatientFormViewModel
     
     @State private var mostrarAlertaExclusao = false
     @State private var textoConfirmacao = ""
     
-    init(pacienteAtual: Binding<Patient>) {
+    init(pacienteAtual: Binding<Patient>, fecharTelaAnterior: Binding<Bool>) {
         self._pacienteAtual = pacienteAtual
+        self._fecharTelaAnterior = fecharTelaAnterior
         self._viewModel = StateObject(wrappedValue: PatientFormViewModel(paciente: pacienteAtual.wrappedValue))
     }
     
@@ -146,6 +149,7 @@ struct EditPatientView: View {
                             let sucesso = await viewModel.excluirPaciente(userId: uid)
                             if sucesso {
                                 dismiss() // Fecha a tela e volta para a lista se deu certo
+                                fecharTelaAnterior = true
                             }
                         }
                     }
