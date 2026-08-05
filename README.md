@@ -1,112 +1,57 @@
-# PsicoFlow
+# Psyes – Gestão para Psicólogos Autônomos
 
-Aplicativo de gestão para profissionais de Psicologia, desenvolvido com SwiftUI e pensado para demonstrar boas práticas de arquitetura, teste e experiência do usuário.
+![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=ios&logoColor=white)
+![Swift](https://img.shields.io/badge/Swift-FA7343?style=for-the-badge&logo=swift&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)
+![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM-blueviolet?style=for-the-badge)
+![Status](https://img.shields.io/badge/Em_Desenvolvimento-success?style=for-the-badge)
 
-Resumo rápido
-
-- Plataforma: iOS (Swift / SwiftUI)
-- Módulos principais: Dashboard, Agenda, Prontuários e Faturamento
-- Abordagem arquitetural: Estrutura altamente desacoplada usando Repositórios, Serviços e MVVM
-
----
-
-Visão geral
-
-O PsicoFlow é um projeto de portfólio que reúne funcionalidades essenciais para o dia a dia de um psicólogo: organização da agenda, registro de atendimentos (prontuários), acompanhamento financeiro e indicadores no dashboard. O objetivo deste repositório é demonstrar habilidades técnicas em desenvolvimento iOS moderno, clareza arquitetural e capacidade de projetar aplicações modulares e testáveis.
-
-Demonstração
-
-Adicione imagens, GIFs ou um vídeo de demonstração aqui para destacar a interface e fluxos principais. Sugestões:
-
-- assets/screenshots/dashboard.png
-- assets/screenshots/agenda.png
-- assets/screenshots/prontuario.png
-
-(Atualize os caminhos conforme as imagens forem adicionadas ao repositório.)
-
-Principais funcionalidades
-
-- Dashboard com visão consolidada de consultas e faturamento
-- Agenda com criação, edição e visualização de consultas
-- Prontuários estruturados para registro de atendimentos e evolução clínica
-- Módulo de faturamento para registrar pagamentos e gerar relatórios
-- Estrutura modular que facilita manutenção e extensão do sistema
-
-Arquitetura e decisões técnicas
-
-- Padrão arquitetural: MVVM para separar responsabilidades entre UI e lógica de negócio
-- Camadas de dados desacopladas por Repositórios e Serviços, permitindo trocar fontes de dados (por exemplo, local vs. remoto) sem impactar a UI
-- Injeção de dependências para facilitar testes e mocks
-- Componentização com views reutilizáveis em SwiftUI
-
-Nota para recrutadores: na seção de código e nos commits você encontrará exemplos de organização de pastas, convenções de nomenclatura e decisões técnicas — se desejar, posso destacar commits ou arquivos específicos que exemplifiquem cada ponto.
-
-Tecnologias
-
-- Swift 5+
-- SwiftUI
-- MVVM, Repositórios e Serviços
-- Xcode (versão compatível indicada no projeto)
-- Swift Package Manager (ou CocoaPods) para dependências, se aplicável
-
-Instalação e execução (para avaliadores / recrutadores)
-
-Pré-requisitos
-
-- macOS com Xcode instalado (recomenda-se Xcode 13+ — verifique o projeto para a versão exata)
-- Git
-
-Passos
-
-1. Clone o repositório:
-   git clone https://github.com/kenaygn/PsicoFlow.git
-
-2. Abra o projeto no Xcode:
-   - Abra `PsicoFlow.xcodeproj` ou `PsicoFlow.xcworkspace` conforme presente
-
-3. Instale/atualize dependências (se houver):
-   - Swift Package Manager: File > Packages > Update to Latest Package Versions
-   - CocoaPods: `pod install` e abra o workspace
-
-4. Selecione um simulador ou dispositivo e rode o app (Cmd+R)
-
-Se o projeto precisar de credenciais, variáveis de ambiente ou um backend local, descreva esses detalhes aqui (ex.: arquivo .env, instruções para popular dados iniciais).
-
-Testes
-
-- Execute os testes via Xcode (Product > Test ou Cmd+U)
-- Descreva aqui qualquer cobertura relevante, testes unitários de componentes críticos e integração com CI (se aplicável)
-
-O que este projeto demonstra (para recrutadores)
-
-- Experiência prática com desenvolvimento iOS moderno (Swift + SwiftUI)
-- Projeto de arquitetura desacoplada e testável (MVVM, injeção de dependência, repositórios)
-- Organização de código, clareza em commits e documentação
-- Capacidade de transformar requisitos de domínio (gestão de pacientes) em solução técnica
-
-Melhorias e próximos passos (opcionais)
-
-- Internacionalização (i18n)
-- Sincronização com backend e suporte offline
-- Relatórios financeiros mais completos e exportação
-- Autenticação/segurança e gerenciamento de perfis profissionais
-
-Contribuição
-
-Este repositório é um projeto de portfólio pessoal. Se você deseja contribuir, abra uma issue ou um pull request com a proposta — mantenha o padrão de commits e siga as convenções do repositório.
-
-Licença
-
-Indique a licença desejada (por exemplo, MIT) e inclua um arquivo LICENSE no repositório.
-
-Contato
-
-- GitHub: https://github.com/kenaygn
-- LinkedIn: (adicione seu perfil, ex.: https://www.linkedin.com/in/seu-nome)
+O **Psyes** é um aplicativo nativo para iOS projetado de ponta a ponta para otimizar a gestão da psicologia clínica. Como um produto comercial completo, o sistema centraliza o controle de pacientes, sessões e finanças para profissionais autônomos, entregando uma experiência fluida, segura e de altíssima performance.
 
 ---
 
-Se quiser, eu posso:
-- Adicionar badges (Swift version, build, tests)
-- Gerar uma versão em inglês deste README para o público internacional
-- Incluir exemplos de commits ou destacar arquivos-chave do projeto
+## Visão Geral do Produto
+
+O aplicativo foi desenhado para resolver as dores reais do dia a dia clínico, combinando ferramentas de produtividade com um modelo de assinatura integrado. 
+
+* **Gestão de Pacientes e Prontuários:** Cadastro completo e acompanhamento histórico.
+* **Controle de Sessões:** Organização de agenda com recursos de acompanhamento contínuo.
+* **Saúde Financeira:** Módulo dedicado ao controle de pagamentos e fluxo de caixa do consultório.
+* **Monetização Nativa:** Sistema de assinaturas e pagamentos In-App gerenciado diretamente via **StoreKit**.
+* **Engajamento em Tempo Real:** Uso de **Live Activities** e **Push Notifications (APNs)** para manter o profissional sempre atualizado sobre eventos importantes e horários de sessões.
+
+---
+
+## Arquitetura e Tecnologias (Under the Hood)
+
+O projeto foi construído com foco em escalabilidade, manutenção e reatividade, utilizando os padrões mais modernos do ecossistema Apple.
+
+### Padrão Arquitetural
+* **Clean Architecture + MVVM:** Estrutura rigorosamente dividida em múltiplas camadas para separação de responsabilidades:
+  * `Router`: Gerenciamento unificado de navegação e fluxos de tela.
+  * `Managers`: Classes utilitárias e gerenciamento de estado global.
+  * `Service`: Comunicação externa, APIs e abstração do Backend.
+  * `Repository`: Padrão de repositório para centralizar o acesso a dados (Cache Local vs Nuvem).
+* **Programação Reativa:** Utilização intensiva do framework **Combine** nas `ViewModels` para um fluxo de dados declarativo e reativo nas interfaces.
+
+### Backend e Sincronização
+* **Serverless Stack:** Operações gerenciadas via **Firebase** (Firestore para banco de dados NoSQL, Firebase Auth para identidade e Cloud Functions para regras de negócio server-side).
+* **Zero-Delay Sync:** Implementação de um robusto sistema de **cache nativo** que permite o funcionamento do app e a leitura de dados em tempo real sem latência de rede perceptível para o usuário.
+
+---
+
+## Segurança e Privacidade de Dados
+
+Tratando-se de dados sensíveis de pacientes (prontuários e informações clínicas), a segurança foi tratada como prioridade máxima e desenvolvida seguindo princípios rigorosos de proteção:
+
+* **Criptografia Avançada:** Uso nativo do **CryptoKit** para assegurar que os dados locais e em trânsito estejam ilegíveis para agentes externos.
+* **Proteção Biométrica:** Autenticação de acesso ao app e a áreas sensíveis utilizando **Face ID e Touch ID** através do framework `LocalAuthentication`.
+
+---
+
+## Status do Projeto
+
+* **2026 - Atual:** Desenvolvimento end-to-end concluído, integração de pagamentos finalizada e submissão completa para a App Store. O aplicativo atua como um negócio ativo na loja oficial da Apple.
+
+---
+*Este repositório serve como documentação de portfólio da arquitetura e das tecnologias utilizadas no produto comercial Psyes.*
