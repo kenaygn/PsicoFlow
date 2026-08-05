@@ -26,6 +26,8 @@ class NewSessionViewModel: ObservableObject {
     @Published var selectedTime: String = "08:00"
     @Published var selectedModalidade: Modalidade = .presencial
     
+    @Published var mostrarAlertaConflitoFixo: Bool = false
+    
     // Lista de horários agora é @Published para refletir a busca assíncrona
     @Published var horariosLivres: [String] = []
     
@@ -84,11 +86,29 @@ class NewSessionViewModel: ObservableObject {
         Task {
             do {
                 if isFixedSession {
-                    self.horariosLivres = try await availabilityService.horariosLivresParaContrato(diaDaSemana: selectedWeekday, userId: userId)
+                    let livresContrato = try await availabilityService.horariosLivresParaContrato(diaDaSemana: selectedWeekday, userId: userId)
+                    
+                    await MainActor.run {
+                        // Se o usuário tentar fixar um horário que já tem dono no contrato:
+                        if !self.selectedTime.isEmpty && !livresContrato.contains(self.selectedTime) {
+                            self.mostrarAlertaConflitoFixo = true
+                            self.isFixedSession = false // Desliga o botão e força voltar para sessão avulsa
+                        } else {
+                            self.horariosLivres = livresContrato
+                            self.atualizarSelecaoDeHorario()
+                        }
+                    }
                 } else {
-                    self.horariosLivres = try await availabilityService.horariosLivresParaSessaoAvulsa(data: selectedDate, userId: userId)
+                    let livresAvulsos = try await availabilityService.horariosLivresParaSessaoAvulsa(data: selectedDate, userId: userId)
+                    
+                    await MainActor.run {
+                        self.horariosLivres = livresAvulsos
+                        // Só muda o horário sozinho se o slot atual realmente estiver ocupado no dia
+                        if !self.selectedTime.isEmpty && !self.horariosLivres.contains(self.selectedTime) {
+                            self.selectedTime = self.horariosLivres.first ?? ""
+                        }
+                    }
                 }
-                atualizarSelecaoDeHorario()
             } catch {
                 print("Erro ao carregar horários: \(error.localizedDescription)")
             }

@@ -106,6 +106,12 @@ struct NewSessionView: View {
             .onChange(of: viewModel.isFixedSession) { _ in
                 if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
             }
+            
+            .alert("Horário Fixo Indisponível", isPresented: $viewModel.mostrarAlertaConflitoFixo) {
+                Button("Entendi", role: .cancel) { }
+            } message: {
+                Text("Já existe um contrato de terapia semanal neste horário. Você pode agendar uma sessão avulsa neste espaço, mas não pode sobrepor duas regras fixas.")
+            }
         }
     }
 }

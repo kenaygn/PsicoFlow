@@ -49,31 +49,20 @@ class AgendaAvailabilityService {
     /// - Parameters:
     ///   - data: A data exata desejada.
     ///   - ignorandoSessaoID: Opcional. O ID da sessão atual em caso de edição.
-    ///   - derivadaDeContratoID: Opcional. Se a sessão nasceu de um contrato, passa o ID do contrato para ele não bloquear a si mesmo.
+    ///   - derivadaDeContratoID: Mantido na assinatura para compatibilidade com a tela de Ações Rápidas.
     ///   - userId: O ID do psicólogo logado.
     func horariosLivresParaSessaoAvulsa(data: Date, ignorandoSessaoID: String? = nil, derivadaDeContratoID: String? = nil, userId: String) async throws -> [String] {
-        let weekdayDaData = Calendar.current.component(.weekday, from: data)
         
-        // Buscas assíncronas no Firebase
-        let contratosDoBanco = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
         let sessoesDoBanco = try await sessionRepository.fetchSessoes(userId: userId)
         
-        // Regras fixas que caem neste dia
-        let regrasFixas = contratosDoBanco.filter {
-            $0.diaDaSemana == weekdayDaData && $0.id != derivadaDeContratoID
-        }
-        
-        // Outras sessões avulsas marcadas para este mesmo dia exato
-        let outrasAvulsas = sessoesDoBanco.filter {
+        let sessoesDoDia = sessoesDoBanco.filter {
             Calendar.current.isDate($0.dataDaSessão, inSameDayAs: data) &&
             $0.status != .cancelada &&
             $0.id != ignorandoSessaoID
         }
         
-        let ocupadosFixas = regrasFixas.map { $0.horaInicio }
-        let ocupadosAvulsas = outrasAvulsas.map { $0.horaInicio }
-        let todosOcupados = ocupadosFixas + ocupadosAvulsas
+        let ocupados = sessoesDoDia.map { $0.horaInicio }
         
-        return todosHorarios.filter { !todosOcupados.contains($0) }
+        return todosHorarios.filter { !ocupados.contains($0) }
     }
 }
