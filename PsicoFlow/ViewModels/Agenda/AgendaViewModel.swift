@@ -151,7 +151,7 @@ class AgendaViewModel: ObservableObject {
     
     func sessoesPara(horario: String) -> [Session] {
         return todasSessoes.filter { sessao in
-            isMesmoDia(sessao.dataDaSessão, selectedDate) &&
+            isMesmoDia(sessao.dataDaSessao, selectedDate) &&
             sessao.horaInicio == horario &&
             sessao.status != .cancelada
         }
@@ -168,7 +168,7 @@ class AgendaViewModel: ObservableObject {
         sessaoAtualizada.status = novoStatus
         
         if novoStatus == .adiada, let data = novaData {
-            sessaoAtualizada.dataDaSessão = data
+            sessaoAtualizada.dataDaSessao = data
             sessaoAtualizada.sessaoFixaID = nil
             
             let formatter = DateFormatter()
@@ -200,11 +200,11 @@ class AgendaViewModel: ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd"
         
         for sessao in sessoesAtivas {
-            let chaveDeTempo = formatter.string(from: sessao.dataDaSessão) + "-" + sessao.horaInicio
+            let chaveDeTempo = formatter.string(from: sessao.dataDaSessao) + "-" + sessao.horaInicio
             agrupamento[chaveDeTempo, default: []].append(sessao)
         }
         
         let gruposComConflito = agrupamento.values.filter { $0.count > 1 }
-        return gruposComConflito.compactMap { $0.first?.dataDaSessão }.sorted().first
+        return gruposComConflito.compactMap { $0.first?.dataDaSessao }.sorted().first
     }
 }

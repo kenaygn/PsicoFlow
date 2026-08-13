@@ -39,7 +39,7 @@ class SessionQuickActionViewModel: ObservableObject {
             sessionRepository: sessionRepository
         )
         
-        self._novaData = Published(initialValue: sessao.dataDaSessão)
+        self._novaData = Published(initialValue: sessao.dataDaSessao)
         self._novaHoraStr = Published(initialValue: sessao.horaInicio)
     }
     

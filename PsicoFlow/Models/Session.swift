@@ -27,7 +27,7 @@ struct Session: Identifiable, Codable {
     
     var sessaoFixaID: String?
     
-    var dataDaSessão: Date
+    var dataDaSessao: Date
     var status: SessionStatus
     var modalidade: Modalidade
     var horaInicio: String // "14:00"

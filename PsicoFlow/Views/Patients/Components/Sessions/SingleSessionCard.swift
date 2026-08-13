@@ -20,7 +20,7 @@ struct SingleSessionCard: View {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "pt_BR")
         formatter.dateFormat = "dd 'de' MMMM, yyyy"
-        return formatter.string(from: avulsa.dataDaSessão)
+        return formatter.string(from: avulsa.dataDaSessao)
     }
         
     var body: some View {

@@ -120,7 +120,7 @@ class HomeViewModel: ObservableObject {
     
     private func processarDadosLocais(userId: String) {
         var sessoesDeHoje = todasSessoes
-            .filter { Calendar.current.isDateInToday($0.dataDaSessão) }
+            .filter { Calendar.current.isDateInToday($0.dataDaSessao) }
             .sorted { $0.horaInicio < $1.horaInicio }
         
         for i in 0..<sessoesDeHoje.count {
@@ -163,7 +163,7 @@ class HomeViewModel: ObservableObject {
                 sessaoAtualizada.status = novoStatus
                 
                 if let novaData = novaData, novoStatus == .adiada {
-                    sessaoAtualizada.dataDaSessão = novaData
+                    sessaoAtualizada.dataDaSessao = novaData
                     sessaoAtualizada.sessaoFixaID = nil
                     
                     let formatter = DateFormatter()
@@ -204,7 +204,7 @@ class HomeViewModel: ObservableObject {
         for sessao in sessoesParaValidar {
             if sessao.id == ignorandoSessaoID || sessao.status == .cancelada { continue }
             
-            if calendar.isDate(sessao.dataDaSessão, inSameDayAs: novaData) {
+            if calendar.isDate(sessao.dataDaSessao, inSameDayAs: novaData) {
                 let minutosSessaoExistente = converterParaMinutos(sessao.horaInicio)
                 
                 if abs(minutosNovaSessao - minutosSessaoExistente) < 60 {
@@ -255,11 +255,11 @@ class HomeViewModel: ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd"
         
         for sessao in sessoesAtivas {
-            let chaveDeTempo = formatter.string(from: sessao.dataDaSessão) + "-" + sessao.horaInicio
+            let chaveDeTempo = formatter.string(from: sessao.dataDaSessao) + "-" + sessao.horaInicio
             agrupamento[chaveDeTempo, default: []].append(sessao)
         }
         
-        return agrupamento.values.filter { $0.count > 1 }.compactMap { $0.first?.dataDaSessão }.sorted().first
+        return agrupamento.values.filter { $0.count > 1 }.compactMap { $0.first?.dataDaSessao }.sorted().first
     }
     
     var slidesAtivos: [HomeSlide] {
@@ -315,8 +315,8 @@ class HomeViewModel: ObservableObject {
         }
         
         let realizadasPassadas = todasSessoes.filter { sessao in
-            let naoEHoje = !calendar.isDateInToday(sessao.dataDaSessão)
-            let dentroDaSemana = sessao.dataDaSessão >= inicioDaSemana
+            let naoEHoje = !calendar.isDateInToday(sessao.dataDaSessao)
+            let dentroDaSemana = sessao.dataDaSessao >= inicioDaSemana
             return sessao.status == .realizada && dentroDaSemana && naoEHoje
         }.count
         

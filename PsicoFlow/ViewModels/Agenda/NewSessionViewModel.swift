@@ -150,7 +150,7 @@ class NewSessionViewModel: ObservableObject {
                         psicologoID: userId,
                         pacienteID: paciente.id,
                         sessaoFixaID: nil,
-                        dataDaSessão: selectedDate,
+                        dataDaSessao: selectedDate,
                         status: .agendada,
                         modalidade: selectedModalidade,
                         horaInicio: horaFormatada

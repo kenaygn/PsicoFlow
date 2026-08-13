@@ -217,7 +217,7 @@ struct TodaySessionCard: View {
                             onUpdateStatus(.realizada, nil)
                         }
                         actionButton(title: "Adiada", icon: "calendar.badge.clock", isNext: isNext, color: .orange) {
-                            novaData = session.dataDaSessão
+                            novaData = session.dataDaSessao
                             novaHoraStr = session.horaInicio
                             withAnimation { mostrandoAdiar = true }
                             // Carrega horários assincronamente ao abrir o reagendamento

@@ -56,7 +56,7 @@ class AgendaAvailabilityService {
         let sessoesDoBanco = try await sessionRepository.fetchSessoes(userId: userId)
         
         let sessoesDoDia = sessoesDoBanco.filter {
-            Calendar.current.isDate($0.dataDaSessão, inSameDayAs: data) &&
+            Calendar.current.isDate($0.dataDaSessao, inSameDayAs: data) &&
             $0.status != .cancelada &&
             $0.id != ignorandoSessaoID
         }

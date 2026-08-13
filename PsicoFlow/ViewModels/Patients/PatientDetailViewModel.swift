@@ -92,9 +92,9 @@ class PatientDetailViewModel: ObservableObject {
                         sessao.pacienteID == paciente.id &&
                         sessao.sessaoFixaID == nil &&
                         (sessao.status == .agendada || sessao.status == .adiada) &&
-                        Calendar.current.startOfDay(for: sessao.dataDaSessão) >= hoje
+                        Calendar.current.startOfDay(for: sessao.dataDaSessao) >= hoje
                     }
-                    .sorted { $0.dataDaSessão < $1.dataDaSessão }
+                    .sorted { $0.dataDaSessao < $1.dataDaSessao }
                 }
             }
         } catch {

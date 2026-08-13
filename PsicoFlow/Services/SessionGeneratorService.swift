@@ -53,7 +53,7 @@ class SessionGeneratorService {
         
         for sessao in sessoesExistentes {
             // Só apaga se for no futuro E se for fruto de um contrato (sessaoFixaID != nil)
-            if sessao.dataDaSessão >= hoje && sessao.sessaoFixaID != nil {
+            if sessao.dataDaSessao >= hoje && sessao.sessaoFixaID != nil {
                 if !pacientesAtivosIDs.contains(sessao.pacienteID) {
                     try await sessionRepository.deletarSessao(id: sessao.id, userId: userId)
                     totalRemovidas += 1
@@ -80,7 +80,7 @@ class SessionGeneratorService {
                 for sessaoNova in sessoesProjetadas {
                     let jaExiste = sessoesExistentes.contains {
                         $0.sessaoFixaID == regra.id &&
-                        Calendar.current.isDate($0.dataDaSessão, inSameDayAs: sessaoNova.dataDaSessão)
+                        Calendar.current.isDate($0.dataDaSessao, inSameDayAs: sessaoNova.dataDaSessao)
                     }
                     
                     if !jaExiste {
@@ -115,7 +115,7 @@ class SessionGeneratorService {
                     psicologoID: regra.psicologoID,
                     pacienteID: regra.pacienteID,
                     sessaoFixaID: regra.id,
-                    dataDaSessão: dataAtual,
+                    dataDaSessao: dataAtual,
                     status: .agendada,
                     modalidade: regra.modalidade,
                     horaInicio: regra.horaInicio
