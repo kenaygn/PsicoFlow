@@ -12,9 +12,22 @@
 		3F755D83302CA9BD00344C25 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3F755D82302CA9BD00344C25 /* FirebaseCrashlytics */; };
 		3F755D85302CA9BD00344C25 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3F755D84302CA9BD00344C25 /* FirebaseFirestore */; };
 		3FBA5CFD302D3A07004D889A /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 3FBA5CFC302D3A07004D889A /* FirebaseMessaging */; };
+		3FBA5D07302DFB3F004D889A /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F7FDE9B302C9AF500B97DCE /* WidgetKit.framework */; };
+		3FBA5D08302DFB3F004D889A /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F7FDE9D302C9AF600B97DCE /* SwiftUI.framework */; };
+		3FBA5D15302DFB40004D889A /* PsyesWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3FBA5D06302DFB3F004D889A /* PsyesWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3FF7DD1D3006EB1E00927CC5 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3FF7DD1C3006EB1E00927CC5 /* GoogleSignIn */; };
 		3FF7DD1F3006EB1E00927CC5 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3FF7DD1E3006EB1E00927CC5 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3FBA5D13302DFB40004D889A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F59B6DB2F81DB4200FA5F86 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3FBA5D05302DFB3F004D889A;
+			remoteInfo = PsyesWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		3F7FDEAA302C9AF700B97DCE /* Embed Foundation Extensions */ = {
@@ -23,6 +36,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				3FBA5D15302DFB40004D889A /* PsyesWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -33,9 +47,24 @@
 		3F7FDE9B302C9AF500B97DCE /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		3F7FDE9D302C9AF600B97DCE /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		3F873CD12F86AACB0002543A /* Psyes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Psyes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FBA5D06302DFB3F004D889A /* PsyesWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PsyesWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3FBA5D19302DFB40004D889A /* Exceptions for "PsyesWidget" folder in "PsyesWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3FBA5D05302DFB3F004D889A /* PsyesWidgetExtension */;
+		};
+		3FBA5D1D302DFBB9004D889A /* Exceptions for "PsicoFlow" folder in "PsyesWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/SessionActivityAttributes.swift,
+			);
+			target = 3FBA5D05302DFB3F004D889A /* PsyesWidgetExtension */;
+		};
 		3FF7DD233006ECA200927CC5 /* Exceptions for "PsicoFlow" folder in "PsicoFlow" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -50,8 +79,17 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				3FF7DD233006ECA200927CC5 /* Exceptions for "PsicoFlow" folder in "PsicoFlow" target */,
+				3FBA5D1D302DFBB9004D889A /* Exceptions for "PsicoFlow" folder in "PsyesWidgetExtension" target */,
 			);
 			path = PsicoFlow;
+			sourceTree = "<group>";
+		};
+		3FBA5D09302DFB3F004D889A /* PsyesWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3FBA5D19302DFB40004D889A /* Exceptions for "PsyesWidget" folder in "PsyesWidgetExtension" target */,
+			);
+			path = PsyesWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -71,6 +109,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3FBA5D03302DFB3F004D889A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3FBA5D08302DFB3F004D889A /* SwiftUI.framework in Frameworks */,
+				3FBA5D07302DFB3F004D889A /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -79,7 +126,9 @@
 			children = (
 				3F59B6E52F81DB4200FA5F86 /* PsicoFlow */,
 				3F873CD12F86AACB0002543A /* Psyes.app */,
+				3FBA5D09302DFB3F004D889A /* PsyesWidget */,
 				3F7FDE9A302C9AF500B97DCE /* Frameworks */,
+				3FBA5D06302DFB3F004D889A /* PsyesWidgetExtension.appex */,
 			);
 			sourceTree = "<group>";
 		};
@@ -108,6 +157,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				3FBA5D14302DFB40004D889A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3F59B6E52F81DB4200FA5F86 /* PsicoFlow */,
@@ -126,6 +176,28 @@
 			productReference = 3F873CD12F86AACB0002543A /* Psyes.app */;
 			productType = "com.apple.product-type.application";
 		};
+		3FBA5D05302DFB3F004D889A /* PsyesWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3FBA5D16302DFB40004D889A /* Build configuration list for PBXNativeTarget "PsyesWidgetExtension" */;
+			buildPhases = (
+				3FBA5D02302DFB3F004D889A /* Sources */,
+				3FBA5D03302DFB3F004D889A /* Frameworks */,
+				3FBA5D04302DFB3F004D889A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3FBA5D09302DFB3F004D889A /* PsyesWidget */,
+			);
+			name = PsyesWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = PsyesWidgetExtension;
+			productReference = 3FBA5D06302DFB3F004D889A /* PsyesWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -137,6 +209,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					3F59B6E22F81DB4200FA5F86 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					3FBA5D05302DFB3F004D889A = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -160,12 +235,20 @@
 			projectRoot = "";
 			targets = (
 				3F59B6E22F81DB4200FA5F86 /* PsicoFlow */,
+				3FBA5D05302DFB3F004D889A /* PsyesWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3F59B6E12F81DB4200FA5F86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FBA5D04302DFB3F004D889A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -204,7 +287,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3FBA5D02302DFB3F004D889A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3FBA5D14302DFB40004D889A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3FBA5D05302DFB3F004D889A /* PsyesWidgetExtension */;
+			targetProxy = 3FBA5D13302DFB40004D889A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3F59B6EC2F81DB4200FA5F86 /* Debug */ = {
@@ -342,6 +440,7 @@
 				INFOPLIST_FILE = PsicoFlow/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Psyes;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Confirme sua identidade para acessar o aplicativo.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -382,6 +481,7 @@
 				INFOPLIST_FILE = PsicoFlow/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Psyes;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Confirme sua identidade para acessar o aplicativo.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -408,6 +508,69 @@
 			};
 			name = Release;
 		};
+		3FBA5D17302DFB40004D889A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = MR7Z669DU4;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PsyesWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PsyesWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kenay.psyes.PsyesWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3FBA5D18302DFB40004D889A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MR7Z669DU4;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PsyesWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PsyesWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kenay.psyes.PsyesWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -425,6 +588,15 @@
 			buildConfigurations = (
 				3F59B6EF2F81DB4200FA5F86 /* Debug */,
 				3F59B6F02F81DB4200FA5F86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3FBA5D16302DFB40004D889A /* Build configuration list for PBXNativeTarget "PsyesWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3FBA5D17302DFB40004D889A /* Debug */,
+				3FBA5D18302DFB40004D889A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

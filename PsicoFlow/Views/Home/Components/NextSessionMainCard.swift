@@ -123,11 +123,3 @@ struct NextSessionMainCard: View {
     }
 }
 
-#Preview {
-    NextSessionMainCard(
-        session: MockData.sessoesExemplo.first!,
-        nomeDaPaciente: "Sarah Connor",
-        onAbrirProntuario: { print("Navegar") }
-    )
-    .padding()
-}

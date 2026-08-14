@@ -8,6 +8,8 @@
 import SwiftUI
 import FirebaseAuth
 
+import ActivityKit
+
 struct SettingsView: View {
     
     @EnvironmentObject var authManager: AuthManager
@@ -199,6 +201,73 @@ struct SettingsView: View {
                             .foregroundColor(.red)
                     }
                 }
+                
+                // --------------------------------------------
+                //Teste Live Activity
+                Section(header: Text("Teste Rápido - Live Activity")) {
+                    
+                    // Botão de Iniciar
+                    Button(action: {
+                        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+                            print("Live Activities estão desativadas.")
+                            return
+                        }
+                        
+                        let atributos = SessionActivityAttributes(
+                            nomePaciente: "Ana Carolina",
+                            modalidade: "Presencial",
+                            isFixa: true,
+                            horaInicio: "14:00"
+                        )
+                        
+                        let estadoInicial = SessionActivityAttributes.ContentState(
+                            statusMensagem: "Tudo pronto para o atendimento."
+                        )
+                        
+                        do {
+                            if #available(iOS 16.2, *) {
+                                let conteudo = ActivityContent(state: estadoInicial, staleDate: nil)
+                                _ = try Activity.request(attributes: atributos, content: conteudo)
+                            } else {
+                                _ = try Activity.request(attributes: atributos, contentState: estadoInicial)
+                            }
+                            print("Live Activity iniciada!")
+                        } catch {
+                            print("Erro ao iniciar: \(error.localizedDescription)")
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "play.circle.fill")
+                            Text("Iniciar Live Activity")
+                        }
+                        .foregroundColor(.teal)
+                    }
+                    
+                    // Botão de Parar
+                    Button(action: {
+                        Task {
+                            let estadoFinal = SessionActivityAttributes.ContentState(statusMensagem: "Sessão concluída.")
+                            
+                            // Procura todas as atividades do Psyes rodando e mata todas
+                            for atividade in Activity<SessionActivityAttributes>.activities {
+                                if #available(iOS 16.2, *) {
+                                    let conteudoFinal = ActivityContent(state: estadoFinal, staleDate: nil)
+                                    await atividade.end(conteudoFinal, dismissalPolicy: .immediate)
+                                } else {
+                                    await atividade.end(using: estadoFinal, dismissalPolicy: .immediate)
+                                }
+                            }
+                            print("Live Activity encerrada!")
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "stop.circle.fill")
+                            Text("Encerrar Live Activity")
+                        }
+                        .foregroundColor(.red)
+                    }
+                }
+                // --------------------------------------------
             }
             .navigationTitle("Ajustes")
             
