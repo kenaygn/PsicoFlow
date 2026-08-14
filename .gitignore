@@ -84,3 +84,26 @@ Secrets.swift
 
 # Caches
 .swiftlint
+
+# Node.js e Cloud Functions
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Logs locais do Firebase
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
+# Chaves Mestra da Apple
+*.p8
+*.p12
+*.cer
+*.cert
+*.pem
+*.mobileprovision
+
+# Chaves de Serviço do Google / Firebase
+serviceAccountKey.json
+*service-account*.json
