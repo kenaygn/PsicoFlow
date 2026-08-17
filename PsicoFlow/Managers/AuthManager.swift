@@ -18,6 +18,9 @@ import Combine
 
 @MainActor
 class AuthManager: ObservableObject {
+    
+    static let shared = AuthManager()
+    
     @Published var usuarioLogado: Bool = false
     @Published var usuarioID: String? = nil
     

@@ -17,7 +17,7 @@ struct RootView: View {
     
     @AppStorage("viuOnboarding") private var viuOnboarding: Bool = false
     
-    @StateObject private var authManager = AuthManager()
+    @StateObject private var authManager = AuthManager.shared
     
     @StateObject private var storeManager = StoreManager()
     
