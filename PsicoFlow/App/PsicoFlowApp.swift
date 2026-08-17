@@ -20,6 +20,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Configura o interceptador de Notificações do Firebase
         Messaging.messaging().delegate = self
         UNUserNotificationCenter.current().delegate = self
+        
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                print("O usuário aceitou receber banners/sons.")
+            } else {
+                print("O usuário recusou banners/sons (mas as Live Activities continuarão funcionando).")
+            }
+        }
+        
         application.registerForRemoteNotifications()
         
         // Inicia o monitoramento das Live Activities
@@ -28,7 +37,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         
         return true
     }
-
+    
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let token = fcmToken, let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
@@ -36,7 +45,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             "fcmToken": token
         ], merge: true)
     }
-
+    
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         
         print("App acordou no background! O PushToStartManager já está pescando o token...")

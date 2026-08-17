@@ -15,6 +15,8 @@ struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var viewModel = SettingsViewModel()
     
+    @Environment(\.scenePhase) var scenePhase
+    
     let versaoApp = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Desconhecida"
     
     @State private var mostrarAlertaSair = false
@@ -84,7 +86,12 @@ struct SettingsView: View {
                 
                 // MARK: - 3. Preferências do Aplicativo
                 Section(header: Text("Preferências")) {
-                    Toggle(isOn: $viewModel.ativarNotificacoes) {
+                    Toggle(isOn: Binding(
+                        get: { viewModel.ativarNotificacoes },
+                        set: { newValue in
+                            viewModel.solicitarMudancaDeNotificacao(ativar: newValue)
+                        }
+                    )) {
                         Text("Notificações de Sessões")
                     }
                     
@@ -273,8 +280,15 @@ struct SettingsView: View {
             
             // MARK: - Eventos de Ciclo de Vida
             .onAppear {
+                viewModel.verificarStatusNotificacoes()
                 if let uid = authManager.usuarioID {
                     viewModel.carregarDadosUsuario(userId: uid)
+                }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    // Se o usuário foi nos Ajustes e voltou, atualiza o botão automaticamente
+                    viewModel.verificarStatusNotificacoes()
                 }
             }
             
@@ -352,6 +366,18 @@ struct SettingsView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(mensagemErro)
+            }
+            
+            .alert("Ajustes do Sistema", isPresented: $viewModel.mostrarAlertaNotificacoes) {
+                Button("Cancelar", role: .cancel) { }
+                
+                Button("Abrir Ajustes") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            } message: {
+                Text("Para ativar ou desativar as notificações do Psyes, você precisa alterar esta permissão nos Ajustes do seu iPhone.")
             }
             
             .fullScreenCover(isPresented: $mostrarModalUpgrade) {

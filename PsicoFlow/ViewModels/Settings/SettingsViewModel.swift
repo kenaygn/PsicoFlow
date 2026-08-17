@@ -9,17 +9,17 @@ import Foundation
 import SwiftUI
 import Combine
 import LocalAuthentication
-import FirebaseFirestore // Necessário para o ListenerRegistration
+import FirebaseFirestore
+import UserNotifications
 
 class SettingsViewModel: ObservableObject {
     
-    // MARK: - Dados do Usuário (Offline-First)
     @Published var currentUser: User?
     private var userListener: ListenerRegistration?
     private let userRepository: UserRepositoryProtocol
     
-    // MARK: - Configurações Locais
     @Published var ativarNotificacoes: Bool = true
+    @Published var mostrarAlertaNotificacoes: Bool = false
     
     @Published var usarFaceID: Bool = UserDefaults.standard.bool(forKey: "usarFaceID") {
         didSet {
@@ -37,7 +37,6 @@ class SettingsViewModel: ObservableObject {
         userListener?.remove()
     }
     
-    // MARK: - Carregamento Offline-First
     func carregarDadosUsuario(userId: String) {
         guard !userId.isEmpty else { return }
         
@@ -54,7 +53,6 @@ class SettingsViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Lógica do Face ID
     func autenticarAtivacaoFaceID(ativar: Bool) {
         guard ativar else {
             self.usarFaceID = false
@@ -85,4 +83,37 @@ class SettingsViewModel: ObservableObject {
             }
         }
     }
+    
+    
+    func verificarStatusNotificacoes() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                self.ativarNotificacoes = (settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional)
+            }
+        }
+    }
+    
+    func solicitarMudancaDeNotificacao(ativar: Bool) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                if settings.authorizationStatus == .notDetermined {
+                    // Primeira vez que o app pede notificação
+                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+                        DispatchQueue.main.async {
+                            self.ativarNotificacoes = granted
+                            if granted {
+                                UIApplication.shared.registerForRemoteNotifications()
+                            }
+                        }
+                    }
+                } else {
+                    // O usuário já negou ou aceitou antes. Só dá pra mudar nos Ajustes do iPhone.
+                    // Reverte o Toggle para o status real do sistema e mostra o alerta.
+                    self.ativarNotificacoes = (settings.authorizationStatus == .authorized)
+                    self.mostrarAlertaNotificacoes = true
+                }
+            }
+        }
+    }
+    
 }
