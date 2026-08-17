@@ -11,7 +11,7 @@ import SwiftUI
 @main
 struct PsyesWidgetBundle: WidgetBundle {
     var body: some Widget {
-        PsyesWidget()
+//        PsyesWidget()
         PsyesWidgetLiveActivity()
     }
 }
