@@ -39,17 +39,48 @@ struct EditProfileView: View {
                 }
             }
             
+            // MARK: - Horário de Expediente
+            Section(
+                header: Text("Horário de Expediente"),
+                footer: Text("Defina o intervalo de horas que aparece na sua agenda diária.").foregroundColor(.secondary)
+            ) {
+                Picker("Início", selection: $viewModel.horaInicioExpediente) {
+                    ForEach(viewModel.horariosDisponiveis, id: \.self) { horario in
+                        Text(horario).tag(horario)
+                    }
+                }
+                .onChange(of: viewModel.horaInicioExpediente) { _, novoInicio in
+                    let inicioInt = Int(novoInicio.prefix(2)) ?? 0
+                    let fimInt = Int(viewModel.horaFimExpediente.prefix(2)) ?? 0
+                    
+                    if inicioInt >= fimInt {
+                        let novoFim = min(inicioInt + 1, 23) // Garante que não passe de 23:00
+                        viewModel.horaFimExpediente = String(format: "%02d:00", novoFim)
+                    }
+                }
+                
+                Picker("Fim", selection: $viewModel.horaFimExpediente) {
+                    ForEach(viewModel.horariosDisponiveis, id: \.self) { horario in
+                        Text(horario).tag(horario)
+                    }
+                }
+                .onChange(of: viewModel.horaFimExpediente) { _, novoFim in
+                    let inicioInt = Int(viewModel.horaInicioExpediente.prefix(2)) ?? 0
+                    let fimInt = Int(novoFim.prefix(2)) ?? 0
+                    
+                    if fimInt <= inicioInt {
+                        let novoInicio = max(fimInt - 1, 0) // Garante que não seja menor que 00:00
+                        viewModel.horaInicioExpediente = String(format: "%02d:00", novoInicio)
+                    }
+                }
+            }
+            
             // MARK: - Alteração de Senha (Condicional)
             if viewModel.isEmailProvider {
                 Section(
                     header: Text("Alterar Senha"),
-                    footer:
-                        Text(
-                            "Deixe em branco caso não queira alterar sua senha atual."
-                        )
-                        .foregroundColor(.secondary)
+                    footer: Text("Deixe em branco caso não queira alterar sua senha atual.").foregroundColor(.secondary)
                 ){
-                    
                     PasswordToggleField(
                         title: "Senha Atual",
                         text: $viewModel.senhaAtual,
@@ -61,16 +92,13 @@ struct EditProfileView: View {
                         text: $viewModel.novaSenha,
                         contentType: .newPassword
                     )
-                    
                 }
             } else {
                 Section(header: Text("Autenticação")) {
-                    Text(
-                        "Sua conta está vinculada por meio de um provedor externo (Apple ou Google). A alteração de senha deve ser feita diretamente com o provedor correspondente."
-                    )
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 4)
+                    Text("Sua conta está vinculada por meio de um provedor externo (Apple ou Google). A alteração de senha deve ser feita diretamente com o provedor correspondente.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 4)
                 }
             }
         }
@@ -93,7 +121,6 @@ struct EditProfileView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Salvar") {
                     Task {
-                        // Aguarda a resposta do Firebase antes de fechar a tela
                         let sucesso = await viewModel.salvarAlteracoes()
                         if sucesso {
                             dismiss()
