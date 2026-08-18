@@ -319,28 +319,32 @@ struct SettingsView: View {
                 Button("Cancelar", role: .cancel) { }
                 
                 Button("Excluir Tudo", role: .destructive) {
+                    
+                    if let lastSignIn = Auth.auth().currentUser?.metadata.lastSignInDate {
+                        let tempoDesdeLogin = Date().timeIntervalSince(lastSignIn)
+                        
+                        if tempoDesdeLogin > 300 {
+                            mostrarAlertaSeguranca = true
+                            return
+                        }
+                    }
+                    
                     Task {
                         do {
-                            // Tenta deletar no Firebase primeiro
                             try await authManager.deletarConta()
-                            
-                            // Se der certo, remove o Face ID do UserDefaults
                             UserDefaults.standard.set(false, forKey: "usarFaceID")
+                            authManager.sairDaConta()
+                            
                         } catch let error as NSError {
-                            // 17014: requiresRecentLogin
-                            // 17020: userTokenExpired
-                            // 17004: invalidUserToken
                             let codigosDeSessaoInvalida = [
                                 AuthErrorCode.requiresRecentLogin.rawValue,
                                 AuthErrorCode.userTokenExpired.rawValue,
                                 AuthErrorCode.invalidUserToken.rawValue
                             ]
                             
-                            // Verifica se o erro faz parte dessa lista de segurança
                             if error.domain == AuthErrorDomain && codigosDeSessaoInvalida.contains(error.code) {
                                 mostrarAlertaSeguranca = true
                             } else {
-                                // Qualquer outro erro (falta de internet, etc)
                                 mensagemErro = error.localizedDescription
                                 mostrarErroGenerico = true
                             }
@@ -359,7 +363,7 @@ struct SettingsView: View {
                     authManager.sairDaConta()
                 }
             } message: {
-                Text("Para excluir sua conta definitivamente, precisamos confirmar que é realmente você. Por favor, faça logout, entre no aplicativo novamente e repita esta ação.")
+                Text("Por medidas de segurança, a exclusão definitiva da conta exige um login recente. Seus dados estão seguros e NÃO foram apagados. Por favor, faça logout, entre novamente e repita a ação.")
             }
             
             .alert("Erro ao Excluir", isPresented: $mostrarErroGenerico) {
