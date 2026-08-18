@@ -7,10 +7,16 @@
 
 import SwiftUI
 
+struct HorarioNovaSessaoContext: Identifiable {
+    let id = UUID()
+    let data: Date
+    let horario: String
+}
+
 struct AgendaView: View {
     
     @EnvironmentObject var router: AppRouter
-    // 1. Injetamos o gerenciador de autenticação
+
     @EnvironmentObject var authManager: AuthManager
     
     @StateObject private var viewModel = AgendaViewModel()
@@ -20,8 +26,8 @@ struct AgendaView: View {
     @State private var navegarParaProntuario: Bool = false
     
     // Estados de Modais
-    @State private var mostrarNovaSessao = false
-    @State private var horarioSugerido: String = "08:00"
+    @State private var contextoNovaSessao: HorarioNovaSessaoContext? = nil
+    
     @State private var sessaoParaAcao: Session? = nil
     @State private var mostrarAcoesRapidas: Bool = false
     
@@ -124,8 +130,7 @@ struct AgendaView: View {
                                     
                                     if sessoesNoHorario.isEmpty {
                                         EmptySlotCard {
-                                            self.horarioSugerido = time
-                                            self.mostrarNovaSessao = true
+                                            self.contextoNovaSessao = HorarioNovaSessaoContext(data: viewModel.selectedDate, horario: time)
                                         }
                                     } else {
                                         VStack(alignment: .leading, spacing: 8) {
@@ -166,7 +171,6 @@ struct AgendaView: View {
             .navigationTitle("Agenda")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                // 2. Passamos o ID do usuário para o carregamento inicial
                 if let uid = authManager.usuarioID {
                     viewModel.carregarDados(userId: uid)
                 }
@@ -181,10 +185,10 @@ struct AgendaView: View {
                 if let paciente = pacienteSelecionado { PatientDetailView(paciente: paciente) }
             }
             
-            .sheet(isPresented: $mostrarNovaSessao, onDismiss: {
+            .sheet(item: $contextoNovaSessao, onDismiss: {
                 if let uid = authManager.usuarioID { viewModel.carregarDados(userId: uid) }
-            }) {
-                NewSessionView(dataSugerida: viewModel.selectedDate, horarioSugerido: horarioSugerido)
+            }) { contexto in
+                NewSessionView(dataSugerida: contexto.data, horarioSugerido: contexto.horario)
             }
             
             .sheet(isPresented: $mostrarAcoesRapidas) {
@@ -193,7 +197,6 @@ struct AgendaView: View {
                         sessao: sessao,
                         paciente: paciente,
                         onUpdateStatus: { novoStatus, novaData in
-                            // 3. Passamos o ID do usuário na atualização de status
                             if let uid = authManager.usuarioID {
                                 withAnimation { viewModel.atualizarStatus(da: sessao, para: novoStatus, novaData: novaData, userId: uid) }
                             }
