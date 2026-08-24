@@ -45,17 +45,19 @@ struct EvolutionTabView: View {
                         )
                     
                     HStack(spacing: 12) {
-                        Button("Cancelar") {
+                        Button( action:{
                             fecharFormulario()
+                        }){
+                            Text("Cancelar")
+                                .font(.system(size: 15, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color(.systemGray5))
+                                .foregroundColor(.gray)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
-                        .font(.system(size: 15, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color(.systemGray5))
-                        .foregroundColor(.gray)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         
-                        Button("Guardar") {
+                        Button( action: {
                             if var evoParaAtualizar = evolucaoEmEdicao {
                                 // MODO EDIÇÃO
                                 evoParaAtualizar.conteudo = textoFormulario
@@ -65,13 +67,16 @@ struct EvolutionTabView: View {
                                 adicionarEvolucao(textoFormulario)
                             }
                             fecharFormulario()
+                        }){
+                            Text("Guardar")
+                                .font(.system(size: 15, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color.teal)
+                                .foregroundColor(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
-                        .font(.system(size: 15, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.teal)
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
                     }
                 }
                 .padding(20)
@@ -141,7 +146,7 @@ struct EvolutionTabView: View {
         .padding(.horizontal, 20)
         .padding(.top, 16)
         
-        .alert("Excluir Prontuário", isPresented: $mostrarAlertaExclusao) {
+        .alert("Excluir Anotação", isPresented: $mostrarAlertaExclusao) {
             Button("Cancelar", role: .cancel) { }
             Button("Excluir", role: .destructive) {
                 if let evo = evolucaoParaExcluir {
@@ -149,7 +154,7 @@ struct EvolutionTabView: View {
                 }
             }
         } message: {
-            Text("Tem certeza que deseja excluir esta anotação clínica? Esta ação não pode ser desfeita.")
+            Text("Tem certeza que deseja excluir esta anotação? Esta ação não pode ser desfeita.")
         }
     }
     
