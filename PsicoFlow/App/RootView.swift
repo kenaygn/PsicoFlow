@@ -24,6 +24,8 @@ struct RootView: View {
     @AppStorage("usarFaceID") private var appExigeFaceID = false
     @State private var estaDesbloqueado = false
     
+    @State private var exibindoSplash: Bool = true
+    
     private var precisaCompletarPerfil: Bool {
         let nomeVazio = authManager.usuarioAtual?.nome.trimmingCharacters(in: .whitespaces).isEmpty ?? true
         let crpVazio = authManager.usuarioAtual?.crp.trimmingCharacters(in: .whitespaces).isEmpty ?? true
@@ -33,37 +35,35 @@ struct RootView: View {
     
     var body: some View {
         Group {
-            if !networkMonitor.isConnected {
+            if exibindoSplash || authManager.carregandoDados {
+                PsyesLoadingView()
+                    .transition(.opacity)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            withAnimation(.easeInOut) {
+                                exibindoSplash = false
+                            }
+                        }
+                    }
+                
+            } else if !networkMonitor.isConnected {
                 NoInternetView()
                 
             } else if !viuOnboarding {
-                // ESTADO 1: Onboarding
                 OnboardingView(viuOnboarding: $viuOnboarding)
                 
             } else if !authManager.usuarioLogado {
-                // ESTADO 2: Login
                 LoginView()
                     .environmentObject(authManager)
                 
-            } else if authManager.carregandoDados {
-                // Segura a tela em branco ou mostra um spinner para não piscar a interface
-                VStack {
-                    ProgressView()
-                        .tint(.teal)
-                        .scaleEffect(1.5)
-                }
-                
             } else if precisaCompletarPerfil {
-                // ESTADO 3: Completar Perfil
                 CompleteProfileView()
                     .environmentObject(authManager)
                 
             } else if appExigeFaceID && !estaDesbloqueado {
-                // ESTADO 4: Tela trancada com Face ID
                 FaceIDBlockView(estaDesbloqueado: $estaDesbloqueado)
                 
             } else {
-                // ESTADO 5: Acesso Liberado ao App!
                 MainTabView()
                     .environmentObject(authManager)
                     .onAppear {
@@ -77,6 +77,7 @@ struct RootView: View {
                     }
             }
         }
+        .animation(.default, value: exibindoSplash)
         .animation(.default, value: networkMonitor.isConnected)
         .animation(.default, value: viuOnboarding)
         .animation(.default, value: authManager.usuarioLogado)
