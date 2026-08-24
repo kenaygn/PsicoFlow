@@ -24,6 +24,8 @@ class HomeViewModel: ObservableObject {
     @Published var mensagemConflito: String = ""
     @Published var mostrarAlertaConflito: Bool = false
     
+    @Published var carregamentoInicialConcluido: Bool = false
+    
     private var todasSessoes: [Session] = []
     private var todosPagamentos: [MonthlyPayment] = []
     
@@ -93,6 +95,8 @@ class HomeViewModel: ObservableObject {
                 withAnimation(.easeInOut(duration: 0.4)) {
                     self.todosPagamentos = novosPagamentos
                     self.processarDadosLocais(userId: userId)
+                    
+                    self.carregamentoInicialConcluido = true
                 }
             }
         }

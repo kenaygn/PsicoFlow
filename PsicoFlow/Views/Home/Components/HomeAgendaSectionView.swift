@@ -31,7 +31,11 @@ struct HomeAgendaSectionView: View {
             
            
             VStack(spacing: 16) {
-                if viewModel.pacientes.isEmpty {
+                
+                if !viewModel.carregamentoInicialConcluido {
+                    Color.clear
+                        .frame(height: 200)
+                } else if viewModel.pacientes.isEmpty {
                     EmptyPatientsHomeCard {
                         router.selectedTab = .patients
                     }
