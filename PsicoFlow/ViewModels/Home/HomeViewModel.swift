@@ -27,7 +27,6 @@ class HomeViewModel: ObservableObject {
     private var todasSessoes: [Session] = []
     private var todosPagamentos: [MonthlyPayment] = []
     
-    // Listeners para manter a sincronia offline-first em tempo real
     private var sessoesListener: ListenerRegistration?
     private var pacientesListener: ListenerRegistration?
     private var pagamentosListener: ListenerRegistration?
@@ -59,18 +58,15 @@ class HomeViewModel: ObservableObject {
         userListener?.remove()
     }
     
-    // MARK: - Carregamento Offline-First (Tempo Real)
     
     func carregarDados(userId: String) {
         guard !userId.isEmpty else { return }
         
-        // Remove ouvintes anteriores para evitar vazamento ou duplicação
         sessoesListener?.remove()
         pacientesListener?.remove()
         pagamentosListener?.remove()
         userListener?.remove()
         
-        // 1. Escuta Sessões
         if let sessionRepo = sessionRepository as? SessionFirebaseRepository {
             sessoesListener = sessionRepo.escutarSessoes(userId: userId) { [weak self] novasSessoes in
                 guard let self = self else { return }
@@ -81,7 +77,6 @@ class HomeViewModel: ObservableObject {
             }
         }
         
-        // 2. Escuta Pacientes
         if let patientRepo = patientRepository as? PatientFirebaseRepository {
             pacientesListener = patientRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
                 guard let self = self else { return }
@@ -92,7 +87,6 @@ class HomeViewModel: ObservableObject {
             }
         }
         
-        // 3. Escuta Pagamentos
         if let paymentRepo = paymentRepository as? PaymentFirebaseRepository {
             pagamentosListener = paymentRepo.escutarPagamentos(userId: userId) { [weak self] novosPagamentos in
                 guard let self = self else { return }
@@ -114,7 +108,7 @@ class HomeViewModel: ObservableObject {
     }
     
     var limitePlanoFreeAtingido: Bool {
-        if isUsuarioPremium { return false } // Premium não tem limite!
+        if isUsuarioPremium { return false }
         return pacientes.count >= 5
     }
     
@@ -141,13 +135,11 @@ class HomeViewModel: ObservableObject {
             .reduce(0) { $0 + $1.valor }
     }
     
-    // MARK: - Ações com Atualização Otimista
     
     func atualizarStatusDaSessao(sessaoID: String, novoStatus: SessionStatus, novaData: Date? = nil, userId: String) {
         if let index = sessoesHoje.firstIndex(where: { $0.id == sessaoID }) {
             
             Task {
-                // 1. Verificação de Conflitos
                 if let novaData = novaData, novoStatus == .adiada {
                     if let conflito = try? await verificarConflito(novaData: novaData, ignorandoSessaoID: sessaoID, userId: userId) {
                         await MainActor.run {
@@ -158,7 +150,6 @@ class HomeViewModel: ObservableObject {
                     }
                 }
                 
-                // 2. Modificação e Atualização Otimista imediata na UI
                 var sessaoAtualizada = sessoesHoje[index]
                 sessaoAtualizada.status = novoStatus
                 
@@ -185,7 +176,6 @@ class HomeViewModel: ObservableObject {
                     }
                 }
                 
-                // 3. Persistência em background
                 try? await sessionRepository.atualizarSessao(sessaoAtualizada, userId: userId)
             }
         }
@@ -199,7 +189,7 @@ class HomeViewModel: ObservableObject {
         let novaHoraStr = formatador.string(from: novaData)
         let minutosNovaSessao = converterParaMinutos(novaHoraStr)
         
-        let sessoesParaValidar = todasSessoes // Usa o cache local em vez de nova requisição
+        let sessoesParaValidar = todasSessoes
         
         for sessao in sessoesParaValidar {
             if sessao.id == ignorandoSessaoID || sessao.status == .cancelada { continue }
@@ -245,9 +235,7 @@ class HomeViewModel: ObservableObject {
             return []
         }
     }
-    
-    // MARK: - Propriedades Computadas e Helpers
-    
+        
     var primeiraDataComConflito: Date? {
         let sessoesAtivas = todasSessoes.filter { $0.status != .cancelada }
         var agrupamento: [String: [Session]] = [:]
