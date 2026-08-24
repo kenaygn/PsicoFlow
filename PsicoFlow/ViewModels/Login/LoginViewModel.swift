@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import Combine
 import GoogleSignIn
+import FirebaseAuth
 
 class LoginViewModel: ObservableObject {
     @Published var email = ""
@@ -31,11 +32,10 @@ class LoginViewModel: ObservableObject {
         Task {
             do {
                 try await authManager.fazerLogin(email: email, senha: senha)
-                // Se der certo, o AuthManager muda o estado e a RootView altera a tela sozinha!
                 carregando = false
             } catch {
                 tituloErro = "Erro ao entrar"
-                mensagemErro = error.localizedDescription
+                mensagemErro = traduzirErroFirebase(error)
                 exibirAlertaErro = true
                 carregando = false
             }
@@ -61,7 +61,8 @@ class LoginViewModel: ObservableObject {
                 iniciarCronometro()
             } catch {
                 carregando = false
-                mensagemErro = error.localizedDescription
+                tituloErro = "Erro ao recuperar senha"
+                mensagemErro = traduzirErroFirebase(error)
                 exibirAlertaErro = true
             }
         }
@@ -75,7 +76,7 @@ class LoginViewModel: ObservableObject {
                 carregando = false
             } catch {
                 tituloErro = "Erro na Apple"
-                mensagemErro = error.localizedDescription
+                mensagemErro = traduzirErroFirebase(error)
                 exibirAlertaErro = true
                 carregando = false
             }
@@ -93,36 +94,32 @@ class LoginViewModel: ObservableObject {
         GIDSignIn.sharedInstance.configuration = config
         
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { [weak self] result, error in
-            // O [weak self] evita vazamento de memória enquanto o usuário está fora do app logando
             guard let self = self else { return }
             
-            // Se der erro (ex: o usuário fechou a janela ou ficou sem internet)
             if let error = error {
                 self.carregando = false
                 
                 if (error as NSError).code != -5 {
                     self.tituloErro = "Erro no Google"
-                    self.mensagemErro = error.localizedDescription
+                    self.mensagemErro = self.traduzirErroFirebase(error)
                     self.exibirAlertaErro = true
                 }
                 return
             }
             
-            // Se deu certo, extrai as senhas (tokens) que o Google devolveu
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString else {
                 self.carregando = false
                 return
             }
             
-            // Repassa para o nosso AuthManager criar a conta no Firebase
             Task {
                 do {
                     try await authManager.loginComGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
                     self.carregando = false
                 } catch {
                     self.tituloErro = "Erro de Autenticação"
-                    self.mensagemErro = error.localizedDescription
+                    self.mensagemErro = self.traduzirErroFirebase(error) // Usando a tradução
                     self.exibirAlertaErro = true
                     self.carregando = false
                 }
@@ -139,5 +136,32 @@ class LoginViewModel: ObservableObject {
                 tempoRestante -= 1
             }
         }
+    }
+    
+    private func traduzirErroFirebase(_ error: Error) -> String {
+        let nsError = error as NSError
+        
+        if nsError.domain == AuthErrorDomain {
+            if let errorCode = AuthErrorCode(rawValue: nsError.code) {
+                switch errorCode {
+                case .invalidEmail:
+                    return "O formato do e-mail é inválido."
+                case .wrongPassword, .userNotFound, .invalidCredential:
+                    return "E-mail ou senha incorretos."
+                case .userDisabled:
+                    return "Esta conta foi desativada. Entre em contato com o suporte."
+                case .emailAlreadyInUse:
+                    return "Este e-mail já está cadastrado."
+                case .networkError:
+                    return "Parece que você está sem internet. Verifique sua conexão e tente novamente."
+                case .tooManyRequests:
+                    return "Muitas tentativas incorretas. Sua conta foi bloqueada temporariamente. Tente redefinir a senha ou aguarde alguns minutos."
+                default:
+                    return "Ocorreu um erro de autenticação. Tente novamente mais tarde."
+                }
+            }
+        }
+        
+        return error.localizedDescription
     }
 }

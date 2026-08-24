@@ -21,7 +21,6 @@ struct LoginView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
                     
-                    // MARK: - 1. LOGO (No topo)
                     VStack(spacing: 12) {
                         Image(systemName: "brain")
                             .font(.system(size: 60))
@@ -38,7 +37,6 @@ struct LoginView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    // MARK: - 2. E-mail e Senha
                     VStack(spacing: 16) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("E-mail")
@@ -96,7 +94,6 @@ struct LoginView: View {
                     }
                     .padding(.horizontal)
                     
-                    // MARK: - 3. DIVISOR
                     HStack {
                         Rectangle()
                             .frame(height: 1)
@@ -111,25 +108,21 @@ struct LoginView: View {
                     }
                     .padding(.horizontal)
                     
-                    // MARK: - 4. OPÇÕES SOCIAIS (Google & Apple)
                     VStack(spacing: 12) {
-                        // Botão Nativo da Apple
                         SignInWithAppleButton(.continue) { request in
-                            //O usuário clicou. Geramos a criptografia antes de abrir o FaceID
+
                             let nonce = AppleSignInHelper.randomNonceString()
                             vm.nonceAtual = nonce
-                            
-                            // Avisamos a Apple o que queremos acessar (e-mail e nome)
                             request.requestedScopes = [.fullName, .email]
                             request.nonce = AppleSignInHelper.sha256(nonce)
                             
                         } onCompletion: { result in
-                            // O usuário colocou o FaceID e a Apple respondeu
+       
                             switch result {
                             case .success(let autorizacao):
                                 if let credencial = autorizacao.credential as? ASAuthorizationAppleIDCredential {
                                     
-                                    // Pega os dados que a Apple devolveu
+   
                                     guard let nonce = vm.nonceAtual,
                                           let tokenDados = credencial.identityToken,
                                           let idToken = String(data: tokenDados, encoding: .utf8) else {
@@ -173,7 +166,6 @@ struct LoginView: View {
                     }
                     .padding(.horizontal)
                     
-                    // MARK: - 5. CreateAccount
                     NavigationLink(destination: CreateAccountView()) {
                         HStack(spacing: 4) {
                             Text("Novo no Psyes?")
@@ -216,7 +208,6 @@ struct LoginView: View {
                     .presentationDragIndicator(.visible)
             }
             
-            // MARK: - ALERTAS
             .alert("E-mail Enviado", isPresented: $vm.mostrarAlertaRecuperacao, actions: {
                 Button("OK", role: .cancel) { }
             }, message: {

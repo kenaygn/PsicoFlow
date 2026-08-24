@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import Combine
 import GoogleSignIn
+import FirebaseAuth
 
 class CreateAccountViewModel: ObservableObject {
     @Published var email = ""
@@ -39,7 +40,7 @@ class CreateAccountViewModel: ObservableObject {
                 try await authManager.criarConta(email: email, senha: senha)
                 carregando = false
             } catch {
-                mostrarErro(titulo: "Erro ao criar conta", mensagem: error.localizedDescription)
+                mostrarErro(titulo: "Erro ao criar conta", mensagem: traduzirErroFirebase(error))
                 carregando = false
             }
         }
@@ -58,7 +59,7 @@ class CreateAccountViewModel: ObservableObject {
                 try await authManager.loginComApple(idToken: idToken, nonce: nonce)
                 carregando = false
             } catch {
-                mostrarErro(titulo: "Erro na Apple", mensagem: error.localizedDescription)
+                mostrarErro(titulo: "Erro na Apple", mensagem: traduzirErroFirebase(error))
                 carregando = false
             }
         }
@@ -75,40 +76,61 @@ class CreateAccountViewModel: ObservableObject {
         GIDSignIn.sharedInstance.configuration = config
         
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { [weak self] result, error in
-            // O [weak self] evita vazamento de memória enquanto o usuário está fora do app logando
             guard let self = self else { return }
             
-            // Se der erro (ex: o usuário fechou a janela ou ficou sem internet)
             if let error = error {
                 self.carregando = false
                 
                 if (error as NSError).code != -5 {
                     self.tituloErro = "Erro no Google"
-                    self.mensagemErro = error.localizedDescription
+                    self.mensagemErro = self.traduzirErroFirebase(error)
                     self.exibirAlertaErro = true
                 }
                 return
             }
             
-            // Se deu certo, extrai as senhas (tokens) que o Google devolveu
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString else {
                 self.carregando = false
                 return
             }
             
-            // Repassa para o nosso AuthManager criar a conta no Firebase
             Task {
                 do {
                     try await authManager.loginComGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
                     self.carregando = false
                 } catch {
                     self.tituloErro = "Erro de Autenticação"
-                    self.mensagemErro = error.localizedDescription
+                    self.mensagemErro = self.traduzirErroFirebase(error)
                     self.exibirAlertaErro = true
                     self.carregando = false
                 }
             }
         }
+    }
+    
+    private func traduzirErroFirebase(_ error: Error) -> String {
+        let nsError = error as NSError
+        
+        if nsError.domain == AuthErrorDomain {
+            if let errorCode = AuthErrorCode(rawValue: nsError.code) {
+                switch errorCode {
+                case .invalidEmail:
+                    return "O formato do e-mail é inválido."
+                case .emailAlreadyInUse:
+                    return "Este e-mail já está cadastrado. Tente voltar e fazer login."
+                case .weakPassword:
+                    return "A senha escolhida é muito fraca. Tente criar uma senha mais segura."
+                case .networkError:
+                    return "Parece que você está sem internet. Verifique sua conexão e tente novamente."
+                case .tooManyRequests:
+                    return "Muitas tentativas. Sua conta foi bloqueada temporariamente. Aguarde alguns minutos."
+                default:
+                    return "Ocorreu um erro na autenticação. Tente novamente mais tarde."
+                }
+            }
+        }
+        
+        return error.localizedDescription
     }
 }
