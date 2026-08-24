@@ -13,18 +13,19 @@ struct FullScreenCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             
-            HStack(spacing: 6) {
-                Circle().fill(.white).frame(width: 6, height: 6)
-                Text(card.tag)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color.white)
-                    .tracking(1)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.white.opacity(0.2))
-            .clipShape(Capsule())
-            .padding(.top, 60)
+//            HStack(spacing: 6) {
+//                Circle().fill(.white).frame(width: 6, height: 6)
+//                Text(card.tag)
+//                    .font(.system(size: 11, weight: .bold))
+//                    .foregroundStyle(Color.white)
+//                    .tracking(1)
+//            }
+//            .padding(.horizontal, 12)
+//            .padding(.vertical, 6)
+//            .background(.white.opacity(0.2))
+//            .clipShape(Capsule())
+            
+            Spacer()
             
             Text(card.titulo)
                 .font(.system(size: 48, weight: .bold, design: .rounded))
