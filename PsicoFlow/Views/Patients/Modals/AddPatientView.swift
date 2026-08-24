@@ -10,7 +10,7 @@ import SwiftUI
 struct AddPatientView: View {
     
     @Environment(\.dismiss) var dismiss
-    // 1. Injetamos o gerenciador de autenticação
+
     @EnvironmentObject var authManager: AuthManager
     
     @StateObject private var viewModel = PatientFormViewModel()

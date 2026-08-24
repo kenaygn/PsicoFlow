@@ -20,15 +20,29 @@ class EvolutionFirebaseRepository: EvolutionRepositoryProtocol {
             .whereField("pacienteID", isEqualTo: pacienteID)
             .getDocuments()
         
-        return snapshot.documents.compactMap { try? $0.data(as: Evolution.self) }
+        var evolucoes = snapshot.documents.compactMap { try? $0.data(as: Evolution.self) }
+        
+        for i in 0..<evolucoes.count {
+            evolucoes[i].conteudo = EncryptionManager.shared.decrypt(base64String: evolucoes[i].conteudo, userId: userId)
+        }
+        
+        return evolucoes
     }
     
     func salvarEvolucao(_ evolucao: Evolution, userId: String) async throws {
-        try collection(userId: userId).document(evolucao.id).setData(from: evolucao)
+        var evolucaoSegura = evolucao
+        
+        evolucaoSegura.conteudo = EncryptionManager.shared.encrypt(text: evolucao.conteudo, userId: userId)
+        
+        try collection(userId: userId).document(evolucaoSegura.id).setData(from: evolucaoSegura)
     }
     
     func atualizarEvolucao(_ evolucao: Evolution, userId: String) async throws {
-        try collection(userId: userId).document(evolucao.id).setData(from: evolucao, merge: true)
+        var evolucaoSegura = evolucao
+        
+        evolucaoSegura.conteudo = EncryptionManager.shared.encrypt(text: evolucao.conteudo, userId: userId)
+        
+        try collection(userId: userId).document(evolucaoSegura.id).setData(from: evolucaoSegura, merge: true)
     }
     
     func deletarEvolucao(id: String, userId: String) async throws {

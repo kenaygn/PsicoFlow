@@ -24,16 +24,14 @@ struct EvolutionTabView: View {
     var body: some View {
         VStack(spacing: 16) {
             
-            // MARK: - Cabeçalho
             HStack {
-                Text("Histórico Clínico")
+                Text("Anotações")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
                 Spacer()
             }
             .padding(.bottom, 4)
             
-            // MARK: - Formulário Inline (Serve para Criar e Editar)
             if isShowingForm {
                 VStack(spacing: 16) {
                     TextEditor(text: $textoFormulario)
@@ -83,7 +81,6 @@ struct EvolutionTabView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
             
-            // MARK: - Botão Novo Registro
             if !isShowingForm {
                 Button(action: {
                     withAnimation(.spring()) {
@@ -106,18 +103,16 @@ struct EvolutionTabView: View {
                 }
             }
             
-            // MARK: - Lista de Evoluções
             if evolucoes.isEmpty && !isShowingForm {
-                // ... (Estado vazio continua idêntico)
                 VStack(spacing: 12) {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.system(size: 40))
                         .foregroundColor(Color(.systemGray4))
                         .padding(.top, 40)
-                    Text("Nenhuma evolução registrada.")
+                    Text("Nenhuma anotação registrada.")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(.darkGray))
-                    Text("Clique em 'Novo Registro' para iniciar o prontuário deste paciente.")
+                    Text("Clique em 'Novo Registro' para iniciar uma anotação deste paciente.")
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -146,7 +141,6 @@ struct EvolutionTabView: View {
         .padding(.horizontal, 20)
         .padding(.top, 16)
         
-        // Alerta de Exclusão (Para evitar acidentes clínicos)
         .alert("Excluir Prontuário", isPresented: $mostrarAlertaExclusao) {
             Button("Cancelar", role: .cancel) { }
             Button("Excluir", role: .destructive) {
