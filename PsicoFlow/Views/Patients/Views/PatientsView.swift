@@ -10,7 +10,6 @@ import SwiftUI
 /// Tela principal de listagem e busca de pacientes.
 struct PatientsView: View {
     
-    // 1. Injetamos o gerenciador de autenticação
     @EnvironmentObject var authManager: AuthManager
     
     @StateObject private var viewModel = PatientsViewModel()
@@ -21,9 +20,14 @@ struct PatientsView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
+                    
                     VStack(spacing: 12) {
-                        
-                        if viewModel.pacientesFiltrados.isEmpty {
+                        if !viewModel.carregamentoInicialConcluido {
+                            Color.clear
+                                .frame(height: 200)
+                                .transition(.opacity)
+                            
+                        } else if viewModel.pacientesFiltrados.isEmpty {
                             VStack {
                                 Image(systemName: "person.crop.circle.badge.questionmark")
                                     .font(.system(size: 40))
@@ -34,6 +38,7 @@ struct PatientsView: View {
                                     .foregroundColor(.secondary)
                             }
                             .padding(.top, 60)
+                            .transition(.opacity)
                             
                         } else {
                             ForEach(viewModel.pacientesFiltrados) { paciente in
@@ -41,6 +46,7 @@ struct PatientsView: View {
                                     PatientCardView(paciente: paciente)
                                 }
                             }
+                            .transition(.opacity)
                         }
                     }
                     .padding(.bottom, 100)
@@ -48,7 +54,6 @@ struct PatientsView: View {
                 .padding(.horizontal, 20)
             }
             .onAppear {
-                // 2. Passamos o ID do usuário logado para carregar a lista correta
                 if let uid = authManager.usuarioID {
                     viewModel.carregarPacientes(userId: uid)
                 }
@@ -59,13 +64,11 @@ struct PatientsView: View {
             .toolbar {
                 ToolbarItem {
                     Button(action: {
-                        
                         if viewModel.limitePlanoFreeAtingido {
                             mostrarModalUpgrade = true
                         } else {
                             mostrarModalAdicionar = true
                         }
-                        
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 16, weight: .bold))
@@ -75,7 +78,6 @@ struct PatientsView: View {
             }
             .sheet(isPresented: $mostrarModalAdicionar) {
                 AddPatientView { novoPaciente in
-                    // 3. Passamos o ID do usuário ao salvar um novo paciente
                     if let uid = authManager.usuarioID {
                         viewModel.adicionarPaciente(novoPaciente, userId: uid)
                     }
@@ -94,4 +96,3 @@ struct PatientsView: View {
         }
     }
 }
-

@@ -21,6 +21,8 @@ struct EvolutionTabView: View {
     @State private var mostrarAlertaExclusao = false
     @State private var evolucaoParaExcluir: Evolution? = nil
     
+    @State private var presuncaoOtimista = true
+    
     var body: some View {
         VStack(spacing: 16) {
             
@@ -108,7 +110,7 @@ struct EvolutionTabView: View {
                 }
             }
             
-            if evolucoes.isEmpty && !isShowingForm {
+            if evolucoes.isEmpty && !isShowingForm && !presuncaoOtimista {
                 VStack(spacing: 12) {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.system(size: 40))
@@ -146,6 +148,19 @@ struct EvolutionTabView: View {
         .padding(.horizontal, 20)
         .padding(.top, 16)
         
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation {
+                    presuncaoOtimista = false
+                }
+            }
+        }
+        .onChange(of: evolucoes.map { $0.id }) { _, _ in
+            withAnimation {
+                presuncaoOtimista = false
+            }
+        }
+        
         .alert("Excluir Anotação", isPresented: $mostrarAlertaExclusao) {
             Button("Cancelar", role: .cancel) { }
             Button("Excluir", role: .destructive) {
@@ -166,3 +181,4 @@ struct EvolutionTabView: View {
         }
     }
 }
+
