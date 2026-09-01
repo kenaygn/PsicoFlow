@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PsyesLoadingView: View {
-    let letras = Array("Psyes")
+    let imagens = ["logo_p", "logo_s", "logo_y", "logo_e", "logo_s"]
     @State private var isAnimating = false
     
     var body: some View {
@@ -17,10 +17,12 @@ struct PsyesLoadingView: View {
                 .ignoresSafeArea()
             
             HStack(spacing: 4) {
-                ForEach(0..<letras.count, id: \.self) { index in
-                    Text(String(letras[index]))
-                        .font(.system(size: 42, weight: .bold, design: .rounded))
-                        .foregroundColor(.teal)
+                ForEach(0..<imagens.count, id: \.self) { index in
+                    Image(imagens[index])
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 72)
+                        
                         .offset(y: isAnimating ? -15 : 0)
                         .animation(
                             Animation
@@ -41,4 +43,3 @@ struct PsyesLoadingView: View {
 #Preview {
     PsyesLoadingView()
 }
-

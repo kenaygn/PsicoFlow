@@ -20,9 +20,7 @@ struct CreateAccountView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
-                // MARK: - 1. HERO SECTION
                 VStack(alignment: .leading, spacing: 16) {
-                    // Espaçador para compensar a área segura do Notch/Dynamic Island
                     Spacer()
                         .frame(height: 60)
                     
@@ -30,7 +28,6 @@ struct CreateAccountView: View {
                         .font(.system(.title, design: .rounded))
                         .bold()
                     
-                    // Texto corrido inspirado no GitHub
                     Text("Explore os recursos essenciais do Psyes para simplificar sua gestão e focar no que realmente importa: seus pacientes.")
                         .font(.subheadline)
                         .opacity(0.9)
@@ -38,32 +35,37 @@ struct CreateAccountView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 24)
-                .padding(.bottom, 140) // Aumentamos um pouco o espaço aqui para o degradê acontecer antes do texto acabar
+                .padding(.bottom, 140)
                 
                 .background(
                     LinearGradient(
                         colors: [
                             Color.teal,
-                            Color.teal.opacity(0.8), // Mantém a cor forte onde está o texto
-                            Color(.systemBackground) // Fica transparente/mescla exatamente no limite com o resto do app
+                            Color.teal.opacity(0.8),
+                            Color(.systemBackground)
                         ],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                     
                 )
-                
-                // A Logo continua como Overlay, aproveitando a transição do fundo
                 .overlay(alignment: .bottom) {
-                    HStack {
+                    HStack(alignment: .center) {
                         Rectangle()
                             .frame(height: 2)
                             .foregroundColor(Color(.white))
-                        Text("Psyes")
-                            .font(.system(.largeTitle, design: .rounded))
-                            .foregroundStyle(Color.white)
-                            .bold()
-                            .shadow(color: .teal.opacity(0.2), radius: 5, y: 0) // Sombra levemente esverdeada para harmonizar
+                        
+                        Image("nameWhiteIcon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 200)
+                            .padding(.horizontal, 4)
+                        
+//                        Text("Psyes")
+//                            .font(.system(.largeTitle, design: .rounded))
+//                            .foregroundStyle(Color.white)
+//                            .bold()
+//                            .shadow(color: .teal.opacity(0.2), radius: 5, y: 0)
                         
                         Rectangle()
                             .frame(height: 2)
@@ -84,7 +86,6 @@ struct CreateAccountView: View {
                     .padding(.horizontal)
                     .padding(.top, -40)
                 
-                // MARK: - 4. OPÇÕES SOCIAIS (Google & Apple)
                 VStack(spacing: 12) {
                     // Botão Nativo da Apple
                     SignInWithAppleButton(.continue) { request in
@@ -146,7 +147,6 @@ struct CreateAccountView: View {
                 .padding(.top, -24)
                 .padding(.horizontal)
                 
-                // MARK: - 3. DIVISOR
                 HStack {
                     Rectangle()
                         .frame(height: 1)
@@ -161,7 +161,6 @@ struct CreateAccountView: View {
                 }
                 .padding(.horizontal)
                 
-                // MARK: - 2. Formulário
                 VStack(spacing: 16) {
                     
                     // Campo E-mail
@@ -260,7 +259,6 @@ struct CreateAccountView: View {
                 .presentationDragIndicator(.visible)
         }
         
-        // MARK: - ALERTA DE ERRO
         .alert(vm.tituloErro ?? "Erro", isPresented: $vm.exibirAlertaErro, actions: {
             Button("Ok", role: .cancel) {}
         }, message: {

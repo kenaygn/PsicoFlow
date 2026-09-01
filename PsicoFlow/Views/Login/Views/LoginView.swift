@@ -22,15 +22,16 @@ struct LoginView: View {
                 VStack(spacing: 24) {
                     
                     VStack(spacing: 12) {
-                        Image(systemName: "brain")
-                            .font(.system(size: 60))
-                            .foregroundColor(Color(.teal))
+                        Image("nameTealIcon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 160)
                             .padding(.top, 40)
                         
-                        Text("Psyes")
-                            .font(.system(.largeTitle, design: .rounded))
-                            .foregroundStyle(Color.teal)
-                            .bold()
+//                        Text("Psyes")
+//                            .font(.system(.largeTitle, design: .rounded))
+//                            .foregroundStyle(Color.teal)
+//                            .bold()
                         
                         Text("Gestão inteligente para psicólogos[Mudar esse texto]")
                             .font(.subheadline)
