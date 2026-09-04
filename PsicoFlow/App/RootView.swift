@@ -71,7 +71,7 @@ struct RootView: View {
                         
                         if let usuario = authManager.currentUser {
                             Task {
-                                await storeManager.sincronizarStatusComApple(usuarioAtual: usuario, userRepository: UserFirebaseRepository())
+                                await storeManager.syncStatusWithApple(currentUser: usuario, userRepository: UserFirebaseRepository())
                             }
                         }
                     }
@@ -94,7 +94,7 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AtualizarStoreKit")).receive(on: RunLoop.main)) { _ in
             if let usuario = authManager.currentUser {
                 Task {
-                    await storeManager.sincronizarStatusComApple(usuarioAtual: usuario, userRepository: UserFirebaseRepository())
+                    await storeManager.syncStatusWithApple(currentUser: usuario, userRepository: UserFirebaseRepository())
                     
                     if let uid = authManager.userID {
                         await authManager.fetchUserData(uid: uid)
@@ -102,13 +102,13 @@ struct RootView: View {
                 }
             }
         }
-        .alert("Sua assinatura expirou", isPresented: $storeManager.assinaturaExpirou) {
+        .alert("Sua assinatura expirou", isPresented: $storeManager.subscriptionExpired) {
             Button("Entendi", role: .cancel) { }
         } message: {
             Text("Seu plano Psyes Pro chegou ao fim. Algumas funcionalidades e pacientes excedentes foram bloqueados. Acesse os Ajustes para renovar e destravar seu acesso.")
         }
         
-        .onChange(of: storeManager.assinaturaExpirou) { _ , expirou in
+        .onChange(of: storeManager.subscriptionExpired) { _ , expirou in
             if expirou {
                 authManager.currentUser?.premium = false
             }

@@ -12,21 +12,19 @@ import StoreKit
 @MainActor
 class StoreManager: ObservableObject {
     
-    // O ID exato que você configurou no arquivo .storekit
     let productIDs = ["psyes_pro_mensal"]
     
-    @Published var produtosDisponiveis: [Product] = []
-    @Published var estaComprando: Bool = false
+    @Published var availableProducts: [Product] = []
+    @Published var isPurchasing: Bool = false
     
-    @Published var assinaturaExpirou: Bool = false
+    @Published var subscriptionExpired: Bool = false
     
-    // Uma "tarefa" que fica escutando se a compra foi aprovada pela Apple
     private var transactionListener: Task<Void, Error>?
     
     init() {
-        transactionListener = escutarTransacoes()
+        transactionListener = listenForTransactions()
         Task {
-            await carregarProdutos()
+            await loadProducts()
         }
     }
     
@@ -34,20 +32,18 @@ class StoreManager: ObservableObject {
         transactionListener?.cancel()
     }
     
-    // Busca as informações do plano direto da Apple
-    func carregarProdutos() async {
+    func loadProducts() async {
         do {
             let storeProducts = try await Product.products(for: productIDs)
-            self.produtosDisponiveis = storeProducts
+            self.availableProducts = storeProducts
         } catch {
-            print("Erro ao buscar produtos: \(error)")
+            print("Error fetching products: \(error)")
         }
     }
     
-    // Aciona o modal de pagamento do iOS
-    func comprar(_ product: Product) async throws -> Transaction? {
-        estaComprando = true
-        defer { estaComprando = false }
+    func purchase(_ product: Product) async throws -> Transaction? {
+        isPurchasing = true
+        defer { isPurchasing = false }
         
         let result = try await product.purchase()
         
@@ -55,7 +51,7 @@ class StoreManager: ObservableObject {
         case .success(let verification):
             let transaction = try checkVerified(verification)
             await transaction.finish()
-            NotificationCenter.default.post(name: NSNotification.Name("AtualizarStoreKit"), object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name("UpdateStoreKit"), object: nil)
             return transaction
             
         case .userCancelled, .pending:
@@ -65,52 +61,49 @@ class StoreManager: ObservableObject {
         }
     }
     
-    func sincronizarStatusComApple(usuarioAtual: User?, userRepository: UserRepositoryProtocol) async {
-        guard let usuario = usuarioAtual else { return }
+    func syncStatusWithApple(currentUser: User?, userRepository: UserRepositoryProtocol) async {
+        guard let user = currentUser else { return }
         
-        var possuiAssinaturaAtiva = false
+        var hasActiveSubscription = false
         
-        // Itera sobre as assinaturas ativas na Apple NESTE momento
         for await result in Transaction.currentEntitlements {
             do {
                 let transaction = try checkVerified(result)
-                // Se achou o plano e ele não foi revogado
                 if transaction.productID == "psyes_pro_mensal" && transaction.revocationDate == nil {
-                    possuiAssinaturaAtiva = true
+                    hasActiveSubscription = true
                 }
             } catch {
-                print("Erro ao verificar transação: \(error)")
+                print("Error verifying transaction: \(error)")
             }
         }
         
-        var usuarioModificado = usuario
+        var modifiedUser = user
         
-        // CENÁRIO A: Assinatura Expirou / Falhou o Pagamento / Cancelou
-        if !possuiAssinaturaAtiva && usuario.premium {
-            usuarioModificado.premium = false
-            try? await userRepository.updateUser(user: usuarioModificado)
+        // SCENARIO A: Subscription Expired / Payment Failed / Cancelled
+        if !hasActiveSubscription && user.premium {
+            modifiedUser.premium = false
+            try? await userRepository.updateUser(user: modifiedUser)
             
             let patientRepo = PatientFirebaseRepository()
-            try? await patientRepo.blockExcessPatients(userId: usuario.id)
+            try? await patientRepo.blockExcessPatients(userId: user.id)
             
             await MainActor.run {
-                self.assinaturaExpirou = true
+                self.subscriptionExpired = true
             }
-            print("Assinatura expirada. Firebase atualizado para Free.")
+            print("Subscription expired. Firebase updated to Free.")
         }
-        // CENÁRIO B: Assinatura renovou automaticamente por fora (ou assinou em outro aparelho)
-        else if possuiAssinaturaAtiva && !usuario.premium {
-            usuarioModificado.premium = true
-            try? await userRepository.updateUser(user: usuarioModificado)
+        // SCENARIO B: Subscription auto-renewed externally (or subscribed on another device)
+        else if hasActiveSubscription && !user.premium {
+            modifiedUser.premium = true
+            try? await userRepository.updateUser(user: modifiedUser)
             
             let patientRepo = PatientFirebaseRepository()
-            try? await patientRepo.unblockPatients(userId: usuario.id)
+            try? await patientRepo.unblockPatients(userId: user.id)
             
-            print("Assinatura renovada/detectada. Firebase atualizado para Premium.")
+            print("Subscription renewed/detected. Firebase updated to Premium.")
         }
     }
     
-    // Verifica se a transação é verdadeira
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified:
@@ -120,19 +113,17 @@ class StoreManager: ObservableObject {
         }
     }
     
-    // Escuta compras feitas por fora
-    private func escutarTransacoes() -> Task<Void, Error> {
+    private func listenForTransactions() -> Task<Void, Error> {
         return Task {
             for await result in Transaction.updates {
                 do {
                     let transaction = try self.checkVerified(result)
                     await transaction.finish()
                     
-                    // Dispara o aviso global com segurança na Main Thread
-                    NotificationCenter.default.post(name: NSNotification.Name("AtualizarStoreKit"), object: nil)
+                    NotificationCenter.default.post(name: NSNotification.Name("UpdateStoreKit"), object: nil)
                     
                 } catch {
-                    print("Transação não verificada: \(error)")
+                    print("Unverified transaction: \(error)")
                 }
             }
         }
