@@ -15,7 +15,7 @@ class EvolutionFirebaseRepository: EvolutionRepositoryProtocol {
         return db.collection("users").document(userId).collection("evolutions")
     }
     
-    func fetchEvolucoes(paraPacienteID pacienteID: String, userId: String) async throws -> [ProgressNote] {
+    func fetchProgressNotes(forPatientID pacienteID: String, userId: String) async throws -> [ProgressNote] {
         let snapshot = try await collection(userId: userId)
             .whereField("pacienteID", isEqualTo: pacienteID)
             .getDocuments()
@@ -29,7 +29,7 @@ class EvolutionFirebaseRepository: EvolutionRepositoryProtocol {
         return evolucoes
     }
     
-    func salvarEvolucao(_ evolucao: ProgressNote, userId: String) async throws {
+    func saveProgressNote(_ evolucao: ProgressNote, userId: String) async throws {
         var evolucaoSegura = evolucao
         
         evolucaoSegura.content = EncryptionManager.shared.encrypt(text: evolucao.content, userId: userId)
@@ -37,7 +37,7 @@ class EvolutionFirebaseRepository: EvolutionRepositoryProtocol {
         try collection(userId: userId).document(evolucaoSegura.id).setData(from: evolucaoSegura)
     }
     
-    func atualizarEvolucao(_ evolucao: ProgressNote, userId: String) async throws {
+    func updateProgressNote(_ evolucao: ProgressNote, userId: String) async throws {
         var evolucaoSegura = evolucao
         
         evolucaoSegura.content = EncryptionManager.shared.encrypt(text: evolucao.content, userId: userId)
@@ -45,7 +45,7 @@ class EvolutionFirebaseRepository: EvolutionRepositoryProtocol {
         try collection(userId: userId).document(evolucaoSegura.id).setData(from: evolucaoSegura, merge: true)
     }
     
-    func deletarEvolucao(id: String, userId: String) async throws {
+    func deleteProgressNote(id: String, userId: String) async throws {
         try await collection(userId: userId).document(id).delete()
     }
 }

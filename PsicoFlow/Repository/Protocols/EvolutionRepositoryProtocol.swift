@@ -8,8 +8,8 @@
 import Foundation
 
 protocol EvolutionRepositoryProtocol {
-    func fetchEvolucoes(paraPacienteID pacienteID: String, userId: String) async throws -> [ProgressNote]
-    func salvarEvolucao(_ evolucao: ProgressNote, userId: String) async throws
-    func atualizarEvolucao(_ evolucao: ProgressNote, userId: String) async throws
-    func deletarEvolucao(id: String, userId: String) async throws
+    func fetchProgressNotes(forPatientID patientID: String, userId: String) async throws -> [ProgressNote]
+    func saveProgressNote(_ note: ProgressNote, userId: String) async throws
+    func updateProgressNote(_ note: ProgressNote, userId: String) async throws
+    func deleteProgressNote(id: String, userId: String) async throws
 }

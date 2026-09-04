@@ -52,7 +52,7 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarEvolucoes(userId: String) async {
         do {
-            let dados = try await evolutionRepository.fetchEvolucoes(paraPacienteID: paciente.id, userId: userId)
+            let dados = try await evolutionRepository.fetchProgressNotes(forPatientID: paciente.id, userId: userId)
             
             await MainActor.run {
                 withAnimation(.spring()) {
@@ -137,7 +137,7 @@ class PatientDetailViewModel: ObservableObject {
         
         Task {
             do {
-                try await evolutionRepository.salvarEvolucao(novaEvolucao, userId: userId)
+                try await evolutionRepository.saveProgressNote(novaEvolucao, userId: userId)
                 
                 await MainActor.run {
                     withAnimation(.spring()) {
@@ -153,7 +153,7 @@ class PatientDetailViewModel: ObservableObject {
     func atualizarEvolucao(evolucaoAtualizada: ProgressNote, userId: String) {
         Task {
             do {
-                try await evolutionRepository.atualizarEvolucao(evolucaoAtualizada, userId: userId)
+                try await evolutionRepository.updateProgressNote(evolucaoAtualizada, userId: userId)
                 
                 await MainActor.run {
                     withAnimation(.spring()) {
@@ -171,7 +171,7 @@ class PatientDetailViewModel: ObservableObject {
     func deletarEvolucao(id: String, userId: String) {
         Task {
             do {
-                try await evolutionRepository.deletarEvolucao(id: id, userId: userId)
+                try await evolutionRepository.deleteProgressNote(id: id, userId: userId)
                 
                 await MainActor.run {
                     withAnimation(.spring()) {
