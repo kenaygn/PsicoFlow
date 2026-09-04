@@ -221,14 +221,14 @@ struct SettingsView: View {
                         }
                         
                         let atributos = SessionActivityAttributes(
-                            nomePaciente: "Ana Carolina",
-                            modalidade: "Presencial",
-                            isFixa: true,
-                            horaInicio: "14:00"
+                            patientName: "Ana Carolina",
+                            modality: "Presencial",
+                            isFixed: true,
+                            startTime: "14:00"
                         )
                         
                         let estadoInicial = SessionActivityAttributes.ContentState(
-                            statusMensagem: "Tudo pronto para o atendimento."
+                            statusMessage: "Tudo pronto para o atendimento."
                         )
                         
                         do {
@@ -253,7 +253,7 @@ struct SettingsView: View {
                     // Botão de Parar
                     Button(action: {
                         Task {
-                            let estadoFinal = SessionActivityAttributes.ContentState(statusMensagem: "Sessão concluída.")
+                            let estadoFinal = SessionActivityAttributes.ContentState(statusMessage: "Sessão concluída.")
                             
                             // Procura todas as atividades do Psyes rodando e mata todas
                             for atividade in Activity<SessionActivityAttributes>.activities {
