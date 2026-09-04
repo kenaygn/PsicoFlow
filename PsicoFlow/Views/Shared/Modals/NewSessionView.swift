@@ -34,8 +34,8 @@ struct NewSessionView: View {
                         }
                         
                         Picker("Modalidade", selection: $viewModel.selectedModalidade) {
-                            Text("Presencial").tag(Modalidade.presencial)
-                            Text("Online").tag(Modalidade.online)
+                            Text("Presencial").tag(Modality.inPerson)
+                            Text("Online").tag(Modality.online)
                         }
                     }
                 }

@@ -88,14 +88,14 @@ class EditProfileViewModel: ObservableObject {
             
             let inicioDeHoje = Calendar.current.startOfDay(for: Date())
             
-            let sessoesAtivas = todasSessoes.filter { $0.dataDaSessao >= inicioDeHoje && $0.status != .cancelada }
+            let sessoesAtivas = todasSessoes.filter { $0.sessionDate >= inicioDeHoje && $0.status != .cancelled }
             
             let novoInicioInt = Int(horaInicioExpediente.prefix(2)) ?? 0
             let novoFimInt = Int(horaFimExpediente.prefix(2)) ?? 23
             
             // Verifica se há conflito nas Sessões (Geradas e Avulsas)
             let conflitoSessoes = sessoesAtivas.contains { sessao in
-                let horaInt = Int(sessao.horaInicio.prefix(2)) ?? 0
+                let horaInt = Int(sessao.startTime.prefix(2)) ?? 0
                 return horaInt < novoInicioInt || horaInt > novoFimInt
             }
             

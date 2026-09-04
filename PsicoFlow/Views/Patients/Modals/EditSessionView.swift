@@ -41,8 +41,8 @@ struct EditSessionView: View {
                     footer: Text(viewModel.isFixa ? "Alterar essas regras afetará as próximas sessões geradas para este paciente." : "Alterar esta sessão não afeta o contrato recorrente.")
                 ) {
                     Picker("Modalidade", selection: $viewModel.selectedModalidade) {
-                        Text("Presencial").tag(Modalidade.presencial)
-                        Text("Online").tag(Modalidade.online)
+                        Text("Presencial").tag(Modality.inPerson)
+                        Text("Online").tag(Modality.online)
                     }
                     
                     if viewModel.isFixa {

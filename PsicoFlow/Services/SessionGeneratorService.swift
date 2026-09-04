@@ -53,8 +53,8 @@ class SessionGeneratorService {
         
         for sessao in sessoesExistentes {
             // Só apaga se for no futuro E se for fruto de um contrato (sessaoFixaID != nil)
-            if sessao.dataDaSessao >= hoje && sessao.sessaoFixaID != nil {
-                if !pacientesAtivosIDs.contains(sessao.pacienteID) {
+            if sessao.sessionDate >= hoje && sessao.fixedSessionID != nil {
+                if !pacientesAtivosIDs.contains(sessao.patientID) {
                     try await sessionRepository.deletarSessao(id: sessao.id, userId: userId)
                     totalRemovidas += 1
                 }
@@ -79,8 +79,8 @@ class SessionGeneratorService {
                 // Filtro Anti-Duplicação
                 for sessaoNova in sessoesProjetadas {
                     let jaExiste = sessoesExistentes.contains {
-                        $0.sessaoFixaID == regra.id &&
-                        Calendar.current.isDate($0.dataDaSessao, inSameDayAs: sessaoNova.dataDaSessao)
+                        $0.fixedSessionID == regra.id &&
+                        Calendar.current.isDate($0.sessionDate, inSameDayAs: sessaoNova.sessionDate)
                     }
                     
                     if !jaExiste {
@@ -112,13 +112,13 @@ class SessionGeneratorService {
                 
                 let novaSessao = Session(
                     id: UUID().uuidString,
-                    psicologoID: regra.psicologoID,
-                    pacienteID: regra.pacienteID,
-                    sessaoFixaID: regra.id,
-                    dataDaSessao: dataAtual,
-                    status: .agendada,
-                    modalidade: regra.modalidade,
-                    horaInicio: regra.horaInicio
+                    psychologistID: regra.psicologoID,
+                    patientID: regra.pacienteID,
+                    fixedSessionID: regra.id,
+                    sessionDate: dataAtual,
+                    status: .scheduled,
+                    modality: regra.modalidade,
+                    startTime: regra.horaInicio
                 )
                 
                 sessoesGeradas.append(novaSessao)

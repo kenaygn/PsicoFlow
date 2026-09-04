@@ -14,6 +14,6 @@ struct FixedSession: Identifiable, Codable {
     
     var diaDaSemana: Int // 1 = Domingo, 2 = Segunda...
     var horaInicio: String // "14:00"
-    var modalidade: Modalidade
+    var modalidade: Modality
 
 }

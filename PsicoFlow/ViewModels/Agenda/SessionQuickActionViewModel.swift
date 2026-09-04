@@ -39,8 +39,8 @@ class SessionQuickActionViewModel: ObservableObject {
             sessionRepository: sessionRepository
         )
         
-        self._novaData = Published(initialValue: sessao.dataDaSessao)
-        self._novaHoraStr = Published(initialValue: sessao.horaInicio)
+        self._novaData = Published(initialValue: sessao.sessionDate)
+        self._novaHoraStr = Published(initialValue: sessao.startTime)
     }
     
     /// Delega o cálculo de horários livres para o serviço centralizado de forma assíncrona,
@@ -54,7 +54,7 @@ class SessionQuickActionViewModel: ObservableObject {
                 let livres = try await availabilityService.horariosLivresParaSessaoAvulsa(
                     data: novaData,
                     ignorandoSessaoID: sessao.id,
-                    derivadaDeContratoID: sessao.sessaoFixaID,
+                    derivadaDeContratoID: sessao.fixedSessionID,
                     userId: userId
                 )
                 

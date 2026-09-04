@@ -52,7 +52,7 @@ struct SessionQuickActionView: View {
                     .foregroundColor(Color(.darkText))
                 
                 HStack(spacing: 12) {
-                    Label(viewModel.sessao.horaInicio, systemImage: "clock")
+                    Label(viewModel.sessao.startTime, systemImage: "clock")
                     Text("•")
                     Label(viewModel.sessao.status.rawValue.capitalized, systemImage: "circle.fill")
                         .foregroundColor(corBadge(status: viewModel.sessao.status))
@@ -111,7 +111,7 @@ struct SessionQuickActionView: View {
                             
                             Button("Salvar") {
                                 let dataFinal = viewModel.obterDataFinal()
-                                onUpdateStatus(.adiada, dataFinal)
+                                onUpdateStatus(.postponed, dataFinal)
                                 dismiss()
                             }
                             .font(.system(size: 15, weight: .bold))
@@ -127,7 +127,7 @@ struct SessionQuickActionView: View {
                 } else {
                     HStack(spacing: 12) {
                         actionButton(title: "Realizada", icon: "checkmark.circle.fill", color: .green) {
-                            onUpdateStatus(.realizada, nil)
+                            onUpdateStatus(.completed, nil)
                             dismiss()
                         }
                         actionButton(title: "Adiada", icon: "calendar.badge.clock", color: .orange) {
@@ -139,7 +139,7 @@ struct SessionQuickActionView: View {
                             }
                         }
                         actionButton(title: "Cancelada", icon: "xmark.circle.fill", color: .red) {
-                            onUpdateStatus(.cancelada, nil)
+                            onUpdateStatus(.cancelled, nil)
                             dismiss()
                         }
                     }
@@ -195,10 +195,10 @@ struct SessionQuickActionView: View {
     
     private func corBadge(status: SessionStatus) -> Color {
         switch status {
-        case .realizada: return .gray
-        case .agendada: return .teal
-        case .adiada: return .orange
-        case .cancelada: return .red
+        case .completed: return .gray
+        case .scheduled: return .teal
+        case .postponed: return .orange
+        case .cancelled: return .red
         }
     }
 }

@@ -8,8 +8,8 @@
 import Foundation
 
 enum PatientStatus: String, Codable, CaseIterable {
-    case active = "Active"
-    case inactive = "Inactive"
+    case active = "Ativo"
+    case inactive = "Inativo"
 }
 
 struct Patient: Identifiable, Codable {

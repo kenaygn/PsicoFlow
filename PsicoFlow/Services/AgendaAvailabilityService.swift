@@ -43,11 +43,11 @@ class AgendaAvailabilityService {
     func horariosLivresParaSessaoAvulsa(data: Date, ignorandoSessaoID: String? = nil, derivadaDeContratoID: String? = nil, userId: String) async throws -> [String] {
         let sessoesDoBanco = try await sessionRepository.fetchSessoes(userId: userId)
         let sessoesDoDia = sessoesDoBanco.filter {
-            Calendar.current.isDate($0.dataDaSessao, inSameDayAs: data) &&
-            $0.status != .cancelada &&
+            Calendar.current.isDate($0.sessionDate, inSameDayAs: data) &&
+            $0.status != .cancelled &&
             $0.id != ignorandoSessaoID
         }
-        let ocupados = sessoesDoDia.map { $0.horaInicio }
+        let ocupados = sessoesDoDia.map { $0.startTime }
         return todosHorarios.filter { !ocupados.contains($0) }
     }
 }

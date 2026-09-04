@@ -24,7 +24,7 @@ class NewSessionViewModel: ObservableObject {
     @Published var selectedDate: Date = Date()
     @Published var selectedWeekday: Int = Calendar.current.component(.weekday, from: Date())
     @Published var selectedTime: String = "08:00"
-    @Published var selectedModalidade: Modalidade = .presencial
+    @Published var selectedModalidade: Modality = .inPerson
     
     @Published var mostrarAlertaConflitoFixo: Bool = false
     
@@ -147,13 +147,13 @@ class NewSessionViewModel: ObservableObject {
                 } else {
                     let sessaoUnica = Session(
                         id: "sess_\(UUID().uuidString)",
-                        psicologoID: userId,
-                        pacienteID: paciente.id,
-                        sessaoFixaID: nil,
-                        dataDaSessao: selectedDate,
-                        status: .agendada,
-                        modalidade: selectedModalidade,
-                        horaInicio: horaFormatada
+                        psychologistID: userId,
+                        patientID: paciente.id,
+                        fixedSessionID: nil,
+                        sessionDate: selectedDate,
+                        status: .scheduled,
+                        modality: selectedModalidade,
+                        startTime: horaFormatada
                     )
                     
                     try await sessionRepository.salvarSessao(sessaoUnica, userId: userId)

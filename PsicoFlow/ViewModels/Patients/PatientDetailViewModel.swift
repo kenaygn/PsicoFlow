@@ -89,12 +89,12 @@ class PatientDetailViewModel: ObservableObject {
                     self.sessoesFixas = fixas.filter { $0.pacienteID == paciente.id }
                     
                     self.sessoesAvulsasFuturas = todasSessoes.filter { sessao in
-                        sessao.pacienteID == paciente.id &&
-                        sessao.sessaoFixaID == nil &&
-                        (sessao.status == .agendada || sessao.status == .adiada) &&
-                        Calendar.current.startOfDay(for: sessao.dataDaSessao) >= hoje
+                        sessao.patientID == paciente.id &&
+                        sessao.fixedSessionID == nil &&
+                        (sessao.status == .scheduled || sessao.status == .postponed) &&
+                        Calendar.current.startOfDay(for: sessao.sessionDate) >= hoje
                     }
-                    .sorted { $0.dataDaSessao < $1.dataDaSessao }
+                    .sorted { $0.sessionDate < $1.sessionDate }
                 }
             }
         } catch {

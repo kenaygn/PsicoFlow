@@ -118,12 +118,12 @@ class HomeViewModel: ObservableObject {
     
     private func processarDadosLocais(userId: String) {
         var sessoesDeHoje = todasSessoes
-            .filter { Calendar.current.isDateInToday($0.dataDaSessao) }
-            .sorted { $0.horaInicio < $1.horaInicio }
+            .filter { Calendar.current.isDateInToday($0.sessionDate) }
+            .sorted { $0.startTime < $1.startTime }
         
         for i in 0..<sessoesDeHoje.count {
-            if sessoesDeHoje[i].status == .adiada {
-                sessoesDeHoje[i].status = .agendada
+            if sessoesDeHoje[i].status == .postponed {
+                sessoesDeHoje[i].status = .scheduled
                 let sessaoParaAtualizar = sessoesDeHoje[i]
                 Task { try? await sessionRepository.atualizarSessao(sessaoParaAtualizar, userId: userId) }
             }
@@ -144,7 +144,7 @@ class HomeViewModel: ObservableObject {
         if let index = sessoesHoje.firstIndex(where: { $0.id == sessaoID }) {
             
             Task {
-                if let novaData = novaData, novoStatus == .adiada {
+                if let novaData = novaData, novoStatus == .postponed {
                     if let conflito = try? await verificarConflito(novaData: novaData, ignorandoSessaoID: sessaoID, userId: userId) {
                         await MainActor.run {
                             self.mensagemConflito = "Este horário conflita com a sessão de \(conflito.nome) às \(conflito.hora)."
@@ -157,16 +157,16 @@ class HomeViewModel: ObservableObject {
                 var sessaoAtualizada = sessoesHoje[index]
                 sessaoAtualizada.status = novoStatus
                 
-                if let novaData = novaData, novoStatus == .adiada {
-                    sessaoAtualizada.dataDaSessao = novaData
-                    sessaoAtualizada.sessaoFixaID = nil
+                if let novaData = novaData, novoStatus == .postponed {
+                    sessaoAtualizada.sessionDate = novaData
+                    sessaoAtualizada.fixedSessionID = nil
                     
                     let formatter = DateFormatter()
                     formatter.dateFormat = "HH:mm"
-                    sessaoAtualizada.horaInicio = formatter.string(from: novaData)
+                    sessaoAtualizada.startTime = formatter.string(from: novaData)
                     
                     if Calendar.current.isDateInToday(novaData) {
-                        sessaoAtualizada.status = .agendada
+                        sessaoAtualizada.status = .scheduled
                     }
                 }
                 
@@ -196,14 +196,14 @@ class HomeViewModel: ObservableObject {
         let sessoesParaValidar = todasSessoes
         
         for sessao in sessoesParaValidar {
-            if sessao.id == ignorandoSessaoID || sessao.status == .cancelada { continue }
+            if sessao.id == ignorandoSessaoID || sessao.status == .cancelled { continue }
             
-            if calendar.isDate(sessao.dataDaSessao, inSameDayAs: novaData) {
-                let minutosSessaoExistente = converterParaMinutos(sessao.horaInicio)
+            if calendar.isDate(sessao.sessionDate, inSameDayAs: novaData) {
+                let minutosSessaoExistente = converterParaMinutos(sessao.startTime)
                 
                 if abs(minutosNovaSessao - minutosSessaoExistente) < 60 {
-                    if let pacienteConflito = pacientes.first(where: { $0.id == sessao.pacienteID }) {
-                        return (nome: pacienteConflito.name, hora: sessao.horaInicio)
+                    if let pacienteConflito = pacientes.first(where: { $0.id == sessao.patientID }) {
+                        return (nome: pacienteConflito.name, hora: sessao.startTime)
                     }
                 }
             }
@@ -231,7 +231,7 @@ class HomeViewModel: ObservableObject {
             return try await service.horariosLivresParaSessaoAvulsa(
                 data: data,
                 ignorandoSessaoID: sessaoID,
-                derivadaDeContratoID: sessaoAtual?.sessaoFixaID,
+                derivadaDeContratoID: sessaoAtual?.fixedSessionID,
                 userId: userId
             )
         } catch {
@@ -241,17 +241,17 @@ class HomeViewModel: ObservableObject {
     }
         
     var primeiraDataComConflito: Date? {
-        let sessoesAtivas = todasSessoes.filter { $0.status != .cancelada }
+        let sessoesAtivas = todasSessoes.filter { $0.status != .cancelled }
         var agrupamento: [String: [Session]] = [:]
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         
         for sessao in sessoesAtivas {
-            let chaveDeTempo = formatter.string(from: sessao.dataDaSessao) + "-" + sessao.horaInicio
+            let chaveDeTempo = formatter.string(from: sessao.sessionDate) + "-" + sessao.startTime
             agrupamento[chaveDeTempo, default: []].append(sessao)
         }
         
-        return agrupamento.values.filter { $0.count > 1 }.compactMap { $0.first?.dataDaSessao }.sorted().first
+        return agrupamento.values.filter { $0.count > 1 }.compactMap { $0.first?.sessionDate }.sorted().first
     }
     
     var slidesAtivos: [HomeSlide] {
@@ -269,13 +269,13 @@ class HomeViewModel: ObservableObject {
         let horaAtual = formatter.string(from: Date())
         
         return sessoesHoje.first { sessao in
-            sessao.horaInicio >= horaAtual && sessao.status == .agendada
+            sessao.startTime >= horaAtual && sessao.status == .scheduled
         }
     }
     
     var nomePacienteProximaSessao: String {
         guard let proxima = proximaSessao,
-              let paciente = pacientes.first(where: { $0.id == proxima.pacienteID }) else {
+              let paciente = pacientes.first(where: { $0.id == proxima.patientID }) else {
             return "Paciente não encontrado"
         }
         return paciente.name
@@ -290,7 +290,7 @@ class HomeViewModel: ObservableObject {
     }
     
     func paciente(for session: Session) -> Patient? {
-        return pacientes.first(where: { $0.id == session.pacienteID })
+        return pacientes.first(where: { $0.id == session.patientID })
     }
     
     func verificarSeEProximaSessao(_ sessao: Session) -> Bool {
@@ -307,12 +307,12 @@ class HomeViewModel: ObservableObject {
         }
         
         let realizadasPassadas = todasSessoes.filter { sessao in
-            let naoEHoje = !calendar.isDateInToday(sessao.dataDaSessao)
-            let dentroDaSemana = sessao.dataDaSessao >= inicioDaSemana
-            return sessao.status == .realizada && dentroDaSemana && naoEHoje
+            let naoEHoje = !calendar.isDateInToday(sessao.sessionDate)
+            let dentroDaSemana = sessao.sessionDate >= inicioDaSemana
+            return sessao.status == .completed && dentroDaSemana && naoEHoje
         }.count
         
-        let realizadasHoje = sessoesHoje.filter { $0.status == .realizada }.count
+        let realizadasHoje = sessoesHoje.filter { $0.status == .completed }.count
         
         return realizadasPassadas + realizadasHoje
     }

@@ -32,7 +32,7 @@ class PatientEditSessionViewModel: ObservableObject {
     let itemToEdit: EditSessionItem
     let nomePaciente: String
     
-    @Published var selectedModalidade: Modalidade
+    @Published var selectedModalidade: Modality
     @Published var selectedTime: String
     @Published var selectedWeekday: Int = 1
     @Published var selectedDate: Date = Date()
@@ -64,9 +64,9 @@ class PatientEditSessionViewModel: ObservableObject {
             self.selectedWeekday = fixa.diaDaSemana
             self.selectedTime = fixa.horaInicio
         case .avulsa(let avulsa):
-            self.selectedModalidade = avulsa.modalidade
-            self.selectedDate = avulsa.dataDaSessao
-            self.selectedTime = avulsa.horaInicio
+            self.selectedModalidade = avulsa.modality
+            self.selectedDate = avulsa.sessionDate
+            self.selectedTime = avulsa.startTime
         }
     }
     
@@ -90,7 +90,7 @@ class PatientEditSessionViewModel: ObservableObject {
                     self.horariosLivres = try await availabilityService.horariosLivresParaSessaoAvulsa(
                         data: selectedDate,
                         ignorandoSessaoID: avulsaAtual.id,
-                        derivadaDeContratoID: avulsaAtual.sessaoFixaID,
+                        derivadaDeContratoID: avulsaAtual.fixedSessionID,
                         userId: userId
                     )
                 }
@@ -122,10 +122,10 @@ class PatientEditSessionViewModel: ObservableObject {
                     
                 case .avulsa(let avulsa):
                     var atualizada = avulsa
-                    atualizada.modalidade = selectedModalidade
-                    atualizada.dataDaSessao = selectedDate
-                    atualizada.horaInicio = selectedTime
-                    if atualizada.status == .adiada { atualizada.status = .agendada }
+                    atualizada.modality = selectedModalidade
+                    atualizada.sessionDate = selectedDate
+                    atualizada.startTime = selectedTime
+                    if atualizada.status == .postponed { atualizada.status = .scheduled }
                     try await sessionRepository.atualizarSessao(atualizada, userId: userId)
                 }
             } catch {
@@ -139,17 +139,17 @@ class PatientEditSessionViewModel: ObservableObject {
         let inicioDoDiaAtual = calendar.startOfDay(for: Date())
         
         let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
-        let sessoesFilhasFuturas = sessoes.filter { $0.sessaoFixaID == regraAtualizada.id && $0.dataDaSessao >= inicioDoDiaAtual }
+        let sessoesFilhasFuturas = sessoes.filter { $0.fixedSessionID == regraAtualizada.id && $0.sessionDate >= inicioDoDiaAtual }
         
         for sessao in sessoesFilhasFuturas {
             var sessaoModificada = sessao
-            sessaoModificada.horaInicio = regraAtualizada.horaInicio
-            sessaoModificada.modalidade = regraAtualizada.modalidade
+            sessaoModificada.startTime = regraAtualizada.horaInicio
+            sessaoModificada.modality = regraAtualizada.modalidade
             
-            var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: sessao.dataDaSessao)
+            var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: sessao.sessionDate)
             components.weekday = regraAtualizada.diaDaSemana
             
-            if let novaData = calendar.date(from: components) { sessaoModificada.dataDaSessao = novaData }
+            if let novaData = calendar.date(from: components) { sessaoModificada.sessionDate = novaData }
             try await sessionRepository.atualizarSessao(sessaoModificada, userId: userId)
         }
     }
@@ -163,7 +163,7 @@ class PatientEditSessionViewModel: ObservableObject {
                     let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
                     let hoje = Calendar.current.startOfDay(for: Date())
                     
-                    for sessao in sessoes.filter({ $0.sessaoFixaID == fixa.id && $0.dataDaSessao >= hoje }) {
+                    for sessao in sessoes.filter({ $0.fixedSessionID == fixa.id && $0.sessionDate >= hoje }) {
                         try await sessionRepository.deletarSessao(id: sessao.id, userId: userId)
                     }
                 case .avulsa(let avulsa):

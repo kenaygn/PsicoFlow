@@ -151,14 +151,14 @@ class AgendaViewModel: ObservableObject {
     
     func sessoesPara(horario: String) -> [Session] {
         return todasSessoes.filter { sessao in
-            isMesmoDia(sessao.dataDaSessao, selectedDate) &&
-            sessao.horaInicio == horario &&
-            sessao.status != .cancelada
+            isMesmoDia(sessao.sessionDate, selectedDate) &&
+            sessao.startTime == horario &&
+            sessao.status != .cancelled
         }
     }
     
     func pacientePara(sessao: Session) -> Patient? {
-        return pacientes.first { $0.id == sessao.pacienteID }
+        return pacientes.first { $0.id == sessao.patientID }
     }
     
     // MARK: - Atualização com Atualização Otimista
@@ -167,13 +167,13 @@ class AgendaViewModel: ObservableObject {
         var sessaoAtualizada = sessao
         sessaoAtualizada.status = novoStatus
         
-        if novoStatus == .adiada, let data = novaData {
-            sessaoAtualizada.dataDaSessao = data
-            sessaoAtualizada.sessaoFixaID = nil
+        if novoStatus == .postponed, let data = novaData {
+            sessaoAtualizada.sessionDate = data
+            sessaoAtualizada.fixedSessionID = nil
             
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
-            sessaoAtualizada.horaInicio = formatter.string(from: data)
+            sessaoAtualizada.startTime = formatter.string(from: data)
         }
         
         // Atualização otimista imediata na UI local
@@ -194,17 +194,17 @@ class AgendaViewModel: ObservableObject {
     }
     
     var primeiraDataComConflito: Date? {
-        let sessoesAtivas = todasSessoes.filter { $0.status != .cancelada }
+        let sessoesAtivas = todasSessoes.filter { $0.status != .cancelled }
         var agrupamento: [String: [Session]] = [:]
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         
         for sessao in sessoesAtivas {
-            let chaveDeTempo = formatter.string(from: sessao.dataDaSessao) + "-" + sessao.horaInicio
+            let chaveDeTempo = formatter.string(from: sessao.sessionDate) + "-" + sessao.startTime
             agrupamento[chaveDeTempo, default: []].append(sessao)
         }
         
         let gruposComConflito = agrupamento.values.filter { $0.count > 1 }
-        return gruposComConflito.compactMap { $0.first?.dataDaSessao }.sorted().first
+        return gruposComConflito.compactMap { $0.first?.sessionDate }.sorted().first
     }
 }
