@@ -185,7 +185,7 @@ struct UpgradePlanView: View {
                                     if let transacao = try await storeManager.comprar(produto) {
                                         print("COMPRA REALIZADA COM SUCESSO! ID: \(transacao.id)")
                                         
-                                        if var usuarioAtualizado = authManager.usuarioAtual {
+                                        if var usuarioAtualizado = authManager.currentUser {
                                             
                                             // Muda o status localmente
                                             usuarioAtualizado.premium = true

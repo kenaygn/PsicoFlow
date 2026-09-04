@@ -80,7 +80,7 @@ struct NewSessionView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Agendar") {
-                        if let uid = authManager.usuarioID {
+                        if let uid = authManager.userID {
                             viewModel.salvarSessao(userId: uid)
                             dismiss()
                         }
@@ -91,20 +91,20 @@ struct NewSessionView: View {
             }
             // Dispara as buscas assíncronas
             .onAppear {
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarPacientes(userId: uid)
                     viewModel.carregarHorariosLivres(userId: uid)
                 }
             }
             // Monitora alterações para atualizar horários do Firebase
             .onChange(of: viewModel.selectedDate) { _ in
-                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
+                if let uid = authManager.userID { viewModel.carregarHorariosLivres(userId: uid) }
             }
             .onChange(of: viewModel.selectedWeekday) { _ in
-                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
+                if let uid = authManager.userID { viewModel.carregarHorariosLivres(userId: uid) }
             }
             .onChange(of: viewModel.isFixedSession) { _ in
-                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
+                if let uid = authManager.userID { viewModel.carregarHorariosLivres(userId: uid) }
             }
             
             .alert("Horário Fixo Indisponível", isPresented: $viewModel.mostrarAlertaConflitoFixo) {

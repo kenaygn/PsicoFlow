@@ -48,7 +48,7 @@ class EditProfileViewModel: ObservableObject {
     }
     
     var temAlteracoes: Bool {
-        guard let user = authManager.usuarioAtual else { return false }
+        guard let user = authManager.currentUser else { return false }
         
         let dadosMudaram = nome != user.name ||
                            crp != user.crp ||
@@ -67,7 +67,7 @@ class EditProfileViewModel: ObservableObject {
     }
     
     private func carregarDadosAtuais() {
-        guard let user = authManager.usuarioAtual else { return }
+        guard let user = authManager.currentUser else { return }
         self.nome = user.name
         self.crp = user.crp
         self.horaInicioExpediente = user.workdayStart
@@ -76,7 +76,7 @@ class EditProfileViewModel: ObservableObject {
     
     // MARK: - Validação Poderosa de Horários
     private func verificarSessoesForaDoExpediente() async -> Bool {
-        guard let userId = authManager.usuarioID else { return false }
+        guard let userId = authManager.userID else { return false }
         
         do {
             // Busca todas as sessões e regras do banco simultaneamente
@@ -123,7 +123,7 @@ class EditProfileViewModel: ObservableObject {
             return false
         }
         
-        if let currentUser = authManager.usuarioAtual {
+        if let currentUser = authManager.currentUser {
             var userAtualizado = currentUser
             userAtualizado.name = self.nome
             userAtualizado.crp = self.crp
@@ -132,7 +132,7 @@ class EditProfileViewModel: ObservableObject {
             
             do {
                 try await userRepository.updateUser(user: userAtualizado)
-                authManager.usuarioAtual = userAtualizado
+                authManager.currentUser = userAtualizado
             } catch {
                 self.errorMessage = "Erro ao atualizar os dados: \(error.localizedDescription)"
                 return false

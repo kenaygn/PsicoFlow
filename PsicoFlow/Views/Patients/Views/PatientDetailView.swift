@@ -75,17 +75,17 @@ struct PatientDetailView: View {
                         EvolutionTabView(
                             evolucoes: viewModel.evolucoes,
                             adicionarEvolucao: { textoDigitado in
-                                if let uid = authManager.usuarioID {
+                                if let uid = authManager.userID {
                                     viewModel.adicionarEvolucao(texto: textoDigitado, userId: uid)
                                 }
                             },
                             atualizarEvolucao: { evolucaoAtualizada in
-                                if let uid = authManager.usuarioID {
+                                if let uid = authManager.userID {
                                     viewModel.atualizarEvolucao(evolucaoAtualizada: evolucaoAtualizada, userId: uid)
                                 }
                             },
                             deletarEvolucao: { idParaDeletar in
-                                if let uid = authManager.usuarioID {
+                                if let uid = authManager.userID {
                                     viewModel.deletarEvolucao(id: idParaDeletar, userId: uid)
                                 }
                             }
@@ -94,7 +94,7 @@ struct PatientDetailView: View {
                         BillingTabView(
                             pagamentos: viewModel.pagamentos,
                             onTogglePagamento: { idPagamento in
-                                if let uid = authManager.usuarioID {
+                                if let uid = authManager.userID {
                                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                         viewModel.togglePagamento(pagamentoID: idPagamento, userId: uid)
                                     }
@@ -117,7 +117,7 @@ struct PatientDetailView: View {
             .padding(.bottom, 40)
         }
         .onAppear {
-            if let uid = authManager.usuarioID {
+            if let uid = authManager.userID {
                 viewModel.carregarDadosCompletos(userId: uid)
             }
         }
@@ -142,16 +142,16 @@ struct PatientDetailView: View {
                 )
             )
             .onDisappear {
-                if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
+                if let uid = authManager.userID { viewModel.carregarDadosCompletos(userId: uid) }
             }
         }
         .sheet(item: $itemSessaoParaEditar, onDismiss: {
-            if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
+            if let uid = authManager.userID { viewModel.carregarDadosCompletos(userId: uid) }
         }) { itemParaEdit in
             EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.name)
         }
         .sheet(isPresented: $mostrarNovoAgendamento, onDismiss: {
-            if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
+            if let uid = authManager.userID { viewModel.carregarDadosCompletos(userId: uid) }
         }) {
             NewSessionView()
         }

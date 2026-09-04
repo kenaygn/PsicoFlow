@@ -95,7 +95,7 @@ struct EditSessionView: View {
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Salvar") {
-                        if let uid = authManager.usuarioID {
+                        if let uid = authManager.userID {
                             viewModel.salvarEdicao(userId: uid)
                             dismiss()
                         }
@@ -111,7 +111,7 @@ struct EditSessionView: View {
             ) {
                 Button("Cancelar", role: .cancel) { }
                 Button("Excluir", role: .destructive) {
-                    if let uid = authManager.usuarioID {
+                    if let uid = authManager.userID {
                         viewModel.deletarSessao(userId: uid)
                         dismiss()
                     }
@@ -124,15 +124,15 @@ struct EditSessionView: View {
             
             // Carregamento inicial e reatividade via Firebase
             .onAppear {
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarHorariosLivres(userId: uid)
                 }
             }
             .onChange(of: viewModel.selectedDate) { _ in
-                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
+                if let uid = authManager.userID { viewModel.carregarHorariosLivres(userId: uid) }
             }
             .onChange(of: viewModel.selectedWeekday) { _ in
-                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
+                if let uid = authManager.userID { viewModel.carregarHorariosLivres(userId: uid) }
             }
         }
     }

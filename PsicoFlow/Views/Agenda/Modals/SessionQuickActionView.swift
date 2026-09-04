@@ -135,7 +135,7 @@ struct SessionQuickActionView: View {
                                 mostrandoAdiar = true
                                 alturaModal = .height(420)
                                 // Dispara a primeira busca ao abrir
-                                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
+                                if let uid = authManager.userID { viewModel.carregarHorariosLivres(userId: uid) }
                             }
                         }
                         actionButton(title: "Cancelada", icon: "xmark.circle.fill", color: .red) {
@@ -171,7 +171,7 @@ struct SessionQuickActionView: View {
         .presentationDragIndicator(.visible)
         // 2. Sempre que a data mudar, busca os novos horários
         .onChange(of: viewModel.novaData) { _ in
-            if let uid = authManager.usuarioID {
+            if let uid = authManager.userID {
                 viewModel.carregarHorariosLivres(userId: uid)
             }
         }

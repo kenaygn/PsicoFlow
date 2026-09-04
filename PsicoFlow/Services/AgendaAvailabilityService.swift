@@ -21,8 +21,8 @@ class AgendaAvailabilityService {
     }
     
     var allTimeSlots: [String] {
-        let startHour = AuthManager.shared.usuarioAtual?.workdayStart ?? "07:00"
-        let endHour = AuthManager.shared.usuarioAtual?.workdayEnd ?? "22:00"
+        let startHour = AuthManager.shared.currentUser?.workdayStart ?? "07:00"
+        let endHour = AuthManager.shared.currentUser?.workdayEnd ?? "22:00"
         
         if let startInt = Int(startHour.prefix(2)),
            let endInt = Int(endHour.prefix(2)),

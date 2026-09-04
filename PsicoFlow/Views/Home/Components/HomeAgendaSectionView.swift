@@ -90,12 +90,12 @@ struct HomeAgendaSectionView: View {
                     self.navegarParaProntuario = true
                 },
                 onUpdateStatus: { novoStatus, novaData in
-                    if let uid = authManager.usuarioID {
+                    if let uid = authManager.userID {
                         viewModel.atualizarStatusDaSessao(sessaoID: sessao.id, novoStatus: novoStatus, novaData: novaData, userId: uid)
                     }
                 },
                 fetchAvailableTimes: { dataDesejada, sessaoID in
-                    if let uid = authManager.usuarioID {
+                    if let uid = authManager.userID {
                         return await viewModel.obterHorariosLivres(para: dataDesejada, ignorandoSessaoID: sessaoID, userId: uid)
                     }
                     return []

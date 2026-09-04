@@ -281,7 +281,7 @@ struct SettingsView: View {
             // MARK: - Eventos de Ciclo de Vida
             .onAppear {
                 viewModel.verificarStatusNotificacoes()
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarDadosUsuario(userId: uid)
                 }
             }
@@ -309,7 +309,7 @@ struct SettingsView: View {
                 
                 Button("Sair", role: .destructive) {
                     UserDefaults.standard.set(false, forKey: "usarFaceID")
-                    authManager.sairDaConta()
+                    authManager.signOut()
                 }
             } message: {
                 Text("Tem certeza de que deseja desconectar sua conta deste dispositivo?")
@@ -331,9 +331,9 @@ struct SettingsView: View {
                     
                     Task {
                         do {
-                            try await authManager.deletarConta()
+                            try await authManager.deleteAccount()
                             UserDefaults.standard.set(false, forKey: "usarFaceID")
-                            authManager.sairDaConta()
+                            authManager.signOut()
                             
                         } catch let error as NSError {
                             let codigosDeSessaoInvalida = [
@@ -360,7 +360,7 @@ struct SettingsView: View {
                 
                 Button("Fazer Logout Agora") {
                     UserDefaults.standard.set(false, forKey: "usarFaceID")
-                    authManager.sairDaConta()
+                    authManager.signOut()
                 }
             } message: {
                 Text("Por medidas de segurança, a exclusão definitiva da conta exige um login recente. Seus dados estão seguros e NÃO foram apagados. Por favor, faça logout, entre novamente e repita a ação.")

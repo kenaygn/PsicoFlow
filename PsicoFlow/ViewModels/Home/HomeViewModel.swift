@@ -318,7 +318,7 @@ class HomeViewModel: ObservableObject {
     }
     
     var primeiraPendenciaAtrasada: Date? {
-        return financeAnalyzer.identifyFirstOverdueMonth(nos: todosPagamentos)
+        return financeAnalyzer.identifyFirstOverdueMonth(in: todosPagamentos)
     }
     
     var labelPendenciaFinanceira: String {
