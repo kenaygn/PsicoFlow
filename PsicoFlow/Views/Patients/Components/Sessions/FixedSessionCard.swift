@@ -64,9 +64,9 @@ struct FixedSessionCard: View {
             HStack {
                 InfoItemView(icon: "calendar", title: "Dia", value: diaDaSemanaTexto, isDark: true)
                 Spacer()
-                InfoItemView(icon: "clock", title: "Horário", value: fixa.horaInicio, isDark: true)
+                InfoItemView(icon: "clock", title: "Horário", value: fixa.startTime, isDark: true)
                 Spacer()
-                InfoItemView(icon: "video", title: "Formato", value: fixa.modalidade.rawValue.capitalized, isDark: true)
+                InfoItemView(icon: "video", title: "Formato", value: fixa.modality.rawValue.capitalized, isDark: true)
             }
         }
         .padding(16)

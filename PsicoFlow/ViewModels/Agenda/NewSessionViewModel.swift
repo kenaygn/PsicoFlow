@@ -129,11 +129,11 @@ class NewSessionViewModel: ObservableObject {
                 if isFixedSession {
                     let novaRegra = FixedSession(
                         id: "fix_\(UUID().uuidString)",
-                        psicologoID: userId,
-                        pacienteID: paciente.id,
-                        diaDaSemana: selectedWeekday,
-                        horaInicio: horaFormatada,
-                        modalidade: selectedModalidade
+                        psychologistID: userId,
+                        patientID: paciente.id,
+                        weekday: selectedWeekday,
+                        startTime: horaFormatada,
+                        modality: selectedModalidade
                     )
                     
                     try await fixedSessionRepository.salvarSessaoFixa(novaRegra, userId: userId)

@@ -101,7 +101,7 @@ class EditProfileViewModel: ObservableObject {
             
             // Verifica se há conflito nas Regras (Contratos Fixos)
             let conflitoRegras = todasRegras.contains { regra in
-                let horaInt = Int(regra.horaInicio.prefix(2)) ?? 0
+                let horaInt = Int(regra.startTime.prefix(2)) ?? 0
                 return horaInt < novoInicioInt || horaInt > novoFimInt
             }
             

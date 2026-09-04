@@ -72,7 +72,7 @@ class SessionGeneratorService {
         
         for regra in regrasFixas {
             // Só gera sessões se o paciente AINDA estiver na lista de ativos
-            if pacientesAtivosIDs.contains(regra.pacienteID) {
+            if pacientesAtivosIDs.contains(regra.patientID) {
                 
                 let sessoesProjetadas = gerarSessoes(para: regra, dataFim: dataFim)
                 
@@ -108,17 +108,17 @@ class SessionGeneratorService {
             let diaDaSemanaAtual = calendar.component(.weekday, from: dataAtual)
             
             // Se o dia do calendário corresponder ao dia estipulado no contrato
-            if diaDaSemanaAtual == regra.diaDaSemana {
+            if diaDaSemanaAtual == regra.weekday {
                 
                 let novaSessao = Session(
                     id: UUID().uuidString,
-                    psychologistID: regra.psicologoID,
-                    patientID: regra.pacienteID,
+                    psychologistID: regra.psychologistID,
+                    patientID: regra.patientID,
                     fixedSessionID: regra.id,
                     sessionDate: dataAtual,
                     status: .scheduled,
-                    modality: regra.modalidade,
-                    startTime: regra.horaInicio
+                    modality: regra.modality,
+                    startTime: regra.startTime
                 )
                 
                 sessoesGeradas.append(novaSessao)

@@ -60,9 +60,9 @@ class PatientEditSessionViewModel: ObservableObject {
         
         switch item {
         case .fixa(let fixa):
-            self.selectedModalidade = fixa.modalidade
-            self.selectedWeekday = fixa.diaDaSemana
-            self.selectedTime = fixa.horaInicio
+            self.selectedModalidade = fixa.modality
+            self.selectedWeekday = fixa.weekday
+            self.selectedTime = fixa.startTime
         case .avulsa(let avulsa):
             self.selectedModalidade = avulsa.modality
             self.selectedDate = avulsa.sessionDate
@@ -114,9 +114,9 @@ class PatientEditSessionViewModel: ObservableObject {
                 switch itemToEdit {
                 case .fixa(let fixa):
                     var atualizada = fixa
-                    atualizada.modalidade = selectedModalidade
-                    atualizada.diaDaSemana = selectedWeekday
-                    atualizada.horaInicio = selectedTime
+                    atualizada.modality = selectedModalidade
+                    atualizada.weekday = selectedWeekday
+                    atualizada.startTime = selectedTime
                     try await fixedSessionRepository.atualizarSessaoFixa(atualizada, userId: userId)
                     try await propagarAlteracoesParaSessoesFuturas(regraAtualizada: atualizada, userId: userId)
                     
@@ -143,11 +143,11 @@ class PatientEditSessionViewModel: ObservableObject {
         
         for sessao in sessoesFilhasFuturas {
             var sessaoModificada = sessao
-            sessaoModificada.startTime = regraAtualizada.horaInicio
-            sessaoModificada.modality = regraAtualizada.modalidade
+            sessaoModificada.startTime = regraAtualizada.startTime
+            sessaoModificada.modality = regraAtualizada.modality
             
             var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: sessao.sessionDate)
-            components.weekday = regraAtualizada.diaDaSemana
+            components.weekday = regraAtualizada.weekday
             
             if let novaData = calendar.date(from: components) { sessaoModificada.sessionDate = novaData }
             try await sessionRepository.atualizarSessao(sessaoModificada, userId: userId)

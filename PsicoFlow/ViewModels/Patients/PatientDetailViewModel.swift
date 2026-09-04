@@ -86,7 +86,7 @@ class PatientDetailViewModel: ObservableObject {
             
             await MainActor.run {
                 withAnimation(.spring()) {
-                    self.sessoesFixas = fixas.filter { $0.pacienteID == paciente.id }
+                    self.sessoesFixas = fixas.filter { $0.patientID == paciente.id }
                     
                     self.sessoesAvulsasFuturas = todasSessoes.filter { sessao in
                         sessao.patientID == paciente.id &&
