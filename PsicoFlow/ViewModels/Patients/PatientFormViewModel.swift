@@ -115,7 +115,7 @@ class PatientFormViewModel: ObservableObject {
         do {
             try await patientRepository.updatePatient(pacienteAtualizado, userId: userId)
             
-            try await sessionGenerator.projetarSessoesFuturas(userId: userId)
+            try await sessionGenerator.projectFutureSessions(userId: userId)
             
             if statusAntigo == .active && pacienteAtualizado.status == .inactive {
                 try await paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id, userId: userId)
