@@ -155,7 +155,7 @@ struct SessionQuickActionView: View {
             }) {
                 HStack {
                     Image(systemName: "person.text.rectangle")
-                    Text("Abrir Prontuário Completo")
+                    Text("Acessar perfil")
                 }
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.white)

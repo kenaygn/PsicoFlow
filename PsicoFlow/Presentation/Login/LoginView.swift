@@ -33,7 +33,7 @@ struct LoginView: View {
 //                            .foregroundStyle(Color.teal)
 //                            .bold()
                         
-                        Text("Gestão inteligente para psicólogos[Mudar esse texto]")
+                        Text("Sua prática profissional, em um só lugar")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
