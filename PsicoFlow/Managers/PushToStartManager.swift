@@ -13,41 +13,37 @@ import FirebaseAuth
 class PushToStartManager {
     static let shared = PushToStartManager()
     
-    func iniciarMonitoramento() {
+    func startMonitoring() {
         Task {
-            // A API exige iOS 17.2+
             if #available(iOS 17.2, *) {
                 for await tokenData in Activity<SessionActivityAttributes>.pushToStartTokenUpdates {
                     let token = tokenData.map { String(format: "%02x", $0) }.joined()
-                    print("Token de Push-to-Start gerado: \(token)")
-                    salvarTokenNoFirestore(token: token)
+                    print("Push-to-Start token generated: \(token)")
+                    saveTokenToFirestore(token: token)
                 }
             }
         }
     }
     
-    private func salvarTokenNoFirestore(token: String) {
-        // Usa o usuário atualmente logado para salvar no banco de dados correto
+    private func saveTokenToFirestore(token: String) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         let db = Firestore.firestore()
         db.collection("users").document(uid).setData([
             "liveActivityToken": token,
-            "liveActivityTokenAtualizadoEm": FieldValue.serverTimestamp()
+            "liveActivityTokenUpdatedAt": FieldValue.serverTimestamp()
         ], merge: true)
     }
     
-    func iniciarMonitoramentoDeEncerramento() {
+    func startEndMonitoring() {
         Task {
             if #available(iOS 16.2, *) {
-                // Fica escutando qualquer Live Activity que nasça no app
                 for await activity in Activity<SessionActivityAttributes>.activityUpdates {
                     Task {
-                        // Assim que ela nasce, gera o Token de Atualização/Encerramento
                         for await tokenData in activity.pushTokenUpdates {
                             let token = tokenData.map { String(format: "%02x", $0) }.joined()
-                            print("Token de Encerramento gerado: \(token)")
-                            salvarTokenDeEncerramentoNoFirestore(token: token)
+                            print("End token generated: \(token)")
+                            saveEndTokenToFirestore(token: token)
                         }
                     }
                 }
@@ -55,7 +51,7 @@ class PushToStartManager {
         }
     }
     
-    private func salvarTokenDeEncerramentoNoFirestore(token: String) {
+    private func saveEndTokenToFirestore(token: String) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
         db.collection("users").document(uid).setData([
