@@ -20,7 +20,7 @@ class PatientDetailViewModel: ObservableObject {
     @Published var sessoesAvulsasFuturas: [Session] = []
         
     private let patientRepository: PatientRepositoryProtocol
-    private let evolutionRepository: EvolutionRepositoryProtocol
+    private let evolutionRepository: ProgressNoteRepositoryProtocol
     private let paymentRepository: PaymentRepositoryProtocol
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
@@ -28,7 +28,7 @@ class PatientDetailViewModel: ObservableObject {
     init(
         paciente: Patient,
         patientRepository: PatientRepositoryProtocol = PatientFirebaseRepository(),
-        evolutionRepository: EvolutionRepositoryProtocol = EvolutionFirebaseRepository(),
+        evolutionRepository: ProgressNoteRepositoryProtocol = EvolutionFirebaseRepository(),
         paymentRepository: PaymentRepositoryProtocol = PaymentFirebaseRepository(),
         fixedSessionRepository: FixedSessionRepositoryProtocol = FixedSessionFirebaseRepository(),
         sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository()

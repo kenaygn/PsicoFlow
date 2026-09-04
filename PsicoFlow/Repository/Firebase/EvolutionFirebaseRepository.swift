@@ -8,7 +8,7 @@
 import Foundation
 import FirebaseFirestore
 
-class EvolutionFirebaseRepository: EvolutionRepositoryProtocol {
+class EvolutionFirebaseRepository: ProgressNoteRepositoryProtocol {
     private let db = Firestore.firestore()
     
     private func collection(userId: String) -> CollectionReference {

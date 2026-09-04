@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol EvolutionRepositoryProtocol {
+protocol ProgressNoteRepositoryProtocol {
     func fetchProgressNotes(forPatientID patientID: String, userId: String) async throws -> [ProgressNote]
     func saveProgressNote(_ note: ProgressNote, userId: String) async throws
     func updateProgressNote(_ note: ProgressNote, userId: String) async throws
