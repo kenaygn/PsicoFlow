@@ -27,15 +27,15 @@ struct RootView: View {
     @State private var exibindoSplash: Bool = true
     
     private var precisaCompletarPerfil: Bool {
-        let nomeVazio = authManager.usuarioAtual?.nome.trimmingCharacters(in: .whitespaces).isEmpty ?? true
-        let crpVazio = authManager.usuarioAtual?.crp.trimmingCharacters(in: .whitespaces).isEmpty ?? true
+        let nomeVazio = authManager.currentUser?.name.trimmingCharacters(in: .whitespaces).isEmpty ?? true
+        let crpVazio = authManager.currentUser?.crp.trimmingCharacters(in: .whitespaces).isEmpty ?? true
         
         return nomeVazio || crpVazio
     }
     
     var body: some View {
         Group {
-            if exibindoSplash || authManager.carregandoDados {
+            if exibindoSplash || authManager.loadingData {
                 PsyesLoadingView()
                     .transition(.opacity)
                     .onAppear {
@@ -52,7 +52,7 @@ struct RootView: View {
             } else if !viuOnboarding {
                 OnboardingView(viuOnboarding: $viuOnboarding)
                 
-            } else if !authManager.usuarioLogado {
+            } else if !authManager.userLoggedIn {
                 LoginView()
                     .environmentObject(authManager)
                 
@@ -69,9 +69,9 @@ struct RootView: View {
                     .onAppear {
                         estaDesbloqueado = true
                         
-                        if let usuario = authManager.usuarioAtual {
+                        if let usuario = authManager.currentUser {
                             Task {
-                                await storeManager.sincronizarStatusComApple(usuarioAtual: usuario, userRepository: UserFirebaseRepository())
+                                await storeManager.syncStatusWithApple(currentUser: usuario, userRepository: UserFirebaseRepository())
                             }
                         }
                     }
@@ -80,8 +80,8 @@ struct RootView: View {
         .animation(.default, value: exibindoSplash)
         .animation(.default, value: networkMonitor.isConnected)
         .animation(.default, value: viuOnboarding)
-        .animation(.default, value: authManager.usuarioLogado)
-        .animation(.default, value: authManager.carregandoDados)
+        .animation(.default, value: authManager.userLoggedIn)
+        .animation(.default, value: authManager.loadingData)
         .animation(.default, value: precisaCompletarPerfil)
         .animation(.default, value: estaDesbloqueado)
         .onChange(of: scenePhase) { novaFase in
@@ -92,25 +92,25 @@ struct RootView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AtualizarStoreKit")).receive(on: RunLoop.main)) { _ in
-            if let usuario = authManager.usuarioAtual {
+            if let usuario = authManager.currentUser {
                 Task {
-                    await storeManager.sincronizarStatusComApple(usuarioAtual: usuario, userRepository: UserFirebaseRepository())
+                    await storeManager.syncStatusWithApple(currentUser: usuario, userRepository: UserFirebaseRepository())
                     
-                    if let uid = authManager.usuarioID {
-                        await authManager.buscarDadosDoUsuario(uid: uid)
+                    if let uid = authManager.userID {
+                        await authManager.fetchUserData(uid: uid)
                     }
                 }
             }
         }
-        .alert("Sua assinatura expirou", isPresented: $storeManager.assinaturaExpirou) {
+        .alert("Sua assinatura expirou", isPresented: $storeManager.subscriptionExpired) {
             Button("Entendi", role: .cancel) { }
         } message: {
             Text("Seu plano Psyes Pro chegou ao fim. Algumas funcionalidades e pacientes excedentes foram bloqueados. Acesse os Ajustes para renovar e destravar seu acesso.")
         }
         
-        .onChange(of: storeManager.assinaturaExpirou) { _ , expirou in
+        .onChange(of: storeManager.subscriptionExpired) { _ , expirou in
             if expirou {
-                authManager.usuarioAtual?.premium = false
+                authManager.currentUser?.premium = false
             }
         }
     }

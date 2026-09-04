@@ -12,11 +12,11 @@ public struct SessionActivityAttributes: ActivityAttributes {
     
     // Permite que o app mude a mensagem de status se precisar (ex: "Paciente aguardando")
     public struct ContentState: Codable, Hashable {
-        var statusMensagem: String
+        var statusMessage: String
     }
 
-    var nomePaciente: String
-    var modalidade: String // Ex: "Online" ou "Presencial"
-    var isFixa: Bool       // true = Fixa (Rosa), false = Avulsa (Laranja)
-    var horaInicio: String // Ex: "14:00"
+    var patientName: String
+    var modality: String // Ex: "Online" ou "Presencial"
+    var isFixed: Bool       // true = Fixa (Rosa), false = Avulsa (Laranja)
+    var startTime: String // Ex: "14:00"
 }

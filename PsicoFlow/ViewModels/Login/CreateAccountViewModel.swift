@@ -37,7 +37,7 @@ class CreateAccountViewModel: ObservableObject {
         
         Task {
             do {
-                try await authManager.criarConta(email: email, senha: senha)
+                try await authManager.createAccount(email: email, password: senha)
                 carregando = false
             } catch {
                 mostrarErro(titulo: "Erro ao criar conta", mensagem: traduzirErroFirebase(error))
@@ -56,7 +56,7 @@ class CreateAccountViewModel: ObservableObject {
         carregando = true
         Task {
             do {
-                try await authManager.loginComApple(idToken: idToken, nonce: nonce)
+                try await authManager.loginWithApple(idToken: idToken, nonce: nonce)
                 carregando = false
             } catch {
                 mostrarErro(titulo: "Erro na Apple", mensagem: traduzirErroFirebase(error))
@@ -97,7 +97,7 @@ class CreateAccountViewModel: ObservableObject {
             
             Task {
                 do {
-                    try await authManager.loginComGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
+                    try await authManager.loginWithGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
                     self.carregando = false
                 } catch {
                     self.tituloErro = "Erro de Autenticação"

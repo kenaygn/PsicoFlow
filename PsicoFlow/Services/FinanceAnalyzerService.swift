@@ -5,35 +5,29 @@
 //  Created by Kenay on 09/05/26.
 //
 
-
 import Foundation
 
-///Analisa o histórico de pagamentos para identificar atrasos e métricas.
+/// Analyzes payment history to identify overdue charges and metrics.
 class FinanceAnalyzerService {
     
-    /// Retorna a data (mês/ano) da primeira pendência financeira encontrada em meses anteriores ao atual.
-    func identificarPrimeiroMesComAtraso(nos pagamentos: [MonthlyPayment]) -> Date? {
+    func identifyFirstOverdueMonth(in payments: [MonthlyPayment]) -> Date? {
         let calendar = Calendar.current
-        let agora = Date()
+        let now = Date()
         
-        // Filtra apenas pagamentos não quitados
-        let pendentes = pagamentos.filter { !$0.pago }
+        let pending = payments.filter { !$0.paid }
         
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM"
         
-        // Converte as strings "yyyy/MM" em Dates reais para comparação
-        let datasPendentes = pendentes.compactMap { p -> Date? in
-            return formatter.date(from: p.mesReferencia)
+        let pendingDates = pending.compactMap { p -> Date? in
+            return formatter.date(from: p.referenceMonth)
         }
         
-        // Filtra apenas datas que são estritamente anteriores ao mês atual
-        let atrasosReais = datasPendentes.filter { dataPendente in
-            guard let inicioDoMesAtual = calendar.date(from: calendar.dateComponents([.year, .month], from: agora)) else { return false }
-            return dataPendente < inicioDoMesAtual
+        let actualOverdues = pendingDates.filter { pendingDate in
+            guard let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) else { return false }
+            return pendingDate < startOfCurrentMonth
         }
         
-        // Retorna a mais antiga (a primeira que ele esqueceu de pagar)
-        return atrasosReais.sorted().first
+        return actualOverdues.sorted().first
     }
 }

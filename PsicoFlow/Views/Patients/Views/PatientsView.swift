@@ -54,7 +54,7 @@ struct PatientsView: View {
                 .padding(.horizontal, 20)
             }
             .onAppear {
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarPacientes(userId: uid)
                 }
             }
@@ -78,7 +78,7 @@ struct PatientsView: View {
             }
             .sheet(isPresented: $mostrarModalAdicionar) {
                 AddPatientView { novoPaciente in
-                    if let uid = authManager.usuarioID {
+                    if let uid = authManager.userID {
                         viewModel.adicionarPaciente(novoPaciente, userId: uid)
                     }
                 }

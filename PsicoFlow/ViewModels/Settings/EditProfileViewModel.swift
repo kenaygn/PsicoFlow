@@ -48,12 +48,12 @@ class EditProfileViewModel: ObservableObject {
     }
     
     var temAlteracoes: Bool {
-        guard let user = authManager.usuarioAtual else { return false }
+        guard let user = authManager.currentUser else { return false }
         
-        let dadosMudaram = nome != user.nome ||
+        let dadosMudaram = nome != user.name ||
                            crp != user.crp ||
-                           horaInicioExpediente != user.horaInicioExpediente ||
-                           horaFimExpediente != user.horaFimExpediente
+                           horaInicioExpediente != user.workdayStart ||
+                           horaFimExpediente != user.workdayEnd
         
         let tentandoMudarSenha = isEmailProvider && !novaSenha.isEmpty && !senhaAtual.isEmpty
         
@@ -67,41 +67,41 @@ class EditProfileViewModel: ObservableObject {
     }
     
     private func carregarDadosAtuais() {
-        guard let user = authManager.usuarioAtual else { return }
-        self.nome = user.nome
+        guard let user = authManager.currentUser else { return }
+        self.nome = user.name
         self.crp = user.crp
-        self.horaInicioExpediente = user.horaInicioExpediente
-        self.horaFimExpediente = user.horaFimExpediente
+        self.horaInicioExpediente = user.workdayStart
+        self.horaFimExpediente = user.workdayEnd
     }
     
     // MARK: - Validação Poderosa de Horários
     private func verificarSessoesForaDoExpediente() async -> Bool {
-        guard let userId = authManager.usuarioID else { return false }
+        guard let userId = authManager.userID else { return false }
         
         do {
             // Busca todas as sessões e regras do banco simultaneamente
-            async let sessoes = sessionRepository.fetchSessoes(userId: userId)
-            async let regrasFixas = fixedSessionRepository.fetchSessoesFixas(userId: userId)
+            async let sessoes = sessionRepository.fetchSessions(userId: userId)
+            async let regrasFixas = fixedSessionRepository.fetchFixedSessions(userId: userId)
             
             let todasSessoes = try await sessoes
             let todasRegras = try await regrasFixas
             
             let inicioDeHoje = Calendar.current.startOfDay(for: Date())
             
-            let sessoesAtivas = todasSessoes.filter { $0.dataDaSessao >= inicioDeHoje && $0.status != .cancelada }
+            let sessoesAtivas = todasSessoes.filter { $0.sessionDate >= inicioDeHoje && $0.status != .cancelled }
             
             let novoInicioInt = Int(horaInicioExpediente.prefix(2)) ?? 0
             let novoFimInt = Int(horaFimExpediente.prefix(2)) ?? 23
             
             // Verifica se há conflito nas Sessões (Geradas e Avulsas)
             let conflitoSessoes = sessoesAtivas.contains { sessao in
-                let horaInt = Int(sessao.horaInicio.prefix(2)) ?? 0
+                let horaInt = Int(sessao.startTime.prefix(2)) ?? 0
                 return horaInt < novoInicioInt || horaInt > novoFimInt
             }
             
             // Verifica se há conflito nas Regras (Contratos Fixos)
             let conflitoRegras = todasRegras.contains { regra in
-                let horaInt = Int(regra.horaInicio.prefix(2)) ?? 0
+                let horaInt = Int(regra.startTime.prefix(2)) ?? 0
                 return horaInt < novoInicioInt || horaInt > novoFimInt
             }
             
@@ -123,16 +123,16 @@ class EditProfileViewModel: ObservableObject {
             return false
         }
         
-        if let currentUser = authManager.usuarioAtual {
+        if let currentUser = authManager.currentUser {
             var userAtualizado = currentUser
-            userAtualizado.nome = self.nome
+            userAtualizado.name = self.nome
             userAtualizado.crp = self.crp
-            userAtualizado.horaInicioExpediente = self.horaInicioExpediente
-            userAtualizado.horaFimExpediente = self.horaFimExpediente
+            userAtualizado.workdayStart = self.horaInicioExpediente
+            userAtualizado.workdayEnd = self.horaFimExpediente
             
             do {
                 try await userRepository.updateUser(user: userAtualizado)
-                authManager.usuarioAtual = userAtualizado
+                authManager.currentUser = userAtualizado
             } catch {
                 self.errorMessage = "Erro ao atualizar os dados: \(error.localizedDescription)"
                 return false

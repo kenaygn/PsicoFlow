@@ -24,7 +24,7 @@ class NewSessionViewModel: ObservableObject {
     @Published var selectedDate: Date = Date()
     @Published var selectedWeekday: Int = Calendar.current.component(.weekday, from: Date())
     @Published var selectedTime: String = "08:00"
-    @Published var selectedModalidade: Modalidade = .presencial
+    @Published var selectedModalidade: Modality = .inPerson
     
     @Published var mostrarAlertaConflitoFixo: Bool = false
     
@@ -68,9 +68,9 @@ class NewSessionViewModel: ObservableObject {
         
         Task {
             do {
-                let pacientesDoBanco = try await patientRepository.fetchPacientes(userId: userId)
+                let pacientesDoBanco = try await patientRepository.fetchPatients(userId: userId)
                 await MainActor.run {
-                    self.pacientesDisponiveis = pacientesDoBanco.filter { $0.status == .ativo }
+                    self.pacientesDisponiveis = pacientesDoBanco.filter { $0.status == .active }
                     if self.pacienteSelecionadoID.isEmpty, let primeiro = self.pacientesDisponiveis.first {
                         self.pacienteSelecionadoID = primeiro.id
                     }
@@ -86,7 +86,7 @@ class NewSessionViewModel: ObservableObject {
         Task {
             do {
                 if isFixedSession {
-                    let livresContrato = try await availabilityService.horariosLivresParaContrato(diaDaSemana: selectedWeekday, userId: userId)
+                    let livresContrato = try await availabilityService.freeSlotsForContract(weekday: selectedWeekday, userId: userId)
                     
                     await MainActor.run {
                         // Se o usuário tentar fixar um horário que já tem dono no contrato:
@@ -99,7 +99,7 @@ class NewSessionViewModel: ObservableObject {
                         }
                     }
                 } else {
-                    let livresAvulsos = try await availabilityService.horariosLivresParaSessaoAvulsa(data: selectedDate, userId: userId)
+                    let livresAvulsos = try await availabilityService.freeSlotsForSingleSession(date: selectedDate, userId: userId)
                     
                     await MainActor.run {
                         self.horariosLivres = livresAvulsos
@@ -129,34 +129,34 @@ class NewSessionViewModel: ObservableObject {
                 if isFixedSession {
                     let novaRegra = FixedSession(
                         id: "fix_\(UUID().uuidString)",
-                        psicologoID: userId,
-                        pacienteID: paciente.id,
-                        diaDaSemana: selectedWeekday,
-                        horaInicio: horaFormatada,
-                        modalidade: selectedModalidade
+                        psychologistID: userId,
+                        patientID: paciente.id,
+                        weekday: selectedWeekday,
+                        startTime: horaFormatada,
+                        modality: selectedModalidade
                     )
                     
-                    try await fixedSessionRepository.salvarSessaoFixa(novaRegra, userId: userId)
+                    try await fixedSessionRepository.saveFixedSession(novaRegra, userId: userId)
                     
-                    let dataFim = generatorService.ultimoDiaDoProximoMes()
-                    let sessoesGeradas = generatorService.gerarSessoes(para: novaRegra, dataFim: dataFim)
+                    let dataFim = generatorService.lastDayOfNextMonth()
+                    let sessoesGeradas = generatorService.generateSessions(for: novaRegra, endDate: dataFim)
                     
                     for sessao in sessoesGeradas {
-                        try await sessionRepository.salvarSessao(sessao, userId: userId)
+                        try await sessionRepository.saveSession(sessao, userId: userId)
                     }
                 } else {
                     let sessaoUnica = Session(
                         id: "sess_\(UUID().uuidString)",
-                        psicologoID: userId,
-                        pacienteID: paciente.id,
-                        sessaoFixaID: nil,
-                        dataDaSessao: selectedDate,
-                        status: .agendada,
-                        modalidade: selectedModalidade,
-                        horaInicio: horaFormatada
+                        psychologistID: userId,
+                        patientID: paciente.id,
+                        fixedSessionID: nil,
+                        sessionDate: selectedDate,
+                        status: .scheduled,
+                        modality: selectedModalidade,
+                        startTime: horaFormatada
                     )
                     
-                    try await sessionRepository.salvarSessao(sessaoUnica, userId: userId)
+                    try await sessionRepository.saveSession(sessaoUnica, userId: userId)
                 }
             } catch {
                 print("Erro ao salvar sessão: \(error.localizedDescription)")

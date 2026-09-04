@@ -8,9 +8,9 @@
 import Foundation
 
 protocol PaymentRepositoryProtocol {
-    func fetchPagamentos(userId: String) async throws -> [MonthlyPayment]
-    func fetchPagamentos(paraPacienteID pacienteID: String, userId: String) async throws -> [MonthlyPayment]
-    func atualizarPagamento(_ pagamento: MonthlyPayment, userId: String) async throws
-    func salvarPagamento(_ pagamento: MonthlyPayment, userId: String) async throws
-    func deletarPagamento(id: String, userId: String) async throws
+    func fetchPayments(userId: String) async throws -> [MonthlyPayment]
+    func fetchPayments(forPatientID patientID: String, userId: String) async throws -> [MonthlyPayment]
+    func updatePayment(_ payment: MonthlyPayment, userId: String) async throws
+    func savePayment(_ payment: MonthlyPayment, userId: String) async throws
+    func deletePayment(id: String, userId: String) async throws
 }

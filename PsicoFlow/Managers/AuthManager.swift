@@ -7,7 +7,7 @@
 
 //
 //  AuthManager.swift
-//  Psyes
+//  PsicoFlow
 //
 
 import Foundation
@@ -21,148 +21,142 @@ class AuthManager: ObservableObject {
     
     static let shared = AuthManager()
     
-    @Published var usuarioLogado: Bool = false
-    @Published var usuarioID: String? = nil
+    @Published var userLoggedIn: Bool = false
+    @Published var userID: String? = nil
     
-    @Published var usuarioAtual: User? = nil
+    @Published var currentUser: User? = nil
     
-    @Published var carregandoDados: Bool = false
+    @Published var loadingData: Bool = false
     
     private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
     private let userRepository: UserRepositoryProtocol
     
     init(userRepository: UserRepositoryProtocol = UserFirebaseRepository()) {
         self.userRepository = userRepository
-        configurarListenerDeAutenticacao()
+        setupAuthStateListener()
     }
     
-    private func configurarListenerDeAutenticacao() {
+    private func setupAuthStateListener() {
         authStateListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             guard let self = self else { return }
             
-            self.usuarioLogado = (user != nil)
-            self.usuarioID = user?.uid
+            self.userLoggedIn = (user != nil)
+            self.userID = user?.uid
             
             if let uid = user?.uid {
-                // Dizemos que começou a carregar
-                self.carregandoDados = true
+                self.loadingData = true
                 Task {
-                    await self.buscarDadosDoUsuario(uid: uid)
-                    // Dizemos que terminou de carregar
-                    self.carregandoDados = false
+                    await self.fetchUserData(uid: uid)
+                    self.loadingData = false
                 }
             } else {
-                self.usuarioAtual = nil
-                self.carregandoDados = false
+                self.currentUser = nil
+                self.loadingData = false
             }
         }
     }
     
-    /// Busca o documento do usuário no Firestore e atualiza a interface
-    func buscarDadosDoUsuario(uid: String) async {
+    /// Fetches the user's document from Firestore and updates the interface
+    func fetchUserData(uid: String) async {
         do {
-            self.usuarioAtual = try await userRepository.fetchUser(uid: uid)
+            self.currentUser = try await userRepository.fetchUser(uid: uid)
         } catch {
-            print("Erro ao buscar dados: \(error.localizedDescription)")
-            self.usuarioAtual = nil
+            print("Error fetching data: \(error.localizedDescription)")
+            self.currentUser = nil
         }
     }
     
-    func salvarPerfilCompleto(nome: String, crp: String, horaInicio: String, horaFim: String) async throws {
-        guard let uid = self.usuarioID else {
-            throw NSError(domain: "AuthManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "Usuário não autenticado."])
+    func saveCompleteProfile(name: String, crp: String, workdayStart: String, workdayEnd: String) async throws {
+        guard let uid = self.userID else {
+            throw NSError(domain: "AuthManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated."])
         }
         
-        let novoUsuario = User(
+        let newUser = User(
             id: uid,
-            nome: nome,
+            name: name,
             crp: crp,
             premium: false,
-            criadoEm: Date(),
-            horaInicioExpediente: horaInicio,
-            horaFimExpediente: horaFim
+            createdAt: Date(),
+            workdayStart: workdayStart,
+            workdayEnd: workdayEnd
         )
         
-        try await userRepository.saveUser(user: novoUsuario)
+        try await userRepository.saveUser(user: newUser)
         
-        self.usuarioAtual = novoUsuario
+        self.currentUser = newUser
     }
     
-    func criarConta(email: String, senha: String) async throws {
-        // O Firebase já faz a validação se o e-mail é válido e se a senha é forte
-        try await Auth.auth().createUser(withEmail: email, password: senha)
+    func createAccount(email: String, password: String) async throws {
+        try await Auth.auth().createUser(withEmail: email, password: password)
     }
     
-    func fazerLogin(email: String, senha: String) async throws {
-        try await Auth.auth().signIn(withEmail: email, password: senha)
+    func login(email: String, password: String) async throws {
+        try await Auth.auth().signIn(withEmail: email, password: password)
     }
     
-    func recuperarSenha(email: String) async throws {
+    func recoverPassword(email: String) async throws {
         try await Auth.auth().sendPasswordReset(withEmail: email)
     }
     
-    func sairDaConta() {
-        print("Fazendo logout do Firebase...")
+    func signOut() {
+        print("Signing out of Firebase...")
         do {
             try Auth.auth().signOut()
         } catch {
-            print("Erro ao tentar sair da conta: \(error.localizedDescription)")
+            print("Error signing out: \(error.localizedDescription)")
         }
     }
     
-    func deletarConta() async throws {
-        print("Iniciando exclusão completa da conta e dos dados...")
+    func deleteAccount() async throws {
+        print("Starting complete account and data deletion...")
         guard let user = Auth.auth().currentUser else { return }
         let uid = user.uid
         let db = Firestore.firestore()
         
-        let colecoesParaApagar = [
+        let collectionsToDelete = [
             "patients",
             "sessions",
-            "evolutions",
+            "progressNotes",
             "payments",
-            "fixed_sessions"
+            "fixedSessions"
         ]
         
-        for colecao in colecoesParaApagar {
-            try await apagarColecaoInteira(nomeDaColecao: colecao, uid: uid, db: db)
+        for collectionName in collectionsToDelete {
+            try await deleteEntireCollection(collectionName: collectionName, uid: uid, db: db)
         }
         
         try await db.collection("users").document(uid).delete()
-        print("Dados do banco de dados excluídos com sucesso.")
+        print("Database data deleted successfully.")
         
         try await user.delete()
-        print("Autenticação excluída com sucesso.")
+        print("Authentication deleted successfully.")
         
-        self.usuarioAtual = nil
-        self.usuarioID = nil
-        self.usuarioLogado = false
+        self.currentUser = nil
+        self.userID = nil
+        self.userLoggedIn = false
     }
     
-    /// Função auxiliar que busca todos os documentos de uma coleção e os apaga em paralelo
-    private func apagarColecaoInteira(nomeDaColecao: String, uid: String, db: Firestore) async throws {
-        let colecaoRef = db.collection("users").document(uid).collection(nomeDaColecao)
-        let snapshot = try await colecaoRef.getDocuments()
+    /// Helper function that fetches all documents in a collection and deletes them in parallel
+    private func deleteEntireCollection(collectionName: String, uid: String, db: Firestore) async throws {
+        let collectionRef = db.collection("users").document(uid).collection(collectionName)
+        let snapshot = try await collectionRef.getDocuments()
         
-        // Se a coleção estiver vazia, não faz nada
         if snapshot.documents.isEmpty { return }
         
-        // Usa TaskGroup para apagar documentos em paralelo, sendo muito mais rápido
-        // e evitando o limite de 500 operações do WriteBatch.
         await withTaskGroup(of: Void.self) { group in
             for document in snapshot.documents {
                 group.addTask {
                     do {
                         try await document.reference.delete()
                     } catch {
-                        print("Erro ao apagar documento \(document.documentID) em \(nomeDaColecao): \(error)")
+                        print("Error deleting document \(document.documentID) in \(collectionName): \(error)")
                     }
                 }
             }
         }
     }
     
-    func loginComApple(idToken: String, nonce: String) async throws {
+    func loginWithApple(idToken: String, nonce: String) async throws {
         let credential = OAuthProvider.appleCredential(withIDToken: idToken,
                                                        rawNonce: nonce,
                                                        fullName: nil)
@@ -170,7 +164,7 @@ class AuthManager: ObservableObject {
         try await Auth.auth().signIn(with: credential)
     }
     
-    func loginComGoogle(idToken: String, accessToken: String) async throws {
+    func loginWithGoogle(idToken: String, accessToken: String) async throws {
         let credential = GoogleAuthProvider.credential(withIDToken: idToken,
                                                        accessToken: accessToken)
         

@@ -177,15 +177,15 @@ struct UpgradePlanView: View {
                         
                         Button(action: {
                             // Pegamos o produto que foi carregado da Apple
-                            guard let produto = storeManager.produtosDisponiveis.first else { return }
+                            guard let produto = storeManager.availableProducts.first else { return }
                             
                             Task {
                                 do {
                                     // Chama o Face ID / Pagamento
-                                    if let transacao = try await storeManager.comprar(produto) {
+                                    if let transacao = try await storeManager.purchase(produto) {
                                         print("COMPRA REALIZADA COM SUCESSO! ID: \(transacao.id)")
                                         
-                                        if var usuarioAtualizado = authManager.usuarioAtual {
+                                        if var usuarioAtualizado = authManager.currentUser {
                                             
                                             // Muda o status localmente
                                             usuarioAtualizado.premium = true
@@ -206,7 +206,7 @@ struct UpgradePlanView: View {
                         }) {
                             ZStack {
                                 // Se estiver carregando, mostra o spinner
-                                if storeManager.estaComprando {
+                                if storeManager.isPurchasing {
                                     ProgressView()
                                         .tint(Color(red: 0.65, green: 0.30, blue: 0.92))
                                 } else {
@@ -222,8 +222,8 @@ struct UpgradePlanView: View {
                             .cornerRadius(16)
                             .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
                         }
-                        .disabled(storeManager.estaComprando || storeManager.produtosDisponiveis.isEmpty)
-                        .opacity(storeManager.produtosDisponiveis.isEmpty ? 0.5 : 1)
+                        .disabled(storeManager.isPurchasing || storeManager.availableProducts.isEmpty)
+                        .opacity(storeManager.availableProducts.isEmpty ? 0.5 : 1)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 40)

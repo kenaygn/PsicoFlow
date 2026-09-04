@@ -40,19 +40,19 @@ struct SessionQuickActionView: View {
             
             // MARK: - Cabeçalho
             VStack(spacing: 8) {
-                Text(String(paciente.nome.prefix(1)))
+                Text(String(paciente.name.prefix(1)))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.teal)
                     .frame(width: 64, height: 64)
                     .background(Color.teal.opacity(0.15))
                     .clipShape(Circle())
                 
-                Text(paciente.nome)
+                Text(paciente.name)
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(Color(.darkText))
                 
                 HStack(spacing: 12) {
-                    Label(viewModel.sessao.horaInicio, systemImage: "clock")
+                    Label(viewModel.sessao.startTime, systemImage: "clock")
                     Text("•")
                     Label(viewModel.sessao.status.rawValue.capitalized, systemImage: "circle.fill")
                         .foregroundColor(corBadge(status: viewModel.sessao.status))
@@ -111,7 +111,7 @@ struct SessionQuickActionView: View {
                             
                             Button("Salvar") {
                                 let dataFinal = viewModel.obterDataFinal()
-                                onUpdateStatus(.adiada, dataFinal)
+                                onUpdateStatus(.postponed, dataFinal)
                                 dismiss()
                             }
                             .font(.system(size: 15, weight: .bold))
@@ -127,7 +127,7 @@ struct SessionQuickActionView: View {
                 } else {
                     HStack(spacing: 12) {
                         actionButton(title: "Realizada", icon: "checkmark.circle.fill", color: .green) {
-                            onUpdateStatus(.realizada, nil)
+                            onUpdateStatus(.completed, nil)
                             dismiss()
                         }
                         actionButton(title: "Adiada", icon: "calendar.badge.clock", color: .orange) {
@@ -135,11 +135,11 @@ struct SessionQuickActionView: View {
                                 mostrandoAdiar = true
                                 alturaModal = .height(420)
                                 // Dispara a primeira busca ao abrir
-                                if let uid = authManager.usuarioID { viewModel.carregarHorariosLivres(userId: uid) }
+                                if let uid = authManager.userID { viewModel.carregarHorariosLivres(userId: uid) }
                             }
                         }
                         actionButton(title: "Cancelada", icon: "xmark.circle.fill", color: .red) {
-                            onUpdateStatus(.cancelada, nil)
+                            onUpdateStatus(.cancelled, nil)
                             dismiss()
                         }
                     }
@@ -171,7 +171,7 @@ struct SessionQuickActionView: View {
         .presentationDragIndicator(.visible)
         // 2. Sempre que a data mudar, busca os novos horários
         .onChange(of: viewModel.novaData) { _ in
-            if let uid = authManager.usuarioID {
+            if let uid = authManager.userID {
                 viewModel.carregarHorariosLivres(userId: uid)
             }
         }
@@ -195,10 +195,10 @@ struct SessionQuickActionView: View {
     
     private func corBadge(status: SessionStatus) -> Color {
         switch status {
-        case .realizada: return .gray
-        case .agendada: return .teal
-        case .adiada: return .orange
-        case .cancelada: return .red
+        case .completed: return .gray
+        case .scheduled: return .teal
+        case .postponed: return .orange
+        case .cancelled: return .red
         }
     }
 }

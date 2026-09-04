@@ -9,27 +9,27 @@ import Foundation
 import SwiftUI
 
 enum SessionStatus: String, Codable, CaseIterable {
-    case realizada = "Realizada"
-    case cancelada = "Cancelada"
-    case adiada = "Adiada"
-    case agendada = "Agendada"
+    case completed = "Realizada"
+    case cancelled = "Cancelada"
+    case postponed = "Adiada"
+    case scheduled = "Agendada"
 }
 
-enum Modalidade: String, Codable {
+enum Modality: String, Codable {
     case online = "Online"
-    case presencial = "Presencial"
+    case inPerson = "Presencial"
 }
 
 struct Session: Identifiable, Codable {
     var id: String
-    var psicologoID: String
-    var pacienteID: String
+    var psychologistID: String
+    var patientID: String
     
-    var sessaoFixaID: String?
+    var fixedSessionID: String?
     
-    var dataDaSessao: Date
+    var sessionDate: Date
     var status: SessionStatus
-    var modalidade: Modalidade
-    var horaInicio: String // "14:00"
+    var modality: Modality
+    var startTime: String // "14:00"
 
 }

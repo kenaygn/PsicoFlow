@@ -16,7 +16,7 @@ class PatientFormViewModel: ObservableObject {
     @Published var telefone: String = ""
     @Published var contatoEmergencia: String = ""
     @Published var valorTexto: String = ""
-    @Published var status: PatientStatus = .ativo
+    @Published var status: PatientStatus = .active
     @Published var observacoes: String = ""
     
     @Published var estaExcluindo: Bool = false
@@ -41,14 +41,14 @@ class PatientFormViewModel: ObservableObject {
         self.patientRepository = patientRepository
         
         if let paciente = paciente {
-            self.nome = paciente.nome
+            self.nome = paciente.name
             self.email = paciente.email
-            self.telefone = paciente.telefone
-            self.contatoEmergencia = paciente.contatoEmergencia ?? ""
+            self.telefone = paciente.phone
+            self.contatoEmergencia = paciente.emergencyContact ?? ""
             self.status = paciente.status
-            self.observacoes = paciente.observacoes ?? ""
+            self.observacoes = paciente.notes ?? ""
             
-            let valorString = String(format: "%.2f", paciente.valor).replacingOccurrences(of: ".", with: ",")
+            let valorString = String(format: "%.2f", paciente.value).replacingOccurrences(of: ".", with: ",")
             self.valorTexto = valorString
         }
         
@@ -75,28 +75,28 @@ class PatientFormViewModel: ObservableObject {
         
         return Patient(
             id: pacienteOriginal?.id ?? idGerado,
-            psicologoID: userId,
-            nome: nome,
+            psychologistID: userId,
+            name: nome,
             email: email,
-            telefone: telefone,
-            contatoEmergencia: contatoEmergencia.isEmpty ? nil : contatoEmergencia,
-            observacoes: observacoes.isEmpty ? nil : observacoes,
+            phone: telefone,
+            emergencyContact: contatoEmergencia.isEmpty ? nil : contatoEmergencia,
+            notes: observacoes.isEmpty ? nil : observacoes,
             status: status,
-            valor: valorConvertido,
-            criadoEm: pacienteOriginal?.criadoEm ?? Date()
+            value: valorConvertido,
+            createdAt: pacienteOriginal?.createdAt ?? Date()
         )
     }
     
     func salvar(userId: String, isPremium: Bool) async -> Bool {
         
-        let isNovoAtivo = pacienteOriginal == nil && status == .ativo
-        let isReativando = pacienteOriginal?.status == .inativo && status == .ativo
+        let isNovoAtivo = pacienteOriginal == nil && status == .active
+        let isReativando = pacienteOriginal?.status == .inactive && status == .active
         let isAtivando = isNovoAtivo || isReativando
         
         if isAtivando && !isPremium {
             do {
-                let todosPacientes = try await patientRepository.fetchPacientes(userId: userId)
-                let totalAtivos = todosPacientes.filter { $0.status == .ativo }.count
+                let todosPacientes = try await patientRepository.fetchPatients(userId: userId)
+                let totalAtivos = todosPacientes.filter { $0.status == .active }.count
                 
                 if totalAtivos >= 5 {
                     self.mostrarAlertaLimite = true
@@ -109,26 +109,26 @@ class PatientFormViewModel: ObservableObject {
         }
         
         let pacienteAtualizado = obterPacienteAtualizado(userId: userId)
-        let statusAntigo = pacienteOriginal?.status ?? .ativo
+        let statusAntigo = pacienteOriginal?.status ?? .active
         let isNovoPaciente = pacienteOriginal == nil
         
         do {
-            try await patientRepository.atualizarPaciente(pacienteAtualizado, userId: userId)
+            try await patientRepository.updatePatient(pacienteAtualizado, userId: userId)
             
-            try await sessionGenerator.projetarSessoesFuturas(userId: userId)
+            try await sessionGenerator.projectFutureSessions(userId: userId)
             
-            if statusAntigo == .ativo && pacienteAtualizado.status == .inativo {
-                try await paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id, userId: userId)
-            } else if (statusAntigo == .inativo && pacienteAtualizado.status == .ativo) || isNovoPaciente {
-                try await paymentService.gerarCobrancasAtuaisEFuturas(userId: userId)
+            if statusAntigo == .active && pacienteAtualizado.status == .inactive {
+                try await paymentService.removePendingCharges(for: pacienteAtualizado.id, userId: userId)
+            } else if (statusAntigo == .inactive && pacienteAtualizado.status == .active) || isNovoPaciente {
+                try await paymentService.generateCurrentAndFutureCharges(userId: userId)
             }
             
-            let precoMudou = pacienteOriginal != nil && pacienteOriginal!.valor != pacienteAtualizado.valor
+            let precoMudou = pacienteOriginal != nil && pacienteOriginal!.value != pacienteAtualizado.value
             
-            if statusAntigo == .ativo && pacienteAtualizado.status == .ativo && precoMudou {
-                try await paymentService.atualizarValorPagamentosPendentes(
-                    pacienteID: pacienteAtualizado.id,
-                    novoValor: pacienteAtualizado.valor,
+            if statusAntigo == .active && pacienteAtualizado.status == .active && precoMudou {
+                try await paymentService.updatePendingPaymentsValue(
+                    patientID: pacienteAtualizado.id,
+                    newValue: pacienteAtualizado.value,
                     userId: userId
                 )
             }
@@ -150,7 +150,7 @@ class PatientFormViewModel: ObservableObject {
         do {
             // Fazemos o cast para o FirebaseRepository para acessar a função de cascata que criamos
             if let repo = patientRepository as? PatientFirebaseRepository {
-                try await repo.excluirPacienteEmCascata(pacienteID: id, userId: userId)
+                try await repo.deletePatientCascade(patientID: id, userId: userId)
                 
                 self.estaExcluindo = false
                 return true // Retorna true para a View fechar a tela

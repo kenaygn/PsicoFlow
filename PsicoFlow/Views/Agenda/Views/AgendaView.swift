@@ -171,7 +171,7 @@ struct AgendaView: View {
             .navigationTitle("Agenda")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarDados(userId: uid)
                 }
                 
@@ -186,7 +186,7 @@ struct AgendaView: View {
             }
             
             .sheet(item: $contextoNovaSessao, onDismiss: {
-                if let uid = authManager.usuarioID { viewModel.carregarDados(userId: uid) }
+                if let uid = authManager.userID { viewModel.carregarDados(userId: uid) }
             }) { contexto in
                 NewSessionView(dataSugerida: contexto.data, horarioSugerido: contexto.horario)
             }
@@ -197,7 +197,7 @@ struct AgendaView: View {
                         sessao: sessao,
                         paciente: paciente,
                         onUpdateStatus: { novoStatus, novaData in
-                            if let uid = authManager.usuarioID {
+                            if let uid = authManager.userID {
                                 withAnimation { viewModel.atualizarStatus(da: sessao, para: novoStatus, novaData: novaData, userId: uid) }
                             }
                         },

@@ -46,11 +46,11 @@ struct SuccessStepCompleteProfileView: View {
             PrimaryButton(texto: "Entrar no App", habilitado: true) {
                 Task {
                     do {
-                        try await authManager.salvarPerfilCompleto(
-                            nome: vm.nome,
+                        try await authManager.saveCompleteProfile(
+                            name: vm.nome,
                             crp: vm.crp,
-                            horaInicio: vm.horaInicio,
-                            horaFim: vm.horaFim
+                            workdayStart: vm.horaInicio,
+                            workdayEnd: vm.horaFim
                         )
                     } catch {
                         print("Erro ao salvar o perfil: \(error)")

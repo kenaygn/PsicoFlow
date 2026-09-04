@@ -30,7 +30,7 @@ struct SettingsView: View {
     var body: some View {
         
         // Utilizamos o usuário da ViewModel, ou um fallback visual enquanto o Firebase devolve do cache (0.001s)
-        let user = viewModel.currentUser ?? User(id: "", nome: "Carregando...", crp: "", premium: false, criadoEm: Date(), horaInicioExpediente: "07:00", horaFimExpediente: "22:00")
+        let user = viewModel.currentUser ?? User(id: "", name: "Carregando...", crp: "", premium: false, createdAt: Date(), workdayStart: "07:00", workdayEnd: "22:00")
         
         NavigationStack {
             Form {
@@ -57,7 +57,7 @@ struct SettingsView: View {
                             //                                .foregroundColor(.teal)
                         }
                     }
-                }else if user.nome == "Carregando..."{
+                }else if user.name == "Carregando..."{
                     
                 } else {
                     PremiumCard(){
@@ -73,7 +73,7 @@ struct SettingsView: View {
                     NavigationLink(destination: EditProfileView(authManager: authManager)) {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(user.nome)
+                                Text(user.name)
                                     .font(.body)
                                 Text("Editar informações e senha")
                                     .font(.caption)
@@ -221,14 +221,14 @@ struct SettingsView: View {
                         }
                         
                         let atributos = SessionActivityAttributes(
-                            nomePaciente: "Ana Carolina",
-                            modalidade: "Presencial",
-                            isFixa: true,
-                            horaInicio: "14:00"
+                            patientName: "Ana Carolina",
+                            modality: "Presencial",
+                            isFixed: true,
+                            startTime: "14:00"
                         )
                         
                         let estadoInicial = SessionActivityAttributes.ContentState(
-                            statusMensagem: "Tudo pronto para o atendimento."
+                            statusMessage: "Tudo pronto para o atendimento."
                         )
                         
                         do {
@@ -253,7 +253,7 @@ struct SettingsView: View {
                     // Botão de Parar
                     Button(action: {
                         Task {
-                            let estadoFinal = SessionActivityAttributes.ContentState(statusMensagem: "Sessão concluída.")
+                            let estadoFinal = SessionActivityAttributes.ContentState(statusMessage: "Sessão concluída.")
                             
                             // Procura todas as atividades do Psyes rodando e mata todas
                             for atividade in Activity<SessionActivityAttributes>.activities {
@@ -281,7 +281,7 @@ struct SettingsView: View {
             // MARK: - Eventos de Ciclo de Vida
             .onAppear {
                 viewModel.verificarStatusNotificacoes()
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarDadosUsuario(userId: uid)
                 }
             }
@@ -309,7 +309,7 @@ struct SettingsView: View {
                 
                 Button("Sair", role: .destructive) {
                     UserDefaults.standard.set(false, forKey: "usarFaceID")
-                    authManager.sairDaConta()
+                    authManager.signOut()
                 }
             } message: {
                 Text("Tem certeza de que deseja desconectar sua conta deste dispositivo?")
@@ -331,9 +331,9 @@ struct SettingsView: View {
                     
                     Task {
                         do {
-                            try await authManager.deletarConta()
+                            try await authManager.deleteAccount()
                             UserDefaults.standard.set(false, forKey: "usarFaceID")
-                            authManager.sairDaConta()
+                            authManager.signOut()
                             
                         } catch let error as NSError {
                             let codigosDeSessaoInvalida = [
@@ -360,7 +360,7 @@ struct SettingsView: View {
                 
                 Button("Fazer Logout Agora") {
                     UserDefaults.standard.set(false, forKey: "usarFaceID")
-                    authManager.sairDaConta()
+                    authManager.signOut()
                 }
             } message: {
                 Text("Por medidas de segurança, a exclusão definitiva da conta exige um login recente. Seus dados estão seguros e NÃO foram apagados. Por favor, faça logout, entre novamente e repita a ação.")

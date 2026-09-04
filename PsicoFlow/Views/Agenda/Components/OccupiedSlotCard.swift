@@ -22,7 +22,7 @@ struct OccupiedSlotCard: View {
                 
                 // MARK: - Identificação e Status
                 HStack(alignment: .top) {
-                    Text(paciente.nome)
+                    Text(paciente.name)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(.darkText))
                         .multilineTextAlignment(.leading)
@@ -42,7 +42,7 @@ struct OccupiedSlotCard: View {
                 // MARK: - Detalhes Operacionais
                 HStack(spacing: 12) {
                     
-                    if sessao.sessaoFixaID != nil {
+                    if sessao.fixedSessionID != nil {
                         HStack(spacing: 4) {
                             Image(systemName: "repeat")
                             Text("Fixa")
@@ -57,8 +57,8 @@ struct OccupiedSlotCard: View {
                     }
                     
                     HStack(spacing: 4) {
-                        Image(systemName: sessao.modalidade.rawValue.lowercased() == "online" ? "video" : "person.2")
-                        Text(sessao.modalidade.rawValue.capitalized)
+                        Image(systemName: sessao.modality.rawValue.lowercased() == "online" ? "video" : "person.2")
+                        Text(sessao.modality.rawValue.capitalized)
                     }
                     
                     HStack(spacing: 4) {
@@ -89,10 +89,10 @@ struct OccupiedSlotCard: View {
     
     private func corBadge(status: SessionStatus) -> Color {
         switch status {
-        case .realizada: return .gray
-        case .agendada: return .teal
-        case .adiada: return .orange
-        case .cancelada: return .red
+        case .completed: return .gray
+        case .scheduled: return .teal
+        case .postponed: return .orange
+        case .cancelled: return .red
         }
     }
 }

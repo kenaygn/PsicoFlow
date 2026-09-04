@@ -36,7 +36,7 @@ struct TodaySessionCard: View {
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
                         .font(.system(size: 14))
-                    Text(session.horaInicio)
+                    Text(session.startTime)
                         .font(.system(size: 16, weight: .semibold))
                 }
                 .foregroundColor(isNext ? .white : .primary)
@@ -56,10 +56,10 @@ struct TodaySessionCard: View {
                     HStack(spacing: 6) {
                         
                         // Botão de Desfazer (Aparece apenas se estiver cancelada)
-                        if session.status == .cancelada {
+                        if session.status == .cancelled {
                             Button(action: {
                                 // Reverte o status para agendada
-                                onUpdateStatus(.agendada, nil)
+                                onUpdateStatus(.scheduled, nil)
                             }) {
                                 Image(systemName: "arrow.uturn.backward")
                                     .font(.system(size: 12, weight: .bold))
@@ -102,7 +102,7 @@ struct TodaySessionCard: View {
                     
                     HStack(spacing: 12) {
                         
-                        if session.sessaoFixaID != nil {
+                        if session.fixedSessionID != nil {
                             HStack(spacing: 4) {
                                 Image(systemName: "repeat")
                                 Text("Fixa")
@@ -117,8 +117,8 @@ struct TodaySessionCard: View {
                         }
                         
                         HStack(spacing: 4) {
-                            Image(systemName: session.modalidade.rawValue.lowercased() == "online" ? "video" : "person.2")
-                            Text(session.modalidade.rawValue.capitalized)
+                            Image(systemName: session.modality.rawValue.lowercased() == "online" ? "video" : "person.2")
+                            Text(session.modality.rawValue.capitalized)
                         }
                         .foregroundColor(isNext ? .gray : .secondary)
                         
@@ -134,7 +134,7 @@ struct TodaySessionCard: View {
             }
             
             // MARK: - Controles de Ação
-            if session.status == .agendada {
+            if session.status == .scheduled {
                 Divider()
                     .background(isNext ? Color.gray.opacity(0.3) : Color.gray.opacity(0.1))
                     .padding(.top, 4)
@@ -192,7 +192,7 @@ struct TodaySessionCard: View {
                             
                             Button(action: {
                                 let dataFinal = combinarDataEHora(data: novaData, horaString: novaHoraStr)
-                                onUpdateStatus(.adiada, dataFinal)
+                                onUpdateStatus(.postponed, dataFinal)
                                 mostrandoAdiar = false
                             }) {
                                 Text("Salvar")
@@ -214,17 +214,17 @@ struct TodaySessionCard: View {
                     // MARK: Botões Padrão
                     HStack(spacing: 8) {
                         actionButton(title: "Realizada", icon: "checkmark.circle", isNext: isNext, color: .green) {
-                            onUpdateStatus(.realizada, nil)
+                            onUpdateStatus(.completed, nil)
                         }
                         actionButton(title: "Adiada", icon: "calendar.badge.clock", isNext: isNext, color: .orange) {
-                            novaData = session.dataDaSessao
-                            novaHoraStr = session.horaInicio
+                            novaData = session.sessionDate
+                            novaHoraStr = session.startTime
                             withAnimation { mostrandoAdiar = true }
                             // Carrega horários assincronamente ao abrir o reagendamento
                             carregarHorarios(para: novaData)
                         }
                         actionButton(title: "Cancelada", icon: "xmark.circle", isNext: isNext, color: .red) {
-                            onUpdateStatus(.cancelada, nil)
+                            onUpdateStatus(.cancelled, nil)
                         }
                     }
                     .padding(.top, 4)
@@ -303,10 +303,10 @@ struct TodaySessionCard: View {
     
     private func corBadge(status: SessionStatus) -> Color {
         switch status {
-        case .realizada: return .gray
-        case .agendada: return .teal
-        case .adiada: return .orange
-        case .cancelada: return .red
+        case .completed: return .gray
+        case .scheduled: return .teal
+        case .postponed: return .orange
+        case .cancelled: return .red
         }
     }
 }

@@ -14,13 +14,13 @@ import Combine
 class PatientDetailViewModel: ObservableObject {
         
     @Published var paciente: Patient
-    @Published var evolucoes: [Evolution] = []
+    @Published var evolucoes: [ProgressNote] = []
     @Published var pagamentos: [MonthlyPayment] = []
     @Published var sessoesFixas: [FixedSession] = []
     @Published var sessoesAvulsasFuturas: [Session] = []
         
     private let patientRepository: PatientRepositoryProtocol
-    private let evolutionRepository: EvolutionRepositoryProtocol
+    private let evolutionRepository: ProgressNoteRepositoryProtocol
     private let paymentRepository: PaymentRepositoryProtocol
     private let fixedSessionRepository: FixedSessionRepositoryProtocol
     private let sessionRepository: SessionRepositoryProtocol
@@ -28,7 +28,7 @@ class PatientDetailViewModel: ObservableObject {
     init(
         paciente: Patient,
         patientRepository: PatientRepositoryProtocol = PatientFirebaseRepository(),
-        evolutionRepository: EvolutionRepositoryProtocol = EvolutionFirebaseRepository(),
+        evolutionRepository: ProgressNoteRepositoryProtocol = ProgressNoteFirebaseRepository(),
         paymentRepository: PaymentRepositoryProtocol = PaymentFirebaseRepository(),
         fixedSessionRepository: FixedSessionRepositoryProtocol = FixedSessionFirebaseRepository(),
         sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository()
@@ -52,7 +52,7 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarEvolucoes(userId: String) async {
         do {
-            let dados = try await evolutionRepository.fetchEvolucoes(paraPacienteID: paciente.id, userId: userId)
+            let dados = try await evolutionRepository.fetchProgressNotes(forPatientID: paciente.id, userId: userId)
             
             await MainActor.run {
                 withAnimation(.spring()) {
@@ -66,11 +66,11 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarPagamentos(userId: String) async {
         do {
-            let dados = try await paymentRepository.fetchPagamentos(userId: userId)
+            let dados = try await paymentRepository.fetchPayments(userId: userId)
             
             await MainActor.run {
                 withAnimation(.spring()) {
-                    self.pagamentos = dados.filter { $0.pacienteID == paciente.id }.sorted { $0.mesReferencia > $1.mesReferencia }
+                    self.pagamentos = dados.filter { $0.patientID == paciente.id }.sorted { $0.referenceMonth > $1.referenceMonth }
                 }
             }
         } catch {
@@ -80,21 +80,21 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarSessoesConfiguradas(userId: String) async {
         do {
-            let fixas = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
-            let todasSessoes = try await sessionRepository.fetchSessoes(userId: userId)
+            let fixas = try await fixedSessionRepository.fetchFixedSessions(userId: userId)
+            let todasSessoes = try await sessionRepository.fetchSessions(userId: userId)
             let hoje = Calendar.current.startOfDay(for: Date())
             
             await MainActor.run {
                 withAnimation(.spring()) {
-                    self.sessoesFixas = fixas.filter { $0.pacienteID == paciente.id }
+                    self.sessoesFixas = fixas.filter { $0.patientID == paciente.id }
                     
                     self.sessoesAvulsasFuturas = todasSessoes.filter { sessao in
-                        sessao.pacienteID == paciente.id &&
-                        sessao.sessaoFixaID == nil &&
-                        (sessao.status == .agendada || sessao.status == .adiada) &&
-                        Calendar.current.startOfDay(for: sessao.dataDaSessao) >= hoje
+                        sessao.patientID == paciente.id &&
+                        sessao.fixedSessionID == nil &&
+                        (sessao.status == .scheduled || sessao.status == .postponed) &&
+                        Calendar.current.startOfDay(for: sessao.sessionDate) >= hoje
                     }
-                    .sorted { $0.dataDaSessao < $1.dataDaSessao }
+                    .sorted { $0.sessionDate < $1.sessionDate }
                 }
             }
         } catch {
@@ -107,12 +107,12 @@ class PatientDetailViewModel: ObservableObject {
     func togglePagamento(pagamentoID: String, userId: String) {
         if let index = pagamentos.firstIndex(where: { $0.id == pagamentoID }) {
             var pagamentoAtualizado = pagamentos[index]
-            pagamentoAtualizado.pago.toggle()
-            pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
+            pagamentoAtualizado.paid.toggle()
+            pagamentoAtualizado.paymentDate = pagamentoAtualizado.paid ? Date() : nil
             
             Task {
                 do {
-                    try await paymentRepository.atualizarPagamento(pagamentoAtualizado, userId: userId)
+                    try await paymentRepository.updatePayment(pagamentoAtualizado, userId: userId)
                     
                     await MainActor.run {
                         withAnimation(.spring()) {
@@ -127,17 +127,17 @@ class PatientDetailViewModel: ObservableObject {
     }
     
     func adicionarEvolucao(texto: String, userId: String) {
-        let novaEvolucao = Evolution(
+        let novaEvolucao = ProgressNote(
             id: UUID().uuidString,
-            psicologoID: userId,
-            pacienteID: paciente.id,
-            data: Date(),
-            conteudo: texto
+            psychologistID: userId,
+            patientID: paciente.id,
+            date: Date(),
+            content: texto
         )
         
         Task {
             do {
-                try await evolutionRepository.salvarEvolucao(novaEvolucao, userId: userId)
+                try await evolutionRepository.saveProgressNote(novaEvolucao, userId: userId)
                 
                 await MainActor.run {
                     withAnimation(.spring()) {
@@ -150,10 +150,10 @@ class PatientDetailViewModel: ObservableObject {
         }
     }
     
-    func atualizarEvolucao(evolucaoAtualizada: Evolution, userId: String) {
+    func atualizarEvolucao(evolucaoAtualizada: ProgressNote, userId: String) {
         Task {
             do {
-                try await evolutionRepository.atualizarEvolucao(evolucaoAtualizada, userId: userId)
+                try await evolutionRepository.updateProgressNote(evolucaoAtualizada, userId: userId)
                 
                 await MainActor.run {
                     withAnimation(.spring()) {
@@ -171,7 +171,7 @@ class PatientDetailViewModel: ObservableObject {
     func deletarEvolucao(id: String, userId: String) {
         Task {
             do {
-                try await evolutionRepository.deletarEvolucao(id: id, userId: userId)
+                try await evolutionRepository.deleteProgressNote(id: id, userId: userId)
                 
                 await MainActor.run {
                     withAnimation(.spring()) {

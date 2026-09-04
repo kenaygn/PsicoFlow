@@ -8,29 +8,28 @@
 import Foundation
 
 enum PatientStatus: String, Codable, CaseIterable {
-    case ativo = "Ativo"
-    case inativo = "Inativo"
+    case active = "Ativo"
+    case inactive = "Inativo"
 }
 
 struct Patient: Identifiable, Codable {
     var id: String
-    var psicologoID: String
+    var psychologistID: String
     
-    var nome: String
+    var name: String
     var email: String
-    var telefone: String
-    var contatoEmergencia: String?
-    var observacoes: String?
+    var phone: String
+    var emergencyContact: String?
+    var notes: String?
     
     var status: PatientStatus
-    var valor: Double
+    var value: Double
     
-    var criadoEm: Date
+    var createdAt: Date
     
-    var bloqueadoPeloSistema: Bool?
+    var blockedBySystem: Bool?
     
-    // Propriedade para facilitar a UI
-    var iniciais: String {
-        nome.components(separatedBy: " ").prefix(2).compactMap { $0.first }.map { String($0) }.joined().uppercased()
+    var initials: String {
+        name.components(separatedBy: " ").prefix(2).compactMap { $0.first }.map { String($0) }.joined().uppercased()
     }
 }

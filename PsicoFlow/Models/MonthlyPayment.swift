@@ -9,20 +9,20 @@ import Foundation
 
 struct MonthlyPayment: Identifiable, Codable {
     var id: String
-    var psicologoID: String
-    var pacienteID: String
+    var psychologistID: String
+    var patientID: String
     
     // Representa o mês e ano (ex: "2026/03") para facilitar filtros
-    var mesReferencia: String
+    var referenceMonth: String
     
     // Data em que o pagamento foi realizado (opcional até que seja pago)
-    var dataPagamento: Date?
+    var paymentDate: Date?
     
-    var valor: Double
-    var pago: Bool
+    var value: Double
+    var paid: Bool
     
     // Propriedade para facilitar a exibição de status na UI
-    var statusCobranca: String {
-        pago ? "Pago" : "Pendente"
+    var billingStatus: String {
+        paid ? "Pago" : "Pendente"
     }
 }

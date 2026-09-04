@@ -9,7 +9,7 @@ import SwiftUI
 
 struct EvolutionCardView: View {
         
-    let evolucao: Evolution
+    let evolucao: ProgressNote
     var onEdit: () -> Void
     var onDelete: () -> Void
     
@@ -18,7 +18,7 @@ struct EvolutionCardView: View {
     private var dataFormatada: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
-        return formatter.string(from: evolucao.data)
+        return formatter.string(from: evolucao.date)
     }
         
     var body: some View {
@@ -62,7 +62,7 @@ struct EvolutionCardView: View {
             }
             
             // MARK: - Conteúdo Clínico
-            Text(evolucao.conteudo)
+            Text(evolucao.content)
                 .font(.system(size: 15))
                 .foregroundColor(Color(.darkGray))
                 .lineSpacing(4)

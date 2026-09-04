@@ -89,11 +89,11 @@ struct EditPatientView: View {
                             }
                             Spacer()
                         }
-                        .foregroundColor(viewModel.status == .ativo ? .gray : .red)
+                        .foregroundColor(viewModel.status == .active ? .gray : .red)
                     }
-                    .disabled(viewModel.status == .ativo || viewModel.estaExcluindo)
+                    .disabled(viewModel.status == .active || viewModel.estaExcluindo)
                 } footer: {
-                    if viewModel.status == .ativo {
+                    if viewModel.status == .active {
                         Text("Para excluir este paciente, você deve alterar o status para inativo primeiro.")
                     }
                 }
@@ -108,8 +108,8 @@ struct EditPatientView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
-                        if let uid = authManager.usuarioID {
-                            let isPremium = authManager.usuarioAtual?.premium ?? false
+                        if let uid = authManager.userID {
+                            let isPremium = authManager.currentUser?.premium ?? false
                             
                             Task {
                                 let sucesso = await viewModel.salvar(userId: uid, isPremium: isPremium)
@@ -144,7 +144,7 @@ struct EditPatientView: View {
                 }
                 
                 Button("Apagar Tudo", role: .destructive) {
-                    if let uid = authManager.usuarioID {
+                    if let uid = authManager.userID {
                         Task {
                             let sucesso = await viewModel.excluirPaciente(userId: uid)
                             if sucesso {

@@ -15,33 +15,33 @@ class SessionFirebaseRepository: SessionRepositoryProtocol {
         return db.collection("users").document(userId).collection("sessions")
     }
     
-    func fetchSessoes(userId: String) async throws -> [Session] {
+    func fetchSessions(userId: String) async throws -> [Session] {
         let snapshot = try await collection(userId: userId).getDocuments()
         return snapshot.documents.compactMap { try? $0.data(as: Session.self) }
     }
     
-    func atualizarSessao(_ sessao: Session, userId: String) async throws {
-        try collection(userId: userId).document(sessao.id).setData(from: sessao)
+    func updateSession(_ session: Session, userId: String) async throws {
+        try collection(userId: userId).document(session.id).setData(from: session)
     }
     
-    func salvarSessao(_ sessao: Session, userId: String) async throws {
-        try collection(userId: userId).document(sessao.id).setData(from: sessao)
+    func saveSession(_ session: Session, userId: String) async throws {
+        try collection(userId: userId).document(session.id).setData(from: session)
     }
     
-    func deletarSessao(id: String, userId: String) async throws {
+    func deleteSession(id: String, userId: String) async throws {
         try await collection(userId: userId).document(id).delete()
     }
     
-    /// Cria um túnel em tempo real com o Firestore para as sessões (Offline-First)
-    func escutarSessoes(userId: String, onChange: @escaping ([Session]) -> Void) -> ListenerRegistration {
+    /// Creates a real-time tunnel with Firestore for sessions (Offline-First)
+    func listenToSessions(userId: String, onChange: @escaping ([Session]) -> Void) -> ListenerRegistration {
         return collection(userId: userId).addSnapshotListener { snapshot, error in
             guard let documents = snapshot?.documents else {
-                print("Erro ao ouvir sessões: \(error?.localizedDescription ?? "Desconhecido")")
+                print("Error listening to sessions: \(error?.localizedDescription ?? "Unknown")")
                 return
             }
             
-            let sessoes = documents.compactMap { try? $0.data(as: Session.self) }
-            onChange(sessoes)
+            let sessions = documents.compactMap { try? $0.data(as: Session.self) }
+            onChange(sessions)
         }
     }
 }

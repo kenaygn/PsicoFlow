@@ -134,12 +134,12 @@ struct FinancesView: View {
                                 let paciente = viewModel.paciente(for: pagamento)
                                 PendingPaymentCard(
                                     pagamento: pagamento,
-                                    nomePaciente: paciente?.nome ?? "Desconhecido",
-                                    iniciais: paciente?.iniciais ?? "?",
-                                    mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
+                                    nomePaciente: paciente?.name ?? "Desconhecido",
+                                    iniciais: paciente?.initials ?? "?",
+                                    mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.referenceMonth),
                                     onPagar: {
                                         // 2. Repassamos o ID do usuário para o ViewModel
-                                        if let uid = authManager.usuarioID {
+                                        if let uid = authManager.userID {
                                             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                                                 viewModel.togglePagamento(pagamentoID: pagamento.id, userId: uid)
                                             }
@@ -172,11 +172,11 @@ struct FinancesView: View {
                                 let paciente = viewModel.paciente(for: pagamento)
                                 PaidPaymentCard(
                                     pagamento: pagamento,
-                                    nomePaciente: paciente?.nome ?? "Desconhecido",
-                                    mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
+                                    nomePaciente: paciente?.name ?? "Desconhecido",
+                                    mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.referenceMonth),
                                     onDesfazer: {
                                         // 3. Repassamos o ID do usuário para o ViewModel
-                                        if let uid = authManager.usuarioID {
+                                        if let uid = authManager.userID {
                                             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                                                 viewModel.togglePagamento(pagamentoID: pagamento.id, userId: uid)
                                             }
@@ -195,7 +195,7 @@ struct FinancesView: View {
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 // 4. Carregamos os dados passando o ID do usuário
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarDados(userId: uid)
                 }
                 

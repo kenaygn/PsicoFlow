@@ -57,15 +57,15 @@ struct HomeView: View {
                 }
             }
             .onAppear {
-                if let uid = authManager.usuarioID {
+                if let uid = authManager.userID {
                     viewModel.carregarDados(userId: uid)
                 }
-                viewModel.isUsuarioPremium = authManager.usuarioAtual?.premium ?? false
+                viewModel.isUsuarioPremium = authManager.currentUser?.premium ?? false
                 if let primeiro = viewModel.slidesAtivos.first {
                     slideAtual = primeiro
                 }
             }
-            .onChange(of: authManager.usuarioAtual?.premium) { _, newValue in
+            .onChange(of: authManager.currentUser?.premium) { _, newValue in
                 viewModel.isUsuarioPremium = newValue ?? false
             }
             .onChange(of: viewModel.slidesAtivos) { _, novosSlides in

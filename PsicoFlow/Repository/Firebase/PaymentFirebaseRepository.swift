@@ -15,44 +15,41 @@ class PaymentFirebaseRepository: PaymentRepositoryProtocol {
         return db.collection("users").document(userId).collection("payments")
     }
     
-    // MARK: - Funções de Fetch Antigas (Mantidas para compatibilidade)
-    func fetchPagamentos(userId: String) async throws -> [MonthlyPayment] {
+    func fetchPayments(userId: String) async throws -> [MonthlyPayment] {
         let snapshot = try await collection(userId: userId).getDocuments()
         return snapshot.documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
     }
     
-    func fetchPagamentos(paraPacienteID pacienteID: String, userId: String) async throws -> [MonthlyPayment] {
+    func fetchPayments(forPatientID patientID: String, userId: String) async throws -> [MonthlyPayment] {
         let snapshot = try await collection(userId: userId)
-            .whereField("pacienteID", isEqualTo: pacienteID)
+            .whereField("patientID", isEqualTo: patientID)
             .getDocuments()
         
         return snapshot.documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
     }
     
-    // MARK: - Escrita de Dados
-    func atualizarPagamento(_ pagamento: MonthlyPayment, userId: String) async throws {
-        try collection(userId: userId).document(pagamento.id).setData(from: pagamento, merge: true)
+    func updatePayment(_ payment: MonthlyPayment, userId: String) async throws {
+        try collection(userId: userId).document(payment.id).setData(from: payment, merge: true)
     }
     
-    func salvarPagamento(_ pagamento: MonthlyPayment, userId: String) async throws {
-        try collection(userId: userId).document(pagamento.id).setData(from: pagamento)
+    func savePayment(_ payment: MonthlyPayment, userId: String) async throws {
+        try collection(userId: userId).document(payment.id).setData(from: payment)
     }
     
-    func deletarPagamento(id: String, userId: String) async throws {
+    func deletePayment(id: String, userId: String) async throws {
         try await collection(userId: userId).document(id).delete()
     }
     
-    // MARK: - NOVO: Função Offline-First (Tempo Real)
-    /// Cria um túnel em tempo real com o Firestore, acionando o cache local imediatamente.
-    func escutarPagamentos(userId: String, onChange: @escaping ([MonthlyPayment]) -> Void) -> ListenerRegistration {
+    /// Real-time tunnel with Firestore, triggering the local cache immediately.
+    func listenToPayments(userId: String, onChange: @escaping ([MonthlyPayment]) -> Void) -> ListenerRegistration {
         return collection(userId: userId).addSnapshotListener { snapshot, error in
             guard let documents = snapshot?.documents else {
-                print("Erro ao ouvir pagamentos: \(error?.localizedDescription ?? "Desconhecido")")
+                print("Error listening to payments: \(error?.localizedDescription ?? "Unknown")")
                 return
             }
             
-            let pagamentos = documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
-            onChange(pagamentos)
+            let payments = documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
+            onChange(payments)
         }
     }
 }

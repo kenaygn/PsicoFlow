@@ -32,7 +32,7 @@ class PatientEditSessionViewModel: ObservableObject {
     let itemToEdit: EditSessionItem
     let nomePaciente: String
     
-    @Published var selectedModalidade: Modalidade
+    @Published var selectedModalidade: Modality
     @Published var selectedTime: String
     @Published var selectedWeekday: Int = 1
     @Published var selectedDate: Date = Date()
@@ -60,13 +60,13 @@ class PatientEditSessionViewModel: ObservableObject {
         
         switch item {
         case .fixa(let fixa):
-            self.selectedModalidade = fixa.modalidade
-            self.selectedWeekday = fixa.diaDaSemana
-            self.selectedTime = fixa.horaInicio
+            self.selectedModalidade = fixa.modality
+            self.selectedWeekday = fixa.weekday
+            self.selectedTime = fixa.startTime
         case .avulsa(let avulsa):
-            self.selectedModalidade = avulsa.modalidade
-            self.selectedDate = avulsa.dataDaSessao
-            self.selectedTime = avulsa.horaInicio
+            self.selectedModalidade = avulsa.modality
+            self.selectedDate = avulsa.sessionDate
+            self.selectedTime = avulsa.startTime
         }
     }
     
@@ -81,16 +81,16 @@ class PatientEditSessionViewModel: ObservableObject {
             do {
                 switch itemToEdit {
                 case .fixa(let fixaAtual):
-                    self.horariosLivres = try await availabilityService.horariosLivresParaContrato(
-                        diaDaSemana: selectedWeekday,
-                        ignorandoContratoID: fixaAtual.id,
+                    self.horariosLivres = try await availabilityService.freeSlotsForContract(
+                        weekday: selectedWeekday,
+                        ignoringContractID: fixaAtual.id,
                         userId: userId
                     )
                 case .avulsa(let avulsaAtual):
-                    self.horariosLivres = try await availabilityService.horariosLivresParaSessaoAvulsa(
-                        data: selectedDate,
-                        ignorandoSessaoID: avulsaAtual.id,
-                        derivadaDeContratoID: avulsaAtual.sessaoFixaID,
+                    self.horariosLivres = try await availabilityService.freeSlotsForSingleSession(
+                        date: selectedDate,
+                        ignoringSessionID: avulsaAtual.id,
+                        derivedFromContractID: avulsaAtual.fixedSessionID,
                         userId: userId
                     )
                 }
@@ -114,19 +114,19 @@ class PatientEditSessionViewModel: ObservableObject {
                 switch itemToEdit {
                 case .fixa(let fixa):
                     var atualizada = fixa
-                    atualizada.modalidade = selectedModalidade
-                    atualizada.diaDaSemana = selectedWeekday
-                    atualizada.horaInicio = selectedTime
-                    try await fixedSessionRepository.atualizarSessaoFixa(atualizada, userId: userId)
+                    atualizada.modality = selectedModalidade
+                    atualizada.weekday = selectedWeekday
+                    atualizada.startTime = selectedTime
+                    try await fixedSessionRepository.updateFixedSession(atualizada, userId: userId)
                     try await propagarAlteracoesParaSessoesFuturas(regraAtualizada: atualizada, userId: userId)
                     
                 case .avulsa(let avulsa):
                     var atualizada = avulsa
-                    atualizada.modalidade = selectedModalidade
-                    atualizada.dataDaSessao = selectedDate
-                    atualizada.horaInicio = selectedTime
-                    if atualizada.status == .adiada { atualizada.status = .agendada }
-                    try await sessionRepository.atualizarSessao(atualizada, userId: userId)
+                    atualizada.modality = selectedModalidade
+                    atualizada.sessionDate = selectedDate
+                    atualizada.startTime = selectedTime
+                    if atualizada.status == .postponed { atualizada.status = .scheduled }
+                    try await sessionRepository.updateSession(atualizada, userId: userId)
                 }
             } catch {
                 print("Erro ao salvar edição: \(error.localizedDescription)")
@@ -138,19 +138,19 @@ class PatientEditSessionViewModel: ObservableObject {
         let calendar = Calendar.current
         let inicioDoDiaAtual = calendar.startOfDay(for: Date())
         
-        let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
-        let sessoesFilhasFuturas = sessoes.filter { $0.sessaoFixaID == regraAtualizada.id && $0.dataDaSessao >= inicioDoDiaAtual }
+        let sessoes = try await sessionRepository.fetchSessions(userId: userId)
+        let sessoesFilhasFuturas = sessoes.filter { $0.fixedSessionID == regraAtualizada.id && $0.sessionDate >= inicioDoDiaAtual }
         
         for sessao in sessoesFilhasFuturas {
             var sessaoModificada = sessao
-            sessaoModificada.horaInicio = regraAtualizada.horaInicio
-            sessaoModificada.modalidade = regraAtualizada.modalidade
+            sessaoModificada.startTime = regraAtualizada.startTime
+            sessaoModificada.modality = regraAtualizada.modality
             
-            var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: sessao.dataDaSessao)
-            components.weekday = regraAtualizada.diaDaSemana
+            var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: sessao.sessionDate)
+            components.weekday = regraAtualizada.weekday
             
-            if let novaData = calendar.date(from: components) { sessaoModificada.dataDaSessao = novaData }
-            try await sessionRepository.atualizarSessao(sessaoModificada, userId: userId)
+            if let novaData = calendar.date(from: components) { sessaoModificada.sessionDate = novaData }
+            try await sessionRepository.updateSession(sessaoModificada, userId: userId)
         }
     }
     
@@ -159,15 +159,15 @@ class PatientEditSessionViewModel: ObservableObject {
             do {
                 switch itemToEdit {
                 case .fixa(let fixa):
-                    try await fixedSessionRepository.deletarSessaoFixa(id: fixa.id, userId: userId)
-                    let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
+                    try await fixedSessionRepository.deleteFixedSession(id: fixa.id, userId: userId)
+                    let sessoes = try await sessionRepository.fetchSessions(userId: userId)
                     let hoje = Calendar.current.startOfDay(for: Date())
                     
-                    for sessao in sessoes.filter({ $0.sessaoFixaID == fixa.id && $0.dataDaSessao >= hoje }) {
-                        try await sessionRepository.deletarSessao(id: sessao.id, userId: userId)
+                    for sessao in sessoes.filter({ $0.fixedSessionID == fixa.id && $0.sessionDate >= hoje }) {
+                        try await sessionRepository.deleteSession(id: sessao.id, userId: userId)
                     }
                 case .avulsa(let avulsa):
-                    try await sessionRepository.deletarSessao(id: avulsa.id, userId: userId)
+                    try await sessionRepository.deleteSession(id: avulsa.id, userId: userId)
                 }
             } catch {
                 print("Erro ao deletar sessão: \(error.localizedDescription)")

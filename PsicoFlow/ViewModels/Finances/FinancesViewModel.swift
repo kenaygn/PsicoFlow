@@ -58,7 +58,7 @@ class FinanceViewModel: ObservableObject {
         // Inicia a escuta em tempo real (Retorna o cache instantaneamente)
         // Se a sua PaymentRepositoryProtocol reclamar, adicione a assinatura da função lá!
         if let firebaseRepo = paymentRepository as? PaymentFirebaseRepository {
-            pagamentosListener = firebaseRepo.escutarPagamentos(userId: userId) { [weak self] novosPagamentos in
+            pagamentosListener = firebaseRepo.listenToPayments(userId: userId) { [weak self] novosPagamentos in
                 guard let self = self else { return }
                 
                 // Anima as mudanças vindo da rede ou do cache
@@ -71,7 +71,7 @@ class FinanceViewModel: ObservableObject {
         // Busca de pacientes (pode se tornar listener futuramente se desejar)
         Task {
             do {
-                let fetchedPacientes = try await patientRepository.fetchPacientes(userId: userId)
+                let fetchedPacientes = try await patientRepository.fetchPatients(userId: userId)
                 withAnimation {
                     self.pacientes = fetchedPacientes
                 }
@@ -88,8 +88,8 @@ class FinanceViewModel: ObservableObject {
             
             // 1. ATUALIZAÇÃO OTIMISTA: Muda a interface antes de ir para a internet
             var pagamentoAtualizado = todosPagamentos[index]
-            pagamentoAtualizado.pago.toggle()
-            pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
+            pagamentoAtualizado.paid.toggle()
+            pagamentoAtualizado.paymentDate = pagamentoAtualizado.paid ? Date() : nil
             
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 self.todosPagamentos[index] = pagamentoAtualizado
@@ -98,7 +98,7 @@ class FinanceViewModel: ObservableObject {
             // 2. SALVAMENTO EM BACKGROUND: Deixa o Firebase sincronizar silenciosamente
             Task {
                 do {
-                    try await paymentRepository.atualizarPagamento(pagamentoAtualizado, userId: userId)
+                    try await paymentRepository.updatePayment(pagamentoAtualizado, userId: userId)
                 } catch {
                     print("Erro ao atualizar pagamento: \(error.localizedDescription)")
                     // Em caso de falha crítica (ex: permissão negada), você poderia reverter a UI aqui
@@ -109,7 +109,7 @@ class FinanceViewModel: ObservableObject {
     
     // MARK: - Propriedades Computadas (Inalteradas)
     var dataDaPrimeiraPendenciaAtrasada: Date? {
-        return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: todosPagamentos)
+        return financeAnalyzer.identifyFirstOverdueMonth(in: todosPagamentos)
     }
     
     var labelPrimeiraPendencia: String {
@@ -161,33 +161,33 @@ class FinanceViewModel: ObservableObject {
     }
     
     var pagamentosFiltrados: [MonthlyPayment] {
-        return todosPagamentos.filter { $0.mesReferencia.hasPrefix(filtroReferencia) }
+        return todosPagamentos.filter { $0.referenceMonth.hasPrefix(filtroReferencia) }
     }
     
     var pagamentosPendentes: [MonthlyPayment] {
         return pagamentosFiltrados
-            .filter { !$0.pago }
-            .sorted { $0.mesReferencia < $1.mesReferencia }
+            .filter { !$0.paid }
+            .sorted { $0.referenceMonth < $1.referenceMonth }
     }
     
     var pagamentosRealizados: [MonthlyPayment] {
         return pagamentosFiltrados
-            .filter { $0.pago }
-            .sorted { $0.mesReferencia > $1.mesReferencia }
+            .filter { $0.paid }
+            .sorted { $0.referenceMonth > $1.referenceMonth }
     }
     
     var totalRecebidoText: String {
-        let soma = pagamentosRealizados.reduce(0) { $0 + $1.valor }
+        let soma = pagamentosRealizados.reduce(0) { $0 + $1.value }
         return String(format: "R$ %.0f", soma)
     }
     
     var totalPendenteText: String {
-        let soma = pagamentosPendentes.reduce(0) { $0 + $1.valor }
+        let soma = pagamentosPendentes.reduce(0) { $0 + $1.value }
         return String(format: "R$ %.0f", soma)
     }
     
     func paciente(for pagamento: MonthlyPayment) -> Patient? {
-        return pacientes.first(where: { $0.id == pagamento.pacienteID })
+        return pacientes.first(where: { $0.id == pagamento.patientID })
     }
     
     func formatarMesRefParaExibicao(_ ref: String) -> String {

@@ -20,34 +20,34 @@ class AgendaAvailabilityService {
         self.sessionRepository = sessionRepository
     }
     
-    var todosHorarios: [String] {
-        let horaInicio = AuthManager.shared.usuarioAtual?.horaInicioExpediente ?? "07:00"
-        let horaFim = AuthManager.shared.usuarioAtual?.horaFimExpediente ?? "22:00"
+    var allTimeSlots: [String] {
+        let startHour = AuthManager.shared.currentUser?.workdayStart ?? "07:00"
+        let endHour = AuthManager.shared.currentUser?.workdayEnd ?? "22:00"
         
-        if let inicioInt = Int(horaInicio.prefix(2)),
-           let fimInt = Int(horaFim.prefix(2)),
-           inicioInt <= fimInt {
-            return (inicioInt...fimInt).map { String(format: "%02d:00", $0) }
+        if let startInt = Int(startHour.prefix(2)),
+           let endInt = Int(endHour.prefix(2)),
+           startInt <= endInt {
+            return (startInt...endInt).map { String(format: "%02d:00", $0) }
         } else {
             return (7...22).map { String(format: "%02d:00", $0) }
         }
     }
     
-    func horariosLivresParaContrato(diaDaSemana: Int, ignorandoContratoID: String? = nil, userId: String) async throws -> [String] {
-        let contratosDoBanco = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
-        let regrasNoMesmoDia = contratosDoBanco.filter { $0.diaDaSemana == diaDaSemana && $0.id != ignorandoContratoID }
-        let ocupados = regrasNoMesmoDia.map { $0.horaInicio }
-        return todosHorarios.filter { !ocupados.contains($0) }
+    func freeSlotsForContract(weekday: Int, ignoringContractID: String? = nil, userId: String) async throws -> [String] {
+        let contractsFromDB = try await fixedSessionRepository.fetchFixedSessions(userId: userId)
+        let rulesOnSameDay = contractsFromDB.filter { $0.weekday == weekday && $0.id != ignoringContractID }
+        let occupied = rulesOnSameDay.map { $0.startTime }
+        return allTimeSlots.filter { !occupied.contains($0) }
     }
     
-    func horariosLivresParaSessaoAvulsa(data: Date, ignorandoSessaoID: String? = nil, derivadaDeContratoID: String? = nil, userId: String) async throws -> [String] {
-        let sessoesDoBanco = try await sessionRepository.fetchSessoes(userId: userId)
-        let sessoesDoDia = sessoesDoBanco.filter {
-            Calendar.current.isDate($0.dataDaSessao, inSameDayAs: data) &&
-            $0.status != .cancelada &&
-            $0.id != ignorandoSessaoID
+    func freeSlotsForSingleSession(date: Date, ignoringSessionID: String? = nil, derivedFromContractID: String? = nil, userId: String) async throws -> [String] {
+        let sessionsFromDB = try await sessionRepository.fetchSessions(userId: userId)
+        let sessionsOnDay = sessionsFromDB.filter {
+            Calendar.current.isDate($0.sessionDate, inSameDayAs: date) &&
+            $0.status != .cancelled &&
+            $0.id != ignoringSessionID
         }
-        let ocupados = sessoesDoDia.map { $0.horaInicio }
-        return todosHorarios.filter { !ocupados.contains($0) }
+        let occupied = sessionsOnDay.map { $0.startTime }
+        return allTimeSlots.filter { !occupied.contains($0) }
     }
 }

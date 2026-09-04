@@ -38,23 +38,23 @@ class PatientsViewModel: ObservableObject {
     }
     
     var pacientesFiltrados: [Patient] {
-        let listaFiltrada = searchText.isEmpty ? pacientes : pacientes.filter { $0.nome.localizedCaseInsensitiveContains(searchText) }
+        let listaFiltrada = searchText.isEmpty ? pacientes : pacientes.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         
         return listaFiltrada.sorted { (paciente1, paciente2) in
-            if paciente1.status == .ativo && paciente2.status != .ativo {
+            if paciente1.status == .active && paciente2.status != .active {
                 return true
             }
-            else if paciente1.status != .ativo && paciente2.status == .ativo {
+            else if paciente1.status != .active && paciente2.status == .active {
                 return false
             }
             else {
-                return paciente1.nome.localizedCaseInsensitiveCompare(paciente2.nome) == .orderedAscending
+                return paciente1.name.localizedCaseInsensitiveCompare(paciente2.name) == .orderedAscending
             }
         }
     }
     
     var numeroDePacientesAtivos: Int {
-        return pacientes.filter { $0.status == .ativo }.count
+        return pacientes.filter { $0.status == .active }.count
     }
     
     var limitePlanoFreeAtingido: Bool {
@@ -69,7 +69,7 @@ class PatientsViewModel: ObservableObject {
         userListener?.remove()
         
         if let firebaseRepo = repository as? PatientFirebaseRepository {
-            pacientesListener = firebaseRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
+            pacientesListener = firebaseRepo.listenToPatients(userId: userId) { [weak self] novosPacientes in
                 guard let self = self else { return }
 
                 self.pacientes = novosPacientes
@@ -78,7 +78,7 @@ class PatientsViewModel: ObservableObject {
         }
         
         if let userRepo = userRepository as? UserFirebaseRepository {
-            userListener = userRepo.escutarUsuario(uid: userId) { [weak self] usuarioAtualizado in
+            userListener = userRepo.listenToUsers(uid: userId) { [weak self] usuarioAtualizado in
                 guard let self = self else { return }
                 withAnimation(.easeInOut(duration: 0.4)) {
                     self.isUsuarioPremium = usuarioAtualizado?.premium ?? false
@@ -96,7 +96,7 @@ class PatientsViewModel: ObservableObject {
         
         Task {
             do {
-                try await repository.atualizarPaciente(pacienteEditado, userId: userId)
+                try await repository.updatePatient(pacienteEditado, userId: userId)
             } catch {
                 print("Erro ao atualizar paciente: \(error.localizedDescription)")
             }
@@ -106,7 +106,7 @@ class PatientsViewModel: ObservableObject {
     func adicionarPaciente(_ novoPaciente: Patient, userId: String) {
         Task {
             do {
-                try await repository.salvarPaciente(novoPaciente, userId: userId)
+                try await repository.savePatient(novoPaciente, userId: userId)
             } catch {
                 print("Erro ao salvar paciente: \(error.localizedDescription)")
             }

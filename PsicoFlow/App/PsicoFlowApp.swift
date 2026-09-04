@@ -32,8 +32,8 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         application.registerForRemoteNotifications()
         
         // Inicia o monitoramento das Live Activities
-        PushToStartManager.shared.iniciarMonitoramento()
-        PushToStartManager.shared.iniciarMonitoramentoDeEncerramento()
+        PushToStartManager.shared.startMonitoring()
+        PushToStartManager.shared.startEndMonitoring()
         
         return true
     }

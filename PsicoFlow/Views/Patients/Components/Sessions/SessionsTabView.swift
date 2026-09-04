@@ -68,7 +68,7 @@ struct SessionsTabView: View {
                     ForEach(sessoesFixas, id: \.id) { fixa in
                         FixedSessionCard(
                             fixa: fixa,
-                            diaDaSemanaTexto: converterDia(fixa.diaDaSemana),
+                            diaDaSemanaTexto: converterDia(fixa.weekday),
                             onEdit: { onEditFixed(fixa) }
                         )
                     }

@@ -20,7 +20,7 @@ struct SingleSessionCard: View {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "pt_BR")
         formatter.dateFormat = "dd 'de' MMMM, yyyy"
-        return formatter.string(from: avulsa.dataDaSessao)
+        return formatter.string(from: avulsa.sessionDate)
     }
         
     var body: some View {
@@ -33,7 +33,7 @@ struct SingleSessionCard: View {
                         Image(systemName: "calendar.badge.clock")
                             .foregroundColor(.orange)
                         
-                        Text(avulsa.status == .adiada ? "Sessão Adiada" : "Sessão Avulsa")
+                        Text(avulsa.status == .postponed ? "Sessão Adiada" : "Sessão Avulsa")
                             .font(.system(size: 17, weight: .bold))
                     }
                     
@@ -59,9 +59,9 @@ struct SingleSessionCard: View {
             HStack {
                 InfoItemView(icon: "circle.fill", title: "Status", value: avulsa.status.rawValue.capitalized, isDark: false)
                 Spacer()
-                InfoItemView(icon: "clock", title: "Horário", value: avulsa.horaInicio, isDark: false)
+                InfoItemView(icon: "clock", title: "Horário", value: avulsa.startTime, isDark: false)
                 Spacer()
-                InfoItemView(icon: "video", title: "Formato", value: avulsa.modalidade.rawValue.capitalized, isDark: false)
+                InfoItemView(icon: "video", title: "Formato", value: avulsa.modality.rawValue.capitalized, isDark: false)
             }
         }
         .padding(16)

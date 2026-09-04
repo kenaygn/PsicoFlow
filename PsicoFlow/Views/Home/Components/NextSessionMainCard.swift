@@ -88,7 +88,7 @@ struct NextSessionMainCard: View {
                         Spacer()
                         
                         // Tag de Horário no topo direito
-                        Text(session.horaInicio)
+                        Text(session.startTime)
                             .font(.system(size: 12, weight: .bold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)

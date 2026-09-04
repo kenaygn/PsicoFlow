@@ -31,7 +31,7 @@ class LoginViewModel: ObservableObject {
         
         Task {
             do {
-                try await authManager.fazerLogin(email: email, senha: senha)
+                try await authManager.login(email: email, password: senha)
                 carregando = false
             } catch {
                 tituloErro = "Erro ao entrar"
@@ -54,7 +54,7 @@ class LoginViewModel: ObservableObject {
         
         Task {
             do {
-                try await authManager.recuperarSenha(email: email)
+                try await authManager.recoverPassword(email: email)
                 carregando = false
                 mostrarAlertaRecuperacao = true
                 
@@ -72,7 +72,7 @@ class LoginViewModel: ObservableObject {
         carregando = true
         Task {
             do {
-                try await authManager.loginComApple(idToken: idToken, nonce: nonce)
+                try await authManager.loginWithApple(idToken: idToken, nonce: nonce)
                 carregando = false
             } catch {
                 tituloErro = "Erro na Apple"
@@ -115,7 +115,7 @@ class LoginViewModel: ObservableObject {
             
             Task {
                 do {
-                    try await authManager.loginComGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
+                    try await authManager.loginWithGoogle(idToken: idToken, accessToken: user.accessToken.tokenString)
                     self.carregando = false
                 } catch {
                     self.tituloErro = "Erro de Autenticação"

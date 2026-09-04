@@ -52,8 +52,8 @@ struct AddPatientView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Salvar") {
-                        if let uid = authManager.usuarioID {
-                            let isPremium = authManager.usuarioAtual?.premium ?? false
+                        if let uid = authManager.userID {
+                            let isPremium = authManager.currentUser?.premium ?? false
                             
                             Task {
                                 let sucesso = await viewModel.salvar(userId: uid, isPremium: isPremium)

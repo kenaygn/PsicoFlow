@@ -15,116 +15,116 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         return db.collection("users").document(userId).collection("patients")
     }
     
-    func fetchPacientes(userId: String) async throws -> [Patient] {
+    func fetchPatients(userId: String) async throws -> [Patient] {
         let snapshot = try await patientsCollection(userId: userId).getDocuments()
-        var pacientes = snapshot.documents.compactMap { try? $0.data(as: Patient.self) }
+        var patients = snapshot.documents.compactMap { try? $0.data(as: Patient.self) }
         
-        for i in 0..<pacientes.count {
-            if let observacoes = pacientes[i].observacoes {
-                pacientes[i].observacoes = EncryptionManager.shared.decrypt(base64String: observacoes, userId: userId)
+        for i in 0..<patients.count {
+            if let notes = patients[i].notes {
+                patients[i].notes = EncryptionManager.shared.decrypt(base64String: notes, userId: userId)
             }
         }
         
-        return pacientes
+        return patients
     }
     
-    func salvarPaciente(_ paciente: Patient, userId: String) async throws {
-        var pacienteSeguro = paciente
+    func savePatient(_ patient: Patient, userId: String) async throws {
+        var securePatient = patient
         
-        if let observacoes = pacienteSeguro.observacoes {
-            pacienteSeguro.observacoes = EncryptionManager.shared.encrypt(text: observacoes, userId: userId)
+        if let notes = securePatient.notes {
+            securePatient.notes = EncryptionManager.shared.encrypt(text: notes, userId: userId)
         }
         
-        try patientsCollection(userId: userId).document(pacienteSeguro.id).setData(from: pacienteSeguro)
+        try patientsCollection(userId: userId).document(securePatient.id).setData(from: securePatient)
     }
     
-    func atualizarPaciente(_ paciente: Patient, userId: String) async throws {
-        var pacienteSeguro = paciente
+    func updatePatient(_ patient: Patient, userId: String) async throws {
+        var securePatient = patient
         
-        if let observacoes = pacienteSeguro.observacoes {
-            pacienteSeguro.observacoes = EncryptionManager.shared.encrypt(text: observacoes, userId: userId)
+        if let notes = securePatient.notes {
+            securePatient.notes = EncryptionManager.shared.encrypt(text: notes, userId: userId)
         }
         
-        try patientsCollection(userId: userId).document(pacienteSeguro.id).setData(from: pacienteSeguro, merge: true)
+        try patientsCollection(userId: userId).document(securePatient.id).setData(from: securePatient, merge: true)
     }
     
-    func excluirPacienteEmCascata(pacienteID: String, userId: String) async throws {
+    func deletePatientCascade(patientID: String, userId: String) async throws {
         let batch = db.batch()
         let userDocRef = db.collection("users").document(userId)
         
-        let pacienteRef = userDocRef.collection("patients").document(pacienteID)
-        batch.deleteDocument(pacienteRef)
+        let patientRef = userDocRef.collection("patients").document(patientID)
+        batch.deleteDocument(patientRef)
         
-        let sessoes = try await userDocRef.collection("sessions")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
-        for doc in sessoes.documents { batch.deleteDocument(doc.reference) }
+        let sessions = try await userDocRef.collection("sessions")
+            .whereField("patientID", isEqualTo: patientID).getDocuments()
+        for doc in sessions.documents { batch.deleteDocument(doc.reference) }
         
-        let pagamentos = try await userDocRef.collection("payments")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
-        for doc in pagamentos.documents { batch.deleteDocument(doc.reference) }
+        let payments = try await userDocRef.collection("payments")
+            .whereField("patientID", isEqualTo: patientID).getDocuments()
+        for doc in payments.documents { batch.deleteDocument(doc.reference) }
         
-        let evolucoes = try await userDocRef.collection("evolutions")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
-        for doc in evolucoes.documents { batch.deleteDocument(doc.reference) }
+        let progressNotes = try await userDocRef.collection("progressNotes")
+            .whereField("patientID", isEqualTo: patientID).getDocuments()
+        for doc in progressNotes.documents { batch.deleteDocument(doc.reference) }
         
-        let sessoesFixas = try await userDocRef.collection("fixed_sessions")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
-        for doc in sessoesFixas.documents { batch.deleteDocument(doc.reference) }
+        let fixedSessions = try await userDocRef.collection("fixedSessions")
+            .whereField("patientID", isEqualTo: patientID).getDocuments()
+        for doc in fixedSessions.documents { batch.deleteDocument(doc.reference) }
         
         try await batch.commit()
     }
     
-    func escutarPacientes(userId: String, onChange: @escaping ([Patient]) -> Void) -> ListenerRegistration {
+    func listenToPatients(userId: String, onChange: @escaping ([Patient]) -> Void) -> ListenerRegistration {
         return patientsCollection(userId: userId).addSnapshotListener { snapshot, error in
             guard let documents = snapshot?.documents else {
-                print("Erro ao ouvir pacientes: \(error?.localizedDescription ?? "Desconhecido")")
+                print("Error listening to patients: \(error?.localizedDescription ?? "Unknown")")
                 return
             }
             
-            var pacientes = documents.compactMap { try? $0.data(as: Patient.self) }
+            var patients = documents.compactMap { try? $0.data(as: Patient.self) }
             
-            for i in 0..<pacientes.count {
-                if let observacoes = pacientes[i].observacoes {
-                    pacientes[i].observacoes = EncryptionManager.shared.decrypt(base64String: observacoes, userId: userId)
+            for i in 0..<patients.count {
+                if let notes = patients[i].notes {
+                    patients[i].notes = EncryptionManager.shared.decrypt(base64String: notes, userId: userId)
                 }
             }
             
-            onChange(pacientes)
+            onChange(patients)
         }
     }
     
-    func bloquearPacientesExcedentes(userId: String) async throws {
+    func blockExcessPatients(userId: String) async throws {
         let db = Firestore.firestore()
-        let pacientesRef = db.collection("users").document(userId).collection("patients")
+        let patientsRef = db.collection("users").document(userId).collection("patients")
         
-        let snapshot = try await pacientesRef.whereField("status", isEqualTo: PatientStatus.ativo.rawValue).getDocuments()
+        let snapshot = try await patientsRef.whereField("status", isEqualTo: PatientStatus.active.rawValue).getDocuments()
         
-        var pacientesAtivos = snapshot.documents.compactMap { try? $0.data(as: Patient.self) }
+        var activePatients = snapshot.documents.compactMap { try? $0.data(as: Patient.self) }
         
-        if pacientesAtivos.count <= 5 { return }
+        if activePatients.count <= 5 { return }
         
-        pacientesAtivos.sort { $0.criadoEm < $1.criadoEm }
-        let pacientesParaBloquear = Array(pacientesAtivos[5...])
+        activePatients.sort { $0.createdAt < $1.createdAt }
+        let patientsToBlock = Array(activePatients[5...])
         
         let batch = db.batch()
         
-        for paciente in pacientesParaBloquear {
-            let docRef = pacientesRef.document(paciente.id)
+        for patient in patientsToBlock {
+            let docRef = patientsRef.document(patient.id)
             batch.updateData([
-                "status": PatientStatus.inativo.rawValue,
-                "bloqueadoPeloSistema": true
+                "status": PatientStatus.inactive.rawValue,
+                "blockedBySystem": true
             ], forDocument: docRef)
         }
         
         try await batch.commit()
-        print("Bloqueio concluído: \(pacientesParaBloquear.count) pacientes foram inativados pelo sistema.")
+        print("Block completed: \(patientsToBlock.count) patients were deactivated by the system.")
     }
     
-    func desbloquearPacientes(userId: String) async throws {
+    func unblockPatients(userId: String) async throws {
         let db = Firestore.firestore()
-        let pacientesRef = db.collection("users").document(userId).collection("patients")
+        let patientsRef = db.collection("users").document(userId).collection("patients")
         
-        let snapshot = try await pacientesRef.whereField("bloqueadoPeloSistema", isEqualTo: true).getDocuments()
+        let snapshot = try await patientsRef.whereField("blockedBySystem", isEqualTo: true).getDocuments()
         
         if snapshot.documents.isEmpty { return }
         
@@ -132,12 +132,12 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         
         for document in snapshot.documents {
             batch.updateData([
-                "status": PatientStatus.ativo.rawValue,
-                "bloqueadoPeloSistema": false
+                "status": PatientStatus.active.rawValue,
+                "blockedBySystem": false
             ], forDocument: document.reference)
         }
         
         try await batch.commit()
-        print("Desbloqueio concluído: \(snapshot.documents.count) pacientes foram reativados.")
+        print("Unblock completed: \(snapshot.documents.count) patients were reactivated.")
     }
 }

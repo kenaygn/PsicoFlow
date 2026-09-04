@@ -21,7 +21,7 @@ struct PatientCardView: View {
             
             // MARK: - Avatar e Status
             ZStack(alignment: .bottomTrailing) {
-                Text(paciente.iniciais)
+                Text(paciente.initials)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.primary)
                     .frame(width: 56, height: 56)
@@ -29,19 +29,19 @@ struct PatientCardView: View {
                     .clipShape(Circle())
                 
                 Circle()
-                    .fill(paciente.status == .ativo ? Color.teal : Color(UIColor.lightGray))
+                    .fill(paciente.status == .active ? Color.teal : Color(UIColor.lightGray))
                     .frame(width: 16, height: 16)
                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
             }
             
             // MARK: - Informações
             VStack(alignment: .leading, spacing: 4) {
-                Text(paciente.nome)
+                Text(paciente.name)
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.primary)
                     .tracking(-0.3)
                 
-                Text(paciente.telefone)
+                Text(paciente.phone)
                     .font(.system(size: 13))
                     .foregroundColor(.secondary)
             }

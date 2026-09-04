@@ -24,7 +24,7 @@ struct BillingCard: View {
             // MARK: - Cabeçalho (Mês e Valor)
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(formatarMesReferencia(pagamento.mesReferencia))
+                    Text(formatarMesReferencia(pagamento.referenceMonth))
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(.darkText))
                     
@@ -37,7 +37,7 @@ struct BillingCard: View {
                 
                 // Note: A substituição do ponto por vírgula atende rapidamente ao padrão BRL.
                 // Para escalar a aplicação para outras moedas no futuro, o ideal será migrar para um NumberFormatter.
-                Text(String(format: "R$ %.2f", pagamento.valor).replacingOccurrences(of: ".", with: ","))
+                Text(String(format: "R$ %.2f", pagamento.value).replacingOccurrences(of: ".", with: ","))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(Color(.darkText))
             }
@@ -47,25 +47,25 @@ struct BillingCard: View {
             // MARK: - Status e Ações
             HStack {
                 HStack(spacing: 4) {
-                    Image(systemName: pagamento.pago ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                    Text(pagamento.statusCobranca)
+                    Image(systemName: pagamento.paid ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    Text(pagamento.billingStatus)
                 }
                 .font(.system(size: 11, weight: .bold))
-                .foregroundColor(pagamento.pago ? .teal : .red)
+                .foregroundColor(pagamento.paid ? .teal : .red)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(pagamento.pago ? Color.teal.opacity(0.1) : Color.red.opacity(0.1))
+                .background(pagamento.paid ? Color.teal.opacity(0.1) : Color.red.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 
                 Spacer()
                 
                 Button(action: onToggle) {
-                    Text(pagamento.pago ? "Desfazer" : "Registrar Pagamento")
+                    Text(pagamento.paid ? "Desfazer" : "Registrar Pagamento")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(pagamento.pago ? Color(.darkGray) : .white)
+                        .foregroundColor(pagamento.paid ? Color(.darkGray) : .white)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(pagamento.pago ? Color(.systemGray6) : Color(.darkText))
+                        .background(pagamento.paid ? Color(.systemGray6) : Color(.darkText))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
             }
