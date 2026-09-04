@@ -134,8 +134,8 @@ struct FinancesView: View {
                                 let paciente = viewModel.paciente(for: pagamento)
                                 PendingPaymentCard(
                                     pagamento: pagamento,
-                                    nomePaciente: paciente?.nome ?? "Desconhecido",
-                                    iniciais: paciente?.iniciais ?? "?",
+                                    nomePaciente: paciente?.name ?? "Desconhecido",
+                                    iniciais: paciente?.initials ?? "?",
                                     mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
                                     onPagar: {
                                         // 2. Repassamos o ID do usuário para o ViewModel
@@ -172,7 +172,7 @@ struct FinancesView: View {
                                 let paciente = viewModel.paciente(for: pagamento)
                                 PaidPaymentCard(
                                     pagamento: pagamento,
-                                    nomePaciente: paciente?.nome ?? "Desconhecido",
+                                    nomePaciente: paciente?.name ?? "Desconhecido",
                                     mesFormatado: viewModel.formatarMesRefParaExibicao(pagamento.mesReferencia),
                                     onDesfazer: {
                                         // 3. Repassamos o ID do usuário para o ViewModel

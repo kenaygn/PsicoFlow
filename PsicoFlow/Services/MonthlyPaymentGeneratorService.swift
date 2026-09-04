@@ -36,7 +36,7 @@ class MonthlyPaymentGeneratorService {
         let mesesParaProcessar = [mesAtualStr, proximoMesStr]
         
         let pacientesDoBanco = try await patientRepository.fetchPacientes(userId: userId)
-        let pacientesAtivos = pacientesDoBanco.filter { $0.status == .ativo }
+        let pacientesAtivos = pacientesDoBanco.filter { $0.status == .active }
         let todosPagamentos = try await paymentRepository.fetchPagamentos(userId: userId)
         
         for paciente in pacientesAtivos {
@@ -52,12 +52,12 @@ class MonthlyPaymentGeneratorService {
                         pacienteID: paciente.id,
                         mesReferencia: mesStr,
                         dataPagamento: nil,
-                        valor: paciente.valor,
+                        valor: paciente.value,
                         pago: false
                     )
                     
                     try await paymentRepository.salvarPagamento(novaCobranca, userId: userId)
-                    print("Mensalidade gerada para o paciente \(paciente.nome) referente a \(mesStr).")
+                    print("Mensalidade gerada para o paciente \(paciente.name) referente a \(mesStr).")
                 }
             }
         }

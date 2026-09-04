@@ -22,7 +22,7 @@ struct OccupiedSlotCard: View {
                 
                 // MARK: - Identificação e Status
                 HStack(alignment: .top) {
-                    Text(paciente.nome)
+                    Text(paciente.name)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(.darkText))
                         .multilineTextAlignment(.leading)

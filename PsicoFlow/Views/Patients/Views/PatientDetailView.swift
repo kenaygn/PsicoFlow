@@ -30,7 +30,7 @@ struct PatientDetailView: View {
                 
                 // MARK: - Cabeçalho do Perfil
                 VStack(spacing: 12) {
-                    Text(viewModel.paciente.iniciais)
+                    Text(viewModel.paciente.initials)
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(Color(.darkGray))
                         .frame(width: 88, height: 88)
@@ -40,16 +40,16 @@ struct PatientDetailView: View {
                         .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
                     
                     VStack(spacing: 4) {
-                        Text(viewModel.paciente.nome)
+                        Text(viewModel.paciente.name)
                             .font(.system(size: 24, weight: .bold))
                             .multilineTextAlignment(.center)
                         
                         Text(viewModel.paciente.status.rawValue.uppercased())
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(viewModel.paciente.status == .ativo ? .green : .gray)
+                            .foregroundColor(viewModel.paciente.status == .active ? .green : .gray)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 4)
-                            .background(viewModel.paciente.status == .ativo ? Color.green.opacity(0.1) : Color.gray.opacity(0.1))
+                            .background(viewModel.paciente.status == .active ? Color.green.opacity(0.1) : Color.gray.opacity(0.1))
                             .clipShape(Capsule())
                     }
                     
@@ -148,7 +148,7 @@ struct PatientDetailView: View {
         .sheet(item: $itemSessaoParaEditar, onDismiss: {
             if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
         }) { itemParaEdit in
-            EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.nome)
+            EditSessionView(item: itemParaEdit, nomePaciente: viewModel.paciente.name)
         }
         .sheet(isPresented: $mostrarNovoAgendamento, onDismiss: {
             if let uid = authManager.usuarioID { viewModel.carregarDadosCompletos(userId: uid) }
@@ -171,13 +171,13 @@ extension View {
     PatientDetailView(
         paciente: Patient(
             id: "p1",
-            psicologoID: "user_dev_01",
-            nome: "Ana Carolina Silva",
+            psychologistID: "user_dev_01",
+            name: "Ana Carolina Silva",
             email: "ana@email.com",
-            telefone: "(11) 98765-4321",
-            status: .ativo,
-            valor: 150.0,
-            criadoEm: Date()
+            phobe: "(11) 98765-4321",
+            status: .active,
+            value: 150.0,
+            createdAt: Date()
         )
     )
 }

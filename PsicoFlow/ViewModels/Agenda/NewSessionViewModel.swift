@@ -70,7 +70,7 @@ class NewSessionViewModel: ObservableObject {
             do {
                 let pacientesDoBanco = try await patientRepository.fetchPacientes(userId: userId)
                 await MainActor.run {
-                    self.pacientesDisponiveis = pacientesDoBanco.filter { $0.status == .ativo }
+                    self.pacientesDisponiveis = pacientesDoBanco.filter { $0.status == .active }
                     if self.pacienteSelecionadoID.isEmpty, let primeiro = self.pacientesDisponiveis.first {
                         self.pacienteSelecionadoID = primeiro.id
                     }

@@ -40,14 +40,14 @@ struct SessionQuickActionView: View {
             
             // MARK: - Cabeçalho
             VStack(spacing: 8) {
-                Text(String(paciente.nome.prefix(1)))
+                Text(String(paciente.name.prefix(1)))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.teal)
                     .frame(width: 64, height: 64)
                     .background(Color.teal.opacity(0.15))
                     .clipShape(Circle())
                 
-                Text(paciente.nome)
+                Text(paciente.name)
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(Color(.darkText))
                 

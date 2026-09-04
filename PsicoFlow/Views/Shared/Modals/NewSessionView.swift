@@ -29,7 +29,7 @@ struct NewSessionView: View {
                     } else {
                         Picker("Paciente", selection: $viewModel.pacienteSelecionadoID) {
                             ForEach(viewModel.pacientesDisponiveis) { paciente in
-                                Text(paciente.nome).tag(paciente.id)
+                                Text(paciente.name).tag(paciente.id)
                             }
                         }
                         

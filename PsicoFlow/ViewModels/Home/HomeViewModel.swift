@@ -203,7 +203,7 @@ class HomeViewModel: ObservableObject {
                 
                 if abs(minutosNovaSessao - minutosSessaoExistente) < 60 {
                     if let pacienteConflito = pacientes.first(where: { $0.id == sessao.pacienteID }) {
-                        return (nome: pacienteConflito.nome, hora: sessao.horaInicio)
+                        return (nome: pacienteConflito.name, hora: sessao.horaInicio)
                     }
                 }
             }
@@ -278,7 +278,7 @@ class HomeViewModel: ObservableObject {
               let paciente = pacientes.first(where: { $0.id == proxima.pacienteID }) else {
             return "Paciente não encontrado"
         }
-        return paciente.nome
+        return paciente.name
     }
     
     var totalSessoesHojeText: String {

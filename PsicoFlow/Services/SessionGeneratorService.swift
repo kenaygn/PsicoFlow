@@ -43,7 +43,7 @@ class SessionGeneratorService {
         let todosPacientes = try await patientRepository.fetchPacientes(userId: userId)
         
         // Pega apenas os IDs dos pacientes que continuam ativos
-        let pacientesAtivosIDs = todosPacientes.filter { $0.status == .ativo }.map { $0.id }
+        let pacientesAtivosIDs = todosPacientes.filter { $0.status == .active }.map { $0.id }
         
         var sessoesExistentes = try await sessionRepository.fetchSessoes(userId: userId)
         

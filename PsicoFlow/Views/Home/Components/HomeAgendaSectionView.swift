@@ -82,8 +82,8 @@ struct HomeAgendaSectionView: View {
             
             TodaySessionCard(
                 session: sessao,
-                nomePaciente: paciente?.nome ?? "Paciente Deletado",
-                iniciaisPaciente: paciente?.iniciais ?? "?",
+                nomePaciente: paciente?.name ?? "Paciente Deletado",
+                iniciaisPaciente: paciente?.initials ?? "?",
                 isNext: isNextSessao,
                 onSelectPaciente: {
                     self.pacienteSelecionado = paciente

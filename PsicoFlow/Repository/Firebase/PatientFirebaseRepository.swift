@@ -20,8 +20,8 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         var pacientes = snapshot.documents.compactMap { try? $0.data(as: Patient.self) }
         
         for i in 0..<pacientes.count {
-            if let observacoes = pacientes[i].observacoes {
-                pacientes[i].observacoes = EncryptionManager.shared.decrypt(base64String: observacoes, userId: userId)
+            if let observacoes = pacientes[i].notes {
+                pacientes[i].notes = EncryptionManager.shared.decrypt(base64String: observacoes, userId: userId)
             }
         }
         
@@ -31,8 +31,8 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
     func salvarPaciente(_ paciente: Patient, userId: String) async throws {
         var pacienteSeguro = paciente
         
-        if let observacoes = pacienteSeguro.observacoes {
-            pacienteSeguro.observacoes = EncryptionManager.shared.encrypt(text: observacoes, userId: userId)
+        if let observacoes = pacienteSeguro.notes {
+            pacienteSeguro.notes = EncryptionManager.shared.encrypt(text: observacoes, userId: userId)
         }
         
         try patientsCollection(userId: userId).document(pacienteSeguro.id).setData(from: pacienteSeguro)
@@ -41,8 +41,8 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
     func atualizarPaciente(_ paciente: Patient, userId: String) async throws {
         var pacienteSeguro = paciente
         
-        if let observacoes = pacienteSeguro.observacoes {
-            pacienteSeguro.observacoes = EncryptionManager.shared.encrypt(text: observacoes, userId: userId)
+        if let observacoes = pacienteSeguro.notes {
+            pacienteSeguro.notes = EncryptionManager.shared.encrypt(text: observacoes, userId: userId)
         }
         
         try patientsCollection(userId: userId).document(pacienteSeguro.id).setData(from: pacienteSeguro, merge: true)
@@ -84,8 +84,8 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
             var pacientes = documents.compactMap { try? $0.data(as: Patient.self) }
             
             for i in 0..<pacientes.count {
-                if let observacoes = pacientes[i].observacoes {
-                    pacientes[i].observacoes = EncryptionManager.shared.decrypt(base64String: observacoes, userId: userId)
+                if let observacoes = pacientes[i].notes {
+                    pacientes[i].notes = EncryptionManager.shared.decrypt(base64String: observacoes, userId: userId)
                 }
             }
             
@@ -97,13 +97,13 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         let db = Firestore.firestore()
         let pacientesRef = db.collection("users").document(userId).collection("patients")
         
-        let snapshot = try await pacientesRef.whereField("status", isEqualTo: PatientStatus.ativo.rawValue).getDocuments()
+        let snapshot = try await pacientesRef.whereField("status", isEqualTo: PatientStatus.active.rawValue).getDocuments()
         
         var pacientesAtivos = snapshot.documents.compactMap { try? $0.data(as: Patient.self) }
         
         if pacientesAtivos.count <= 5 { return }
         
-        pacientesAtivos.sort { $0.criadoEm < $1.criadoEm }
+        pacientesAtivos.sort { $0.createdAt < $1.createdAt }
         let pacientesParaBloquear = Array(pacientesAtivos[5...])
         
         let batch = db.batch()
@@ -111,7 +111,7 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         for paciente in pacientesParaBloquear {
             let docRef = pacientesRef.document(paciente.id)
             batch.updateData([
-                "status": PatientStatus.inativo.rawValue,
+                "status": PatientStatus.inactive.rawValue,
                 "bloqueadoPeloSistema": true
             ], forDocument: docRef)
         }
@@ -132,7 +132,7 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         
         for document in snapshot.documents {
             batch.updateData([
-                "status": PatientStatus.ativo.rawValue,
+                "status": PatientStatus.active.rawValue,
                 "bloqueadoPeloSistema": false
             ], forDocument: document.reference)
         }

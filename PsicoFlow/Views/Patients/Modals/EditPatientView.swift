@@ -89,11 +89,11 @@ struct EditPatientView: View {
                             }
                             Spacer()
                         }
-                        .foregroundColor(viewModel.status == .ativo ? .gray : .red)
+                        .foregroundColor(viewModel.status == .active ? .gray : .red)
                     }
-                    .disabled(viewModel.status == .ativo || viewModel.estaExcluindo)
+                    .disabled(viewModel.status == .active || viewModel.estaExcluindo)
                 } footer: {
-                    if viewModel.status == .ativo {
+                    if viewModel.status == .active {
                         Text("Para excluir este paciente, você deve alterar o status para inativo primeiro.")
                     }
                 }

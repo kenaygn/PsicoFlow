@@ -38,23 +38,23 @@ class PatientsViewModel: ObservableObject {
     }
     
     var pacientesFiltrados: [Patient] {
-        let listaFiltrada = searchText.isEmpty ? pacientes : pacientes.filter { $0.nome.localizedCaseInsensitiveContains(searchText) }
+        let listaFiltrada = searchText.isEmpty ? pacientes : pacientes.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         
         return listaFiltrada.sorted { (paciente1, paciente2) in
-            if paciente1.status == .ativo && paciente2.status != .ativo {
+            if paciente1.status == .active && paciente2.status != .active {
                 return true
             }
-            else if paciente1.status != .ativo && paciente2.status == .ativo {
+            else if paciente1.status != .active && paciente2.status == .active {
                 return false
             }
             else {
-                return paciente1.nome.localizedCaseInsensitiveCompare(paciente2.nome) == .orderedAscending
+                return paciente1.name.localizedCaseInsensitiveCompare(paciente2.name) == .orderedAscending
             }
         }
     }
     
     var numeroDePacientesAtivos: Int {
-        return pacientes.filter { $0.status == .ativo }.count
+        return pacientes.filter { $0.status == .active }.count
     }
     
     var limitePlanoFreeAtingido: Bool {
