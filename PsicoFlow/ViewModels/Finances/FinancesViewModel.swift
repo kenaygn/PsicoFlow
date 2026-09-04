@@ -58,7 +58,7 @@ class FinanceViewModel: ObservableObject {
         // Inicia a escuta em tempo real (Retorna o cache instantaneamente)
         // Se a sua PaymentRepositoryProtocol reclamar, adicione a assinatura da função lá!
         if let firebaseRepo = paymentRepository as? PaymentFirebaseRepository {
-            pagamentosListener = firebaseRepo.escutarPagamentos(userId: userId) { [weak self] novosPagamentos in
+            pagamentosListener = firebaseRepo.listenToPayments(userId: userId) { [weak self] novosPagamentos in
                 guard let self = self else { return }
                 
                 // Anima as mudanças vindo da rede ou do cache

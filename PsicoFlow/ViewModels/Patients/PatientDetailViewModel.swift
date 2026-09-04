@@ -28,7 +28,7 @@ class PatientDetailViewModel: ObservableObject {
     init(
         paciente: Patient,
         patientRepository: PatientRepositoryProtocol = PatientFirebaseRepository(),
-        evolutionRepository: ProgressNoteRepositoryProtocol = EvolutionFirebaseRepository(),
+        evolutionRepository: ProgressNoteRepositoryProtocol = ProgressNoteFirebaseRepository(),
         paymentRepository: PaymentRepositoryProtocol = PaymentFirebaseRepository(),
         fixedSessionRepository: FixedSessionRepositoryProtocol = FixedSessionFirebaseRepository(),
         sessionRepository: SessionRepositoryProtocol = SessionFirebaseRepository()

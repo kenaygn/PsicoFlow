@@ -43,7 +43,7 @@ class SettingsViewModel: ObservableObject {
         userListener?.remove()
         
         if let firebaseRepo = userRepository as? UserFirebaseRepository {
-            userListener = firebaseRepo.escutarUsuario(uid: userId) { [weak self] usuarioAtualizado in
+            userListener = firebaseRepo.listenToUsers(uid: userId) { [weak self] usuarioAtualizado in
                 guard let self = self else { return }
                 
                 withAnimation(.easeInOut(duration: 0.3)) {

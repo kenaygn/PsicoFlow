@@ -24,20 +24,15 @@ class UserFirebaseRepository: UserRepositoryProtocol {
         }
     }
     
-    /// Salva um novo usuário no banco de dados.
     func saveUser(user: User) async throws {
-        // O setData(from:) usa o Codable para transformar a struct em um JSON do Firebase automaticamente
         try db.collection(collectionName).document(user.id).setData(from: user)
     }
     
-    /// Atualiza dados de um usuário existente.
     func updateUser(user: User) async throws {
-        // O merge: true garante que, se houver outros campos lá, eles não serão apagados
         try db.collection(collectionName).document(user.id).setData(from: user, merge: true)
     }
     
-    /// Cria um túnel em tempo real com o documento do usuário
-    func escutarUsuario(uid: String, onChange: @escaping (User?) -> Void) -> ListenerRegistration {
+    func listenToUsers(uid: String, onChange: @escaping (User?) -> Void) -> ListenerRegistration {
         return db.collection(collectionName).document(uid).addSnapshotListener { snapshot, error in
             guard let document = snapshot, document.exists else {
                 print("Erro ao ouvir usuário: \(error?.localizedDescription ?? "Desconhecido")")

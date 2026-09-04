@@ -78,7 +78,7 @@ class PatientsViewModel: ObservableObject {
         }
         
         if let userRepo = userRepository as? UserFirebaseRepository {
-            userListener = userRepo.escutarUsuario(uid: userId) { [weak self] usuarioAtualizado in
+            userListener = userRepo.listenToUsers(uid: userId) { [weak self] usuarioAtualizado in
                 guard let self = self else { return }
                 withAnimation(.easeInOut(duration: 0.4)) {
                     self.isUsuarioPremium = usuarioAtualizado?.premium ?? false
