@@ -80,7 +80,7 @@ class EditProfileViewModel: ObservableObject {
         
         do {
             // Busca todas as sessões e regras do banco simultaneamente
-            async let sessoes = sessionRepository.fetchSessoes(userId: userId)
+            async let sessoes = sessionRepository.fetchSessions(userId: userId)
             async let regrasFixas = fixedSessionRepository.fetchSessoesFixas(userId: userId)
             
             let todasSessoes = try await sessoes

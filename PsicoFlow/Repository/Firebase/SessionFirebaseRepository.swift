@@ -15,20 +15,20 @@ class SessionFirebaseRepository: SessionRepositoryProtocol {
         return db.collection("users").document(userId).collection("sessions")
     }
     
-    func fetchSessoes(userId: String) async throws -> [Session] {
+    func fetchSessions(userId: String) async throws -> [Session] {
         let snapshot = try await collection(userId: userId).getDocuments()
         return snapshot.documents.compactMap { try? $0.data(as: Session.self) }
     }
     
-    func atualizarSessao(_ sessao: Session, userId: String) async throws {
+    func updateSession(_ sessao: Session, userId: String) async throws {
         try collection(userId: userId).document(sessao.id).setData(from: sessao)
     }
     
-    func salvarSessao(_ sessao: Session, userId: String) async throws {
+    func saveSession(_ sessao: Session, userId: String) async throws {
         try collection(userId: userId).document(sessao.id).setData(from: sessao)
     }
     
-    func deletarSessao(id: String, userId: String) async throws {
+    func deleteSession(id: String, userId: String) async throws {
         try await collection(userId: userId).document(id).delete()
     }
     

@@ -126,7 +126,7 @@ class PatientEditSessionViewModel: ObservableObject {
                     atualizada.sessionDate = selectedDate
                     atualizada.startTime = selectedTime
                     if atualizada.status == .postponed { atualizada.status = .scheduled }
-                    try await sessionRepository.atualizarSessao(atualizada, userId: userId)
+                    try await sessionRepository.updateSession(atualizada, userId: userId)
                 }
             } catch {
                 print("Erro ao salvar edição: \(error.localizedDescription)")
@@ -138,7 +138,7 @@ class PatientEditSessionViewModel: ObservableObject {
         let calendar = Calendar.current
         let inicioDoDiaAtual = calendar.startOfDay(for: Date())
         
-        let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
+        let sessoes = try await sessionRepository.fetchSessions(userId: userId)
         let sessoesFilhasFuturas = sessoes.filter { $0.fixedSessionID == regraAtualizada.id && $0.sessionDate >= inicioDoDiaAtual }
         
         for sessao in sessoesFilhasFuturas {
@@ -150,7 +150,7 @@ class PatientEditSessionViewModel: ObservableObject {
             components.weekday = regraAtualizada.weekday
             
             if let novaData = calendar.date(from: components) { sessaoModificada.sessionDate = novaData }
-            try await sessionRepository.atualizarSessao(sessaoModificada, userId: userId)
+            try await sessionRepository.updateSession(sessaoModificada, userId: userId)
         }
     }
     
@@ -160,14 +160,14 @@ class PatientEditSessionViewModel: ObservableObject {
                 switch itemToEdit {
                 case .fixa(let fixa):
                     try await fixedSessionRepository.deletarSessaoFixa(id: fixa.id, userId: userId)
-                    let sessoes = try await sessionRepository.fetchSessoes(userId: userId)
+                    let sessoes = try await sessionRepository.fetchSessions(userId: userId)
                     let hoje = Calendar.current.startOfDay(for: Date())
                     
                     for sessao in sessoes.filter({ $0.fixedSessionID == fixa.id && $0.sessionDate >= hoje }) {
-                        try await sessionRepository.deletarSessao(id: sessao.id, userId: userId)
+                        try await sessionRepository.deleteSession(id: sessao.id, userId: userId)
                     }
                 case .avulsa(let avulsa):
-                    try await sessionRepository.deletarSessao(id: avulsa.id, userId: userId)
+                    try await sessionRepository.deleteSession(id: avulsa.id, userId: userId)
                 }
             } catch {
                 print("Erro ao deletar sessão: \(error.localizedDescription)")

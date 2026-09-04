@@ -142,7 +142,7 @@ class NewSessionViewModel: ObservableObject {
                     let sessoesGeradas = generatorService.gerarSessoes(para: novaRegra, dataFim: dataFim)
                     
                     for sessao in sessoesGeradas {
-                        try await sessionRepository.salvarSessao(sessao, userId: userId)
+                        try await sessionRepository.saveSession(sessao, userId: userId)
                     }
                 } else {
                     let sessaoUnica = Session(
@@ -156,7 +156,7 @@ class NewSessionViewModel: ObservableObject {
                         startTime: horaFormatada
                     )
                     
-                    try await sessionRepository.salvarSessao(sessaoUnica, userId: userId)
+                    try await sessionRepository.saveSession(sessaoUnica, userId: userId)
                 }
             } catch {
                 print("Erro ao salvar sessão: \(error.localizedDescription)")

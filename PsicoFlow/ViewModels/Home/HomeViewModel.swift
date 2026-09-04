@@ -125,7 +125,7 @@ class HomeViewModel: ObservableObject {
             if sessoesDeHoje[i].status == .postponed {
                 sessoesDeHoje[i].status = .scheduled
                 let sessaoParaAtualizar = sessoesDeHoje[i]
-                Task { try? await sessionRepository.atualizarSessao(sessaoParaAtualizar, userId: userId) }
+                Task { try? await sessionRepository.updateSession(sessaoParaAtualizar, userId: userId) }
             }
         }
         self.sessoesHoje = sessoesDeHoje
@@ -180,7 +180,7 @@ class HomeViewModel: ObservableObject {
                     }
                 }
                 
-                try? await sessionRepository.atualizarSessao(sessaoAtualizada, userId: userId)
+                try? await sessionRepository.updateSession(sessaoAtualizada, userId: userId)
             }
         }
     }

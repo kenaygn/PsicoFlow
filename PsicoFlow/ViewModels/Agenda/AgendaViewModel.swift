@@ -186,7 +186,7 @@ class AgendaViewModel: ObservableObject {
         // Persistência em background
         Task {
             do {
-                try await sessionRepository.atualizarSessao(sessaoAtualizada, userId: userId)
+                try await sessionRepository.updateSession(sessaoAtualizada, userId: userId)
             } catch {
                 print("Erro ao atualizar status na agenda: \(error.localizedDescription)")
             }

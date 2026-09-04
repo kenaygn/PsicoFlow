@@ -41,7 +41,7 @@ class AgendaAvailabilityService {
     }
     
     func horariosLivresParaSessaoAvulsa(data: Date, ignorandoSessaoID: String? = nil, derivadaDeContratoID: String? = nil, userId: String) async throws -> [String] {
-        let sessoesDoBanco = try await sessionRepository.fetchSessoes(userId: userId)
+        let sessoesDoBanco = try await sessionRepository.fetchSessions(userId: userId)
         let sessoesDoDia = sessoesDoBanco.filter {
             Calendar.current.isDate($0.sessionDate, inSameDayAs: data) &&
             $0.status != .cancelled &&
