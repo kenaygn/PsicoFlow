@@ -37,7 +37,7 @@ class MonthlyPaymentGeneratorService {
         
         let pacientesDoBanco = try await patientRepository.fetchPatients(userId: userId)
         let pacientesAtivos = pacientesDoBanco.filter { $0.status == .active }
-        let todosPagamentos = try await paymentRepository.fetchPagamentos(userId: userId)
+        let todosPagamentos = try await paymentRepository.fetchPayments(userId: userId)
         
         for paciente in pacientesAtivos {
             for mesStr in mesesParaProcessar {
@@ -56,7 +56,7 @@ class MonthlyPaymentGeneratorService {
                         paid: false
                     )
                     
-                    try await paymentRepository.salvarPagamento(novaCobranca, userId: userId)
+                    try await paymentRepository.savePayment(novaCobranca, userId: userId)
                     print("Mensalidade gerada para o paciente \(paciente.name) referente a \(mesStr).")
                 }
             }
@@ -78,12 +78,12 @@ class MonthlyPaymentGeneratorService {
         let proximoMesStr = formatter.string(from: proximoMes)
         let mesesAlvo = [mesAtualStr, proximoMesStr]
         
-        let pagamentosDoPaciente = try await paymentRepository.fetchPagamentos(paraPacienteID: pacienteID, userId: userId)
+        let pagamentosDoPaciente = try await paymentRepository.fetchPayments(forPatientID: pacienteID, userId: userId)
         var totalDeletados = 0
         
         for pagamento in pagamentosDoPaciente {
             if mesesAlvo.contains(pagamento.referenceMonth) && !pagamento.paid {
-                try await paymentRepository.deletarPagamento(id: pagamento.id, userId: userId)
+                try await paymentRepository.deletePayment(id: pagamento.id, userId: userId)
                 totalDeletados += 1
             }
         }
@@ -95,7 +95,7 @@ class MonthlyPaymentGeneratorService {
     
     /// Atualiza o valor de todas as cobranças do mês atual e dos meses futuros que ainda não foram pagas.
     func atualizarValorPagamentosPendentes(pacienteID: String, novoValor: Double, userId: String) async throws {
-        let pagamentos = try await paymentRepository.fetchPagamentos(paraPacienteID: pacienteID, userId: userId)
+        let pagamentos = try await paymentRepository.fetchPayments(forPatientID: pacienteID, userId: userId)
         
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM"
@@ -109,7 +109,7 @@ class MonthlyPaymentGeneratorService {
                 
                 pagamento.value = novoValor
                 
-                try await paymentRepository.atualizarPagamento(pagamento, userId: userId)
+                try await paymentRepository.updatePayment(pagamento, userId: userId)
             }
         }
     }

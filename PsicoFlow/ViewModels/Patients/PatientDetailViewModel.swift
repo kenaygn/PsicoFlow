@@ -66,7 +66,7 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarPagamentos(userId: String) async {
         do {
-            let dados = try await paymentRepository.fetchPagamentos(userId: userId)
+            let dados = try await paymentRepository.fetchPayments(userId: userId)
             
             await MainActor.run {
                 withAnimation(.spring()) {
@@ -112,7 +112,7 @@ class PatientDetailViewModel: ObservableObject {
             
             Task {
                 do {
-                    try await paymentRepository.atualizarPagamento(pagamentoAtualizado, userId: userId)
+                    try await paymentRepository.updatePayment(pagamentoAtualizado, userId: userId)
                     
                     await MainActor.run {
                         withAnimation(.spring()) {

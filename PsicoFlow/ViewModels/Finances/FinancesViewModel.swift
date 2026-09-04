@@ -98,7 +98,7 @@ class FinanceViewModel: ObservableObject {
             // 2. SALVAMENTO EM BACKGROUND: Deixa o Firebase sincronizar silenciosamente
             Task {
                 do {
-                    try await paymentRepository.atualizarPagamento(pagamentoAtualizado, userId: userId)
+                    try await paymentRepository.updatePayment(pagamentoAtualizado, userId: userId)
                 } catch {
                     print("Erro ao atualizar pagamento: \(error.localizedDescription)")
                     // Em caso de falha crítica (ex: permissão negada), você poderia reverter a UI aqui

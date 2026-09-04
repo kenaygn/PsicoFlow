@@ -16,12 +16,12 @@ class PaymentFirebaseRepository: PaymentRepositoryProtocol {
     }
     
     // MARK: - Funções de Fetch Antigas (Mantidas para compatibilidade)
-    func fetchPagamentos(userId: String) async throws -> [MonthlyPayment] {
+    func fetchPayments(userId: String) async throws -> [MonthlyPayment] {
         let snapshot = try await collection(userId: userId).getDocuments()
         return snapshot.documents.compactMap { try? $0.data(as: MonthlyPayment.self) }
     }
     
-    func fetchPagamentos(paraPacienteID pacienteID: String, userId: String) async throws -> [MonthlyPayment] {
+    func fetchPayments(forPatientID pacienteID: String, userId: String) async throws -> [MonthlyPayment] {
         let snapshot = try await collection(userId: userId)
             .whereField("pacienteID", isEqualTo: pacienteID)
             .getDocuments()
@@ -30,15 +30,15 @@ class PaymentFirebaseRepository: PaymentRepositoryProtocol {
     }
     
     // MARK: - Escrita de Dados
-    func atualizarPagamento(_ pagamento: MonthlyPayment, userId: String) async throws {
+    func updatePayment(_ pagamento: MonthlyPayment, userId: String) async throws {
         try collection(userId: userId).document(pagamento.id).setData(from: pagamento, merge: true)
     }
     
-    func salvarPagamento(_ pagamento: MonthlyPayment, userId: String) async throws {
+    func savePayment(_ pagamento: MonthlyPayment, userId: String) async throws {
         try collection(userId: userId).document(pagamento.id).setData(from: pagamento)
     }
     
-    func deletarPagamento(id: String, userId: String) async throws {
+    func deletePayment(id: String, userId: String) async throws {
         try await collection(userId: userId).document(id).delete()
     }
     
