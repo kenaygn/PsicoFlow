@@ -136,7 +136,7 @@ class NewSessionViewModel: ObservableObject {
                         modality: selectedModalidade
                     )
                     
-                    try await fixedSessionRepository.salvarSessaoFixa(novaRegra, userId: userId)
+                    try await fixedSessionRepository.saveFixedSession(novaRegra, userId: userId)
                     
                     let dataFim = generatorService.ultimoDiaDoProximoMes()
                     let sessoesGeradas = generatorService.gerarSessoes(para: novaRegra, dataFim: dataFim)

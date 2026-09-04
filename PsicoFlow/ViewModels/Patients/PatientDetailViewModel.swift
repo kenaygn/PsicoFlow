@@ -80,7 +80,7 @@ class PatientDetailViewModel: ObservableObject {
     
     func carregarSessoesConfiguradas(userId: String) async {
         do {
-            let fixas = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
+            let fixas = try await fixedSessionRepository.fetchFixedSessions(userId: userId)
             let todasSessoes = try await sessionRepository.fetchSessions(userId: userId)
             let hoje = Calendar.current.startOfDay(for: Date())
             

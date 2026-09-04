@@ -34,7 +34,7 @@ class AgendaAvailabilityService {
     }
     
     func horariosLivresParaContrato(diaDaSemana: Int, ignorandoContratoID: String? = nil, userId: String) async throws -> [String] {
-        let contratosDoBanco = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
+        let contratosDoBanco = try await fixedSessionRepository.fetchFixedSessions(userId: userId)
         let regrasNoMesmoDia = contratosDoBanco.filter { $0.weekday == diaDaSemana && $0.id != ignorandoContratoID }
         let ocupados = regrasNoMesmoDia.map { $0.startTime }
         return todosHorarios.filter { !ocupados.contains($0) }

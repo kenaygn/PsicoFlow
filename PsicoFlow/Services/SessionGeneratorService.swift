@@ -39,7 +39,7 @@ class SessionGeneratorService {
         let dataFim = ultimoDiaDoProximoMes() // Chama a função local
         
         // Buscas assíncronas usando o userId
-        let regrasFixas = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
+        let regrasFixas = try await fixedSessionRepository.fetchFixedSessions(userId: userId)
         let todosPacientes = try await patientRepository.fetchPatients(userId: userId)
         
         // Pega apenas os IDs dos pacientes que continuam ativos

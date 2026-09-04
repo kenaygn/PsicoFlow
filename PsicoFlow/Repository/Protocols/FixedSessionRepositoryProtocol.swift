@@ -8,8 +8,8 @@
 import Foundation
 
 protocol FixedSessionRepositoryProtocol {
-    func fetchSessoesFixas(userId: String) async throws -> [FixedSession]
-    func salvarSessaoFixa(_ sessaoFixa: FixedSession, userId: String) async throws
-    func atualizarSessaoFixa(_ sessaoFixa: FixedSession, userId: String) async throws
-    func deletarSessaoFixa(id: String, userId: String) async throws
+    func fetchFixedSessions(userId: String) async throws -> [FixedSession]
+    func saveFixedSession(_ fixedSession: FixedSession, userId: String) async throws
+    func updateFixedSession(_ fixedSession: FixedSession, userId: String) async throws
+    func deleteFixedSession(id: String, userId: String) async throws
 }

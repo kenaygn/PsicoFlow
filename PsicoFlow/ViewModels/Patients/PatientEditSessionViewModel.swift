@@ -117,7 +117,7 @@ class PatientEditSessionViewModel: ObservableObject {
                     atualizada.modality = selectedModalidade
                     atualizada.weekday = selectedWeekday
                     atualizada.startTime = selectedTime
-                    try await fixedSessionRepository.atualizarSessaoFixa(atualizada, userId: userId)
+                    try await fixedSessionRepository.updateFixedSession(atualizada, userId: userId)
                     try await propagarAlteracoesParaSessoesFuturas(regraAtualizada: atualizada, userId: userId)
                     
                 case .avulsa(let avulsa):
@@ -159,7 +159,7 @@ class PatientEditSessionViewModel: ObservableObject {
             do {
                 switch itemToEdit {
                 case .fixa(let fixa):
-                    try await fixedSessionRepository.deletarSessaoFixa(id: fixa.id, userId: userId)
+                    try await fixedSessionRepository.deleteFixedSession(id: fixa.id, userId: userId)
                     let sessoes = try await sessionRepository.fetchSessions(userId: userId)
                     let hoje = Calendar.current.startOfDay(for: Date())
                     
