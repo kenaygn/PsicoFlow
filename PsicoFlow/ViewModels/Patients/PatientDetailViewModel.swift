@@ -14,7 +14,7 @@ import Combine
 class PatientDetailViewModel: ObservableObject {
         
     @Published var paciente: Patient
-    @Published var evolucoes: [Evolution] = []
+    @Published var evolucoes: [ProgressNote] = []
     @Published var pagamentos: [MonthlyPayment] = []
     @Published var sessoesFixas: [FixedSession] = []
     @Published var sessoesAvulsasFuturas: [Session] = []
@@ -127,12 +127,12 @@ class PatientDetailViewModel: ObservableObject {
     }
     
     func adicionarEvolucao(texto: String, userId: String) {
-        let novaEvolucao = Evolution(
+        let novaEvolucao = ProgressNote(
             id: UUID().uuidString,
-            psicologoID: userId,
-            pacienteID: paciente.id,
-            data: Date(),
-            conteudo: texto
+            psychologistID: userId,
+            patientID: paciente.id,
+            date: Date(),
+            content: texto
         )
         
         Task {
@@ -150,7 +150,7 @@ class PatientDetailViewModel: ObservableObject {
         }
     }
     
-    func atualizarEvolucao(evolucaoAtualizada: Evolution, userId: String) {
+    func atualizarEvolucao(evolucaoAtualizada: ProgressNote, userId: String) {
         Task {
             do {
                 try await evolutionRepository.atualizarEvolucao(evolucaoAtualizada, userId: userId)

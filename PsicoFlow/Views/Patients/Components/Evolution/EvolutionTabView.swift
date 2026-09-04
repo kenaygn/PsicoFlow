@@ -9,17 +9,17 @@ import SwiftUI
 
 struct EvolutionTabView: View {
         
-    var evolucoes: [Evolution]
+    var evolucoes: [ProgressNote]
     var adicionarEvolucao: ((String) -> Void)
-    var atualizarEvolucao: ((Evolution) -> Void)
+    var atualizarEvolucao: ((ProgressNote) -> Void)
     var deletarEvolucao: ((String) -> Void)
     
     @State private var isShowingForm = false
     @State private var textoFormulario = ""
-    @State private var evolucaoEmEdicao: Evolution? = nil
+    @State private var evolucaoEmEdicao: ProgressNote? = nil
     
     @State private var mostrarAlertaExclusao = false
-    @State private var evolucaoParaExcluir: Evolution? = nil
+    @State private var evolucaoParaExcluir: ProgressNote? = nil
     
     @State private var presuncaoOtimista = true
     
@@ -62,7 +62,7 @@ struct EvolutionTabView: View {
                         Button( action: {
                             if var evoParaAtualizar = evolucaoEmEdicao {
                                 // MODO EDIÇÃO
-                                evoParaAtualizar.conteudo = textoFormulario
+                                evoParaAtualizar.content = textoFormulario
                                 atualizarEvolucao(evoParaAtualizar)
                             } else {
                                 // MODO CRIAÇÃO
@@ -127,13 +127,13 @@ struct EvolutionTabView: View {
                 }
                 .padding(.bottom, 60)
             } else {
-                ForEach(evolucoes.sorted(by: { $0.data > $1.data })) { evolucao in
+                ForEach(evolucoes.sorted(by: { $0.date > $1.date })) { evolucao in
                     EvolutionCardView(
                         evolucao: evolucao,
                         onEdit: {
                             withAnimation(.spring()) {
                                 evolucaoEmEdicao = evolucao
-                                textoFormulario = evolucao.conteudo
+                                textoFormulario = evolucao.content
                                 isShowingForm = true
                             }
                         },
