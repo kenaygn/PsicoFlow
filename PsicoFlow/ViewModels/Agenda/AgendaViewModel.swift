@@ -64,7 +64,7 @@ class AgendaViewModel: ObservableObject {
         
         // 1. Ouvinte em tempo real para sessões
         if let sessionRepo = sessionRepository as? SessionFirebaseRepository {
-            sessoesListener = sessionRepo.escutarSessoes(userId: userId) { [weak self] novasSessoes in
+            sessoesListener = sessionRepo.listenToSessions(userId: userId) { [weak self] novasSessoes in
                 guard let self = self else { return }
                 withAnimation(.easeInOut(duration: 0.3)) {
                     self.todasSessoes = novasSessoes

@@ -70,7 +70,7 @@ class HomeViewModel: ObservableObject {
         userListener?.remove()
         
         if let sessionRepo = sessionRepository as? SessionFirebaseRepository {
-            sessoesListener = sessionRepo.escutarSessoes(userId: userId) { [weak self] novasSessoes in
+            sessoesListener = sessionRepo.listenToSessions(userId: userId) { [weak self] novasSessoes in
                 guard let self = self else { return }
                 withAnimation(.easeInOut(duration: 0.4)) {
                     self.todasSessoes = novasSessoes
