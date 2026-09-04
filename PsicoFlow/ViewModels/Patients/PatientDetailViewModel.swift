@@ -70,7 +70,7 @@ class PatientDetailViewModel: ObservableObject {
             
             await MainActor.run {
                 withAnimation(.spring()) {
-                    self.pagamentos = dados.filter { $0.pacienteID == paciente.id }.sorted { $0.mesReferencia > $1.mesReferencia }
+                    self.pagamentos = dados.filter { $0.patientID == paciente.id }.sorted { $0.referenceMonth > $1.referenceMonth }
                 }
             }
         } catch {
@@ -107,8 +107,8 @@ class PatientDetailViewModel: ObservableObject {
     func togglePagamento(pagamentoID: String, userId: String) {
         if let index = pagamentos.firstIndex(where: { $0.id == pagamentoID }) {
             var pagamentoAtualizado = pagamentos[index]
-            pagamentoAtualizado.pago.toggle()
-            pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
+            pagamentoAtualizado.paid.toggle()
+            pagamentoAtualizado.paymentDate = pagamentoAtualizado.paid ? Date() : nil
             
             Task {
                 do {

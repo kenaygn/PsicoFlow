@@ -88,8 +88,8 @@ class FinanceViewModel: ObservableObject {
             
             // 1. ATUALIZAÇÃO OTIMISTA: Muda a interface antes de ir para a internet
             var pagamentoAtualizado = todosPagamentos[index]
-            pagamentoAtualizado.pago.toggle()
-            pagamentoAtualizado.dataPagamento = pagamentoAtualizado.pago ? Date() : nil
+            pagamentoAtualizado.paid.toggle()
+            pagamentoAtualizado.paymentDate = pagamentoAtualizado.paid ? Date() : nil
             
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 self.todosPagamentos[index] = pagamentoAtualizado
@@ -161,33 +161,33 @@ class FinanceViewModel: ObservableObject {
     }
     
     var pagamentosFiltrados: [MonthlyPayment] {
-        return todosPagamentos.filter { $0.mesReferencia.hasPrefix(filtroReferencia) }
+        return todosPagamentos.filter { $0.referenceMonth.hasPrefix(filtroReferencia) }
     }
     
     var pagamentosPendentes: [MonthlyPayment] {
         return pagamentosFiltrados
-            .filter { !$0.pago }
-            .sorted { $0.mesReferencia < $1.mesReferencia }
+            .filter { !$0.paid }
+            .sorted { $0.referenceMonth < $1.referenceMonth }
     }
     
     var pagamentosRealizados: [MonthlyPayment] {
         return pagamentosFiltrados
-            .filter { $0.pago }
-            .sorted { $0.mesReferencia > $1.mesReferencia }
+            .filter { $0.paid }
+            .sorted { $0.referenceMonth > $1.referenceMonth }
     }
     
     var totalRecebidoText: String {
-        let soma = pagamentosRealizados.reduce(0) { $0 + $1.valor }
+        let soma = pagamentosRealizados.reduce(0) { $0 + $1.value }
         return String(format: "R$ %.0f", soma)
     }
     
     var totalPendenteText: String {
-        let soma = pagamentosPendentes.reduce(0) { $0 + $1.valor }
+        let soma = pagamentosPendentes.reduce(0) { $0 + $1.value }
         return String(format: "R$ %.0f", soma)
     }
     
     func paciente(for pagamento: MonthlyPayment) -> Patient? {
-        return pacientes.first(where: { $0.id == pagamento.pacienteID })
+        return pacientes.first(where: { $0.id == pagamento.patientID })
     }
     
     func formatarMesRefParaExibicao(_ ref: String) -> String {

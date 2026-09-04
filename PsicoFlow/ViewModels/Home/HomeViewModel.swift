@@ -135,8 +135,8 @@ class HomeViewModel: ObservableObject {
         let mesAtualStr = formatter.string(from: Date())
         
         self.valoresPendentes = todosPagamentos
-            .filter { !$0.pago && $0.mesReferencia <= mesAtualStr }
-            .reduce(0) { $0 + $1.valor }
+            .filter { !$0.paid && $0.referenceMonth <= mesAtualStr }
+            .reduce(0) { $0 + $1.value }
     }
     
     

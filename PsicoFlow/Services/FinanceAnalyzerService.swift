@@ -17,14 +17,14 @@ class FinanceAnalyzerService {
         let agora = Date()
         
         // Filtra apenas pagamentos não quitados
-        let pendentes = pagamentos.filter { !$0.pago }
+        let pendentes = pagamentos.filter { !$0.paid }
         
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM"
         
         // Converte as strings "yyyy/MM" em Dates reais para comparação
         let datasPendentes = pendentes.compactMap { p -> Date? in
-            return formatter.date(from: p.mesReferencia)
+            return formatter.date(from: p.referenceMonth)
         }
         
         // Filtra apenas datas que são estritamente anteriores ao mês atual

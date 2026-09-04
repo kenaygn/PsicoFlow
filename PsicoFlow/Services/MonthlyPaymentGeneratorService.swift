@@ -42,18 +42,18 @@ class MonthlyPaymentGeneratorService {
         for paciente in pacientesAtivos {
             for mesStr in mesesParaProcessar {
                 let jaPossuiCobranca = todosPagamentos.contains { pagamento in
-                    pagamento.pacienteID == paciente.id && pagamento.mesReferencia == mesStr
+                    pagamento.patientID == paciente.id && pagamento.referenceMonth == mesStr
                 }
                 
                 if !jaPossuiCobranca {
                     let novaCobranca = MonthlyPayment(
                         id: "pay_\(UUID().uuidString)",
-                        psicologoID: userId, // Utiliza o ID seguro fornecido por parâmetro
-                        pacienteID: paciente.id,
-                        mesReferencia: mesStr,
-                        dataPagamento: nil,
-                        valor: paciente.value,
-                        pago: false
+                        psychologistID: userId, // Utiliza o ID seguro fornecido por parâmetro
+                        patientID: paciente.id,
+                        referenceMonth: mesStr,
+                        paymentDate: nil,
+                        value: paciente.value,
+                        paid: false
                     )
                     
                     try await paymentRepository.salvarPagamento(novaCobranca, userId: userId)
@@ -82,7 +82,7 @@ class MonthlyPaymentGeneratorService {
         var totalDeletados = 0
         
         for pagamento in pagamentosDoPaciente {
-            if mesesAlvo.contains(pagamento.mesReferencia) && !pagamento.pago {
+            if mesesAlvo.contains(pagamento.referenceMonth) && !pagamento.paid {
                 try await paymentRepository.deletarPagamento(id: pagamento.id, userId: userId)
                 totalDeletados += 1
             }
@@ -103,11 +103,11 @@ class MonthlyPaymentGeneratorService {
         
         for var pagamento in pagamentos {
 
-            let isMesAtualOuFuturo = pagamento.mesReferencia >= mesAtualStr
+            let isMesAtualOuFuturo = pagamento.referenceMonth >= mesAtualStr
             
-            if isMesAtualOuFuturo && !pagamento.pago {
+            if isMesAtualOuFuturo && !pagamento.paid {
                 
-                pagamento.valor = novoValor
+                pagamento.value = novoValor
                 
                 try await paymentRepository.atualizarPagamento(pagamento, userId: userId)
             }

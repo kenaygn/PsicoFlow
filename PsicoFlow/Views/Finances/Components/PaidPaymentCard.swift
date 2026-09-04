@@ -42,7 +42,7 @@ struct PaidPaymentCard: View {
                 
                 // Note: Para projetos focados em iOS 15+, considere substituir
                 // a formatação C-style nativa por: pagamento.valor.formatted(.currency(code: "BRL"))
-                Text(String(format: "R$ %.0f", pagamento.valor))
+                Text(String(format: "R$ %.0f", pagamento.value))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(.teal)
                 
