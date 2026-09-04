@@ -18,7 +18,7 @@ struct Patient: Identifiable, Codable {
     
     var name: String
     var email: String
-    var phobe: String
+    var phone: String
     var emergencyContact: String?
     var notes: String?
     

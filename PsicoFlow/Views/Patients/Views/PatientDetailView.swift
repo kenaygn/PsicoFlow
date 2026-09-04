@@ -174,7 +174,7 @@ extension View {
             psychologistID: "user_dev_01",
             name: "Ana Carolina Silva",
             email: "ana@email.com",
-            phobe: "(11) 98765-4321",
+            phone: "(11) 98765-4321",
             status: .active,
             value: 150.0,
             createdAt: Date()

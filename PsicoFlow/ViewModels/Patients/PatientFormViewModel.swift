@@ -43,7 +43,7 @@ class PatientFormViewModel: ObservableObject {
         if let paciente = paciente {
             self.nome = paciente.name
             self.email = paciente.email
-            self.telefone = paciente.phobe
+            self.telefone = paciente.phone
             self.contatoEmergencia = paciente.emergencyContact ?? ""
             self.status = paciente.status
             self.observacoes = paciente.notes ?? ""
@@ -78,7 +78,7 @@ class PatientFormViewModel: ObservableObject {
             psychologistID: userId,
             name: nome,
             email: email,
-            phobe: telefone,
+            phone: telefone,
             emergencyContact: contatoEmergencia.isEmpty ? nil : contatoEmergencia,
             notes: observacoes.isEmpty ? nil : observacoes,
             status: status,

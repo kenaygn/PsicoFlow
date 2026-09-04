@@ -41,7 +41,7 @@ struct PatientCardView: View {
                     .foregroundColor(.primary)
                     .tracking(-0.3)
                 
-                Text(paciente.phobe)
+                Text(paciente.phone)
                     .font(.system(size: 13))
                     .foregroundColor(.secondary)
             }
