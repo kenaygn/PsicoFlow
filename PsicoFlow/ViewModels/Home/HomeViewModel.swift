@@ -80,7 +80,7 @@ class HomeViewModel: ObservableObject {
         }
         
         if let patientRepo = patientRepository as? PatientFirebaseRepository {
-            pacientesListener = patientRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
+            pacientesListener = patientRepo.listenToPatients(userId: userId) { [weak self] novosPacientes in
                 guard let self = self else { return }
                 withAnimation(.easeInOut(duration: 0.4)) {
                     self.pacientes = novosPacientes

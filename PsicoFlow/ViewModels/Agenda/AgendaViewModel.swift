@@ -74,7 +74,7 @@ class AgendaViewModel: ObservableObject {
         
         // 2. Ouvinte em tempo real para pacientes
         if let patientRepo = patientRepository as? PatientFirebaseRepository {
-            pacientesListener = patientRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
+            pacientesListener = patientRepo.listenToPatients(userId: userId) { [weak self] novosPacientes in
                 guard let self = self else { return }
                 withAnimation(.easeInOut(duration: 0.3)) {
                     self.pacientes = novosPacientes

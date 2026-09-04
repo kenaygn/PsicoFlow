@@ -91,7 +91,7 @@ class StoreManager: ObservableObject {
             try? await userRepository.updateUser(user: usuarioModificado)
             
             let patientRepo = PatientFirebaseRepository()
-            try? await patientRepo.bloquearPacientesExcedentes(userId: usuario.id)
+            try? await patientRepo.blockExcessPatients(userId: usuario.id)
             
             await MainActor.run {
                 self.assinaturaExpirou = true
@@ -104,7 +104,7 @@ class StoreManager: ObservableObject {
             try? await userRepository.updateUser(user: usuarioModificado)
             
             let patientRepo = PatientFirebaseRepository()
-            try? await patientRepo.desbloquearPacientes(userId: usuario.id)
+            try? await patientRepo.unblockPatients(userId: usuario.id)
             
             print("Assinatura renovada/detectada. Firebase atualizado para Premium.")
         }

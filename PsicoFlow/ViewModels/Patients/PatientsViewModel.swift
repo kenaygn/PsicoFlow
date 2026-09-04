@@ -69,7 +69,7 @@ class PatientsViewModel: ObservableObject {
         userListener?.remove()
         
         if let firebaseRepo = repository as? PatientFirebaseRepository {
-            pacientesListener = firebaseRepo.escutarPacientes(userId: userId) { [weak self] novosPacientes in
+            pacientesListener = firebaseRepo.listenToPatients(userId: userId) { [weak self] novosPacientes in
                 guard let self = self else { return }
 
                 self.pacientes = novosPacientes
