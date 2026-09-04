@@ -40,7 +40,7 @@ class SessionGeneratorService {
         
         // Buscas assíncronas usando o userId
         let regrasFixas = try await fixedSessionRepository.fetchSessoesFixas(userId: userId)
-        let todosPacientes = try await patientRepository.fetchPacientes(userId: userId)
+        let todosPacientes = try await patientRepository.fetchPatients(userId: userId)
         
         // Pega apenas os IDs dos pacientes que continuam ativos
         let pacientesAtivosIDs = todosPacientes.filter { $0.status == .active }.map { $0.id }

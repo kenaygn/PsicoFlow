@@ -17,7 +17,7 @@ struct PsyesWidgetLiveActivity: Widget {
             PsyesActivityContentView(context: context)
             
         } dynamicIsland: { context in
-            let primeiroNome = context.attributes.nomePaciente.components(separatedBy: " ").first ?? context.attributes.nomePaciente
+            let primeiroNome = context.attributes.patientName.components(separatedBy: " ").first ?? context.attributes.patientName
             
             // MARK: - DYNAMIC ISLAND
             return DynamicIsland {
@@ -36,7 +36,7 @@ struct PsyesWidgetLiveActivity: Widget {
                 }
                 
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.attributes.horaInicio)
+                    Text(context.attributes.startTime)
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 10).padding(.vertical, 5)
@@ -47,11 +47,11 @@ struct PsyesWidgetLiveActivity: Widget {
                 
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(context.attributes.nomePaciente)
+                        Text(context.attributes.patientName)
                             .font(.title3).fontWeight(.bold).foregroundColor(.white)
                         
                         HStack(spacing: 12) {
-                            if context.attributes.isFixa {
+                            if context.attributes.isFixed {
                                 HStack(spacing: 4) { Image(systemName: "repeat"); Text("Fixa") }
                                 .foregroundColor(Color(red: 0.89, green: 0.25, blue: 0.35))
                             } else {
@@ -60,8 +60,8 @@ struct PsyesWidgetLiveActivity: Widget {
                             }
                             
                             HStack(spacing: 4) {
-                                Image(systemName: context.attributes.modalidade.lowercased() == "online" ? "video.fill" : "person.2.fill")
-                                Text(context.attributes.modalidade.capitalized)
+                                Image(systemName: context.attributes.modality.lowercased() == "online" ? "video.fill" : "person.2.fill")
+                                Text(context.attributes.modality.capitalized)
                             }
                             .foregroundColor(Color.white.opacity(0.7))
                             
@@ -70,7 +70,7 @@ struct PsyesWidgetLiveActivity: Widget {
                         }
                         .font(.system(size: 13, weight: .medium))
                         
-                        Text(context.state.statusMensagem)
+                        Text(context.state.statusMessage)
                             .font(.subheadline).foregroundColor(Color.white.opacity(0.9)).padding(.top, 4)
                     }
                     .padding(.leading, -88).padding(.horizontal, 8).padding(.bottom, 8).padding(.top, 4)
@@ -84,7 +84,7 @@ struct PsyesWidgetLiveActivity: Widget {
                     .padding(.leading, 4)
                 
             } compactTrailing: {
-                Text(context.attributes.horaInicio)
+                Text(context.attributes.startTime)
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white)
                     .padding(.trailing, 4)
@@ -143,7 +143,7 @@ struct LockScreenView: View {
                 
                 Spacer()
                 
-                Text(context.attributes.horaInicio)
+                Text(context.attributes.startTime)
                     .font(.system(size: 12, weight: .bold))
                     .padding(.horizontal, 10).padding(.vertical, 5)
                     .background(Color.white.opacity(0.2))
@@ -151,11 +151,11 @@ struct LockScreenView: View {
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                Text(context.attributes.nomePaciente)
+                Text(context.attributes.patientName)
                     .font(.title3).fontWeight(.bold)
                 
                 HStack(spacing: 12) {
-                    if context.attributes.isFixa {
+                    if context.attributes.isFixed {
                         HStack(spacing: 4) { Image(systemName: "repeat"); Text("Fixa") }
                         .foregroundColor(Color(red: 0.89, green: 0.25, blue: 0.35))
                     } else {
@@ -164,8 +164,8 @@ struct LockScreenView: View {
                     }
                     
                     HStack(spacing: 4) {
-                        Image(systemName: context.attributes.modalidade.lowercased() == "online" ? "video.fill" : "person.2.fill")
-                        Text(context.attributes.modalidade.capitalized)
+                        Image(systemName: context.attributes.modality.lowercased() == "online" ? "video.fill" : "person.2.fill")
+                        Text(context.attributes.modality.capitalized)
                     }
                     .foregroundColor(Color.white.opacity(0.7))
                     
@@ -193,7 +193,7 @@ struct WatchSmartStackView: View {
         VStack(alignment: .leading, spacing: 8) {
             // Header e Nome mais compactos
             HStack {
-                Text(context.attributes.nomePaciente)
+                Text(context.attributes.patientName)
                     .font(.headline)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -201,7 +201,7 @@ struct WatchSmartStackView: View {
                 
                 Spacer()
                 
-                Text(context.attributes.horaInicio)
+                Text(context.attributes.startTime)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.teal)
             }
@@ -209,15 +209,15 @@ struct WatchSmartStackView: View {
             // Apenas tags essenciais
             HStack(spacing: 8) {
                 HStack(spacing: 4) {
-                    Image(systemName: context.attributes.isFixa ? "repeat" : "1.circle")
-                    Text(context.attributes.isFixa ? "Fixa" : "Avulsa")
+                    Image(systemName: context.attributes.isFixed ? "repeat" : "1.circle")
+                    Text(context.attributes.isFixed ? "Fixa" : "Avulsa")
                 }
                 .font(.system(size: 12, weight: .bold))
-                .foregroundColor(context.attributes.isFixa ? Color(red: 0.89, green: 0.25, blue: 0.35) : .orange)
+                .foregroundColor(context.attributes.isFixed ? Color(red: 0.89, green: 0.25, blue: 0.35) : .orange)
                 
                 HStack(spacing: 4) {
-                    Image(systemName: context.attributes.modalidade.lowercased() == "online" ? "video.fill" : "person.2.fill")
-                    Text(context.attributes.modalidade.capitalized)
+                    Image(systemName: context.attributes.modality.lowercased() == "online" ? "video.fill" : "person.2.fill")
+                    Text(context.attributes.modality.capitalized)
                 }
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.white.opacity(0.8))
@@ -233,9 +233,9 @@ struct WatchSmartStackView: View {
 
 // MARK: - Previews (Mantidos para validação visual)
 #Preview("Tela de Bloqueio - Fixa", as: .content, using: SessionActivityAttributes(
-    nomePaciente: "Ana Carolina", modalidade: "Presencial", isFixa: true, horaInicio: "14:00"
+    patientName: "Ana Carolina", modality: "Presencial", isFixed: true, startTime: "14:00"
 )) {
     PsyesWidgetLiveActivity()
 } contentStates: {
-    SessionActivityAttributes.ContentState(statusMensagem: "Tudo pronto para o atendimento.")
+    SessionActivityAttributes.ContentState(statusMessage: "Tudo pronto para o atendimento.")
 }

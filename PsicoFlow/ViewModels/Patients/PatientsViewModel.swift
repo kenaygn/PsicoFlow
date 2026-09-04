@@ -96,7 +96,7 @@ class PatientsViewModel: ObservableObject {
         
         Task {
             do {
-                try await repository.atualizarPaciente(pacienteEditado, userId: userId)
+                try await repository.updatePatient(pacienteEditado, userId: userId)
             } catch {
                 print("Erro ao atualizar paciente: \(error.localizedDescription)")
             }
@@ -106,7 +106,7 @@ class PatientsViewModel: ObservableObject {
     func adicionarPaciente(_ novoPaciente: Patient, userId: String) {
         Task {
             do {
-                try await repository.salvarPaciente(novoPaciente, userId: userId)
+                try await repository.savePatient(novoPaciente, userId: userId)
             } catch {
                 print("Erro ao salvar paciente: \(error.localizedDescription)")
             }

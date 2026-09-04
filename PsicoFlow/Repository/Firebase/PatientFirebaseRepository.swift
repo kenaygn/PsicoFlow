@@ -15,7 +15,7 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         return db.collection("users").document(userId).collection("patients")
     }
     
-    func fetchPacientes(userId: String) async throws -> [Patient] {
+    func fetchPatients(userId: String) async throws -> [Patient] {
         let snapshot = try await patientsCollection(userId: userId).getDocuments()
         var pacientes = snapshot.documents.compactMap { try? $0.data(as: Patient.self) }
         
@@ -28,7 +28,7 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         return pacientes
     }
     
-    func salvarPaciente(_ paciente: Patient, userId: String) async throws {
+    func savePatient(_ paciente: Patient, userId: String) async throws {
         var pacienteSeguro = paciente
         
         if let observacoes = pacienteSeguro.notes {
@@ -38,7 +38,7 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         try patientsCollection(userId: userId).document(pacienteSeguro.id).setData(from: pacienteSeguro)
     }
     
-    func atualizarPaciente(_ paciente: Patient, userId: String) async throws {
+    func updatePatient(_ paciente: Patient, userId: String) async throws {
         var pacienteSeguro = paciente
         
         if let observacoes = pacienteSeguro.notes {
@@ -48,27 +48,27 @@ class PatientFirebaseRepository: PatientRepositoryProtocol {
         try patientsCollection(userId: userId).document(pacienteSeguro.id).setData(from: pacienteSeguro, merge: true)
     }
     
-    func excluirPacienteEmCascata(pacienteID: String, userId: String) async throws {
+    func deletePatientCascade(patientID: String, userId: String) async throws {
         let batch = db.batch()
         let userDocRef = db.collection("users").document(userId)
         
-        let pacienteRef = userDocRef.collection("patients").document(pacienteID)
+        let pacienteRef = userDocRef.collection("patients").document(patientID)
         batch.deleteDocument(pacienteRef)
         
         let sessoes = try await userDocRef.collection("sessions")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+            .whereField("pacienteID", isEqualTo: patientID).getDocuments()
         for doc in sessoes.documents { batch.deleteDocument(doc.reference) }
         
         let pagamentos = try await userDocRef.collection("payments")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+            .whereField("pacienteID", isEqualTo: patientID).getDocuments()
         for doc in pagamentos.documents { batch.deleteDocument(doc.reference) }
         
         let evolucoes = try await userDocRef.collection("evolutions")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+            .whereField("pacienteID", isEqualTo: patientID).getDocuments()
         for doc in evolucoes.documents { batch.deleteDocument(doc.reference) }
         
         let sessoesFixas = try await userDocRef.collection("fixed_sessions")
-            .whereField("pacienteID", isEqualTo: pacienteID).getDocuments()
+            .whereField("pacienteID", isEqualTo: patientID).getDocuments()
         for doc in sessoesFixas.documents { batch.deleteDocument(doc.reference) }
         
         try await batch.commit()

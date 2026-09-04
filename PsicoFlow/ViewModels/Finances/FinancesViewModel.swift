@@ -71,7 +71,7 @@ class FinanceViewModel: ObservableObject {
         // Busca de pacientes (pode se tornar listener futuramente se desejar)
         Task {
             do {
-                let fetchedPacientes = try await patientRepository.fetchPacientes(userId: userId)
+                let fetchedPacientes = try await patientRepository.fetchPatients(userId: userId)
                 withAnimation {
                     self.pacientes = fetchedPacientes
                 }

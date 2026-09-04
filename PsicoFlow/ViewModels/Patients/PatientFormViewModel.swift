@@ -95,7 +95,7 @@ class PatientFormViewModel: ObservableObject {
         
         if isAtivando && !isPremium {
             do {
-                let todosPacientes = try await patientRepository.fetchPacientes(userId: userId)
+                let todosPacientes = try await patientRepository.fetchPatients(userId: userId)
                 let totalAtivos = todosPacientes.filter { $0.status == .active }.count
                 
                 if totalAtivos >= 5 {
@@ -113,7 +113,7 @@ class PatientFormViewModel: ObservableObject {
         let isNovoPaciente = pacienteOriginal == nil
         
         do {
-            try await patientRepository.atualizarPaciente(pacienteAtualizado, userId: userId)
+            try await patientRepository.updatePatient(pacienteAtualizado, userId: userId)
             
             try await sessionGenerator.projetarSessoesFuturas(userId: userId)
             
@@ -150,7 +150,7 @@ class PatientFormViewModel: ObservableObject {
         do {
             // Fazemos o cast para o FirebaseRepository para acessar a função de cascata que criamos
             if let repo = patientRepository as? PatientFirebaseRepository {
-                try await repo.excluirPacienteEmCascata(pacienteID: id, userId: userId)
+                try await repo.deletePatientCascade(patientID: id, userId: userId)
                 
                 self.estaExcluindo = false
                 return true // Retorna true para a View fechar a tela

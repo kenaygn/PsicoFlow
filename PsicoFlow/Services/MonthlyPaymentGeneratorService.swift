@@ -35,7 +35,7 @@ class MonthlyPaymentGeneratorService {
         let proximoMesStr = formatter.string(from: proximoMes)
         let mesesParaProcessar = [mesAtualStr, proximoMesStr]
         
-        let pacientesDoBanco = try await patientRepository.fetchPacientes(userId: userId)
+        let pacientesDoBanco = try await patientRepository.fetchPatients(userId: userId)
         let pacientesAtivos = pacientesDoBanco.filter { $0.status == .active }
         let todosPagamentos = try await paymentRepository.fetchPagamentos(userId: userId)
         
