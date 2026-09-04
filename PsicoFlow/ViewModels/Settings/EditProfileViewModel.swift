@@ -50,10 +50,10 @@ class EditProfileViewModel: ObservableObject {
     var temAlteracoes: Bool {
         guard let user = authManager.usuarioAtual else { return false }
         
-        let dadosMudaram = nome != user.nome ||
+        let dadosMudaram = nome != user.name ||
                            crp != user.crp ||
-                           horaInicioExpediente != user.horaInicioExpediente ||
-                           horaFimExpediente != user.horaFimExpediente
+                           horaInicioExpediente != user.workdayStart ||
+                           horaFimExpediente != user.workdayEnd
         
         let tentandoMudarSenha = isEmailProvider && !novaSenha.isEmpty && !senhaAtual.isEmpty
         
@@ -68,10 +68,10 @@ class EditProfileViewModel: ObservableObject {
     
     private func carregarDadosAtuais() {
         guard let user = authManager.usuarioAtual else { return }
-        self.nome = user.nome
+        self.nome = user.name
         self.crp = user.crp
-        self.horaInicioExpediente = user.horaInicioExpediente
-        self.horaFimExpediente = user.horaFimExpediente
+        self.horaInicioExpediente = user.workdayStart
+        self.horaFimExpediente = user.workdayEnd
     }
     
     // MARK: - Validação Poderosa de Horários
@@ -125,10 +125,10 @@ class EditProfileViewModel: ObservableObject {
         
         if let currentUser = authManager.usuarioAtual {
             var userAtualizado = currentUser
-            userAtualizado.nome = self.nome
+            userAtualizado.name = self.nome
             userAtualizado.crp = self.crp
-            userAtualizado.horaInicioExpediente = self.horaInicioExpediente
-            userAtualizado.horaFimExpediente = self.horaFimExpediente
+            userAtualizado.workdayStart = self.horaInicioExpediente
+            userAtualizado.workdayEnd = self.horaFimExpediente
             
             do {
                 try await userRepository.updateUser(user: userAtualizado)

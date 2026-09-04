@@ -30,7 +30,7 @@ struct SettingsView: View {
     var body: some View {
         
         // Utilizamos o usuário da ViewModel, ou um fallback visual enquanto o Firebase devolve do cache (0.001s)
-        let user = viewModel.currentUser ?? User(id: "", nome: "Carregando...", crp: "", premium: false, criadoEm: Date(), horaInicioExpediente: "07:00", horaFimExpediente: "22:00")
+        let user = viewModel.currentUser ?? User(id: "", name: "Carregando...", crp: "", premium: false, createdAt: Date(), workdayStart: "07:00", workdayEnd: "22:00")
         
         NavigationStack {
             Form {
@@ -57,7 +57,7 @@ struct SettingsView: View {
                             //                                .foregroundColor(.teal)
                         }
                     }
-                }else if user.nome == "Carregando..."{
+                }else if user.name == "Carregando..."{
                     
                 } else {
                     PremiumCard(){
@@ -73,7 +73,7 @@ struct SettingsView: View {
                     NavigationLink(destination: EditProfileView(authManager: authManager)) {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(user.nome)
+                                Text(user.name)
                                     .font(.body)
                                 Text("Editar informações e senha")
                                     .font(.caption)

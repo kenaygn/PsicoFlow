@@ -9,24 +9,24 @@ import Foundation
 
 struct User: Identifiable, Codable {
     var id: String           // UID do Firebase Auth
-    var nome: String
+    var name: String
     var crp: String
     var premium: Bool
-    var criadoEm: Date
+    var createdAt: Date
     
-    var horaInicioExpediente: String
-    var horaFimExpediente: String
+    var workdayStart: String
+    var workdayEnd: String
     
     // Propriedade Computada para a UI (Avatar)
-    var iniciais: String {
-        let componentes = nome.components(separatedBy: " ")
+    var initials: String {
+        let componentes = name.components(separatedBy: " ")
         let primeiro = componentes.first?.first ?? "?"
         let ultimo = componentes.count > 1 ? componentes.last?.first ?? " " : " "
         return "\(primeiro)\(ultimo)".uppercased().trimmingCharacters(in: .whitespaces)
     }
     
     // Lógica de negócio baseada em dados
-    var statusAssinatura: String {
+    var subscriptionStatus: String {
         premium ? "Premium" : "Gratuito"
     }
 }

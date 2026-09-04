@@ -75,12 +75,12 @@ class AuthManager: ObservableObject {
         
         let novoUsuario = User(
             id: uid,
-            nome: nome,
+            name: nome,
             crp: crp,
             premium: false,
-            criadoEm: Date(),
-            horaInicioExpediente: horaInicio,
-            horaFimExpediente: horaFim
+            createdAt: Date(),
+            workdayStart: horaInicio,
+            workdayEnd: horaFim
         )
         
         try await userRepository.saveUser(user: novoUsuario)

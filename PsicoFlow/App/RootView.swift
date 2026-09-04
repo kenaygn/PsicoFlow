@@ -27,7 +27,7 @@ struct RootView: View {
     @State private var exibindoSplash: Bool = true
     
     private var precisaCompletarPerfil: Bool {
-        let nomeVazio = authManager.usuarioAtual?.nome.trimmingCharacters(in: .whitespaces).isEmpty ?? true
+        let nomeVazio = authManager.usuarioAtual?.name.trimmingCharacters(in: .whitespaces).isEmpty ?? true
         let crpVazio = authManager.usuarioAtual?.crp.trimmingCharacters(in: .whitespaces).isEmpty ?? true
         
         return nomeVazio || crpVazio

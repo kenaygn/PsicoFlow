@@ -21,8 +21,8 @@ class AgendaAvailabilityService {
     }
     
     var todosHorarios: [String] {
-        let horaInicio = AuthManager.shared.usuarioAtual?.horaInicioExpediente ?? "07:00"
-        let horaFim = AuthManager.shared.usuarioAtual?.horaFimExpediente ?? "22:00"
+        let horaInicio = AuthManager.shared.usuarioAtual?.workdayStart ?? "07:00"
+        let horaFim = AuthManager.shared.usuarioAtual?.workdayEnd ?? "22:00"
         
         if let inicioInt = Int(horaInicio.prefix(2)),
            let fimInt = Int(horaFim.prefix(2)),
