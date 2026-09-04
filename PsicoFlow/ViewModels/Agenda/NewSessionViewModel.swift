@@ -139,7 +139,7 @@ class NewSessionViewModel: ObservableObject {
                     try await fixedSessionRepository.saveFixedSession(novaRegra, userId: userId)
                     
                     let dataFim = generatorService.lastDayOfNextMonth()
-                    let sessoesGeradas = generatorService.generateSessions(para: novaRegra, dataFim: dataFim)
+                    let sessoesGeradas = generatorService.generateSessions(for: novaRegra, endDate: dataFim)
                     
                     for sessao in sessoesGeradas {
                         try await sessionRepository.saveSession(sessao, userId: userId)

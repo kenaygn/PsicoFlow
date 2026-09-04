@@ -118,17 +118,17 @@ class PatientFormViewModel: ObservableObject {
             try await sessionGenerator.projectFutureSessions(userId: userId)
             
             if statusAntigo == .active && pacienteAtualizado.status == .inactive {
-                try await paymentService.removerCobrancasPendentes(para: pacienteAtualizado.id, userId: userId)
+                try await paymentService.removePendingCharges(for: pacienteAtualizado.id, userId: userId)
             } else if (statusAntigo == .inactive && pacienteAtualizado.status == .active) || isNovoPaciente {
-                try await paymentService.gerarCobrancasAtuaisEFuturas(userId: userId)
+                try await paymentService.generateCurrentAndFutureCharges(userId: userId)
             }
             
             let precoMudou = pacienteOriginal != nil && pacienteOriginal!.value != pacienteAtualizado.value
             
             if statusAntigo == .active && pacienteAtualizado.status == .active && precoMudou {
-                try await paymentService.atualizarValorPagamentosPendentes(
-                    pacienteID: pacienteAtualizado.id,
-                    novoValor: pacienteAtualizado.value,
+                try await paymentService.updatePendingPaymentsValue(
+                    patientID: pacienteAtualizado.id,
+                    newValue: pacienteAtualizado.value,
                     userId: userId
                 )
             }
