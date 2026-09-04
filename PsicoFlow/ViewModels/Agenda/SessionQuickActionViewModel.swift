@@ -51,10 +51,10 @@ class SessionQuickActionViewModel: ObservableObject {
         
         Task {
             do {
-                let livres = try await availabilityService.horariosLivresParaSessaoAvulsa(
-                    data: novaData,
-                    ignorandoSessaoID: sessao.id,
-                    derivadaDeContratoID: sessao.fixedSessionID,
+                let livres = try await availabilityService.freeSlotsForSingleSession(
+                    date: novaData,
+                    ignoringSessionID: sessao.id,
+                    derivedFromContractID: sessao.fixedSessionID,
                     userId: userId
                 )
                 

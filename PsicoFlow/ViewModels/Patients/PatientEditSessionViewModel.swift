@@ -81,16 +81,16 @@ class PatientEditSessionViewModel: ObservableObject {
             do {
                 switch itemToEdit {
                 case .fixa(let fixaAtual):
-                    self.horariosLivres = try await availabilityService.horariosLivresParaContrato(
-                        diaDaSemana: selectedWeekday,
-                        ignorandoContratoID: fixaAtual.id,
+                    self.horariosLivres = try await availabilityService.freeSlotsForContract(
+                        weekday: selectedWeekday,
+                        ignoringContractID: fixaAtual.id,
                         userId: userId
                     )
                 case .avulsa(let avulsaAtual):
-                    self.horariosLivres = try await availabilityService.horariosLivresParaSessaoAvulsa(
-                        data: selectedDate,
-                        ignorandoSessaoID: avulsaAtual.id,
-                        derivadaDeContratoID: avulsaAtual.fixedSessionID,
+                    self.horariosLivres = try await availabilityService.freeSlotsForSingleSession(
+                        date: selectedDate,
+                        ignoringSessionID: avulsaAtual.id,
+                        derivedFromContractID: avulsaAtual.fixedSessionID,
                         userId: userId
                     )
                 }

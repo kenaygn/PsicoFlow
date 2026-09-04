@@ -86,7 +86,7 @@ class NewSessionViewModel: ObservableObject {
         Task {
             do {
                 if isFixedSession {
-                    let livresContrato = try await availabilityService.horariosLivresParaContrato(diaDaSemana: selectedWeekday, userId: userId)
+                    let livresContrato = try await availabilityService.freeSlotsForContract(weekday: selectedWeekday, userId: userId)
                     
                     await MainActor.run {
                         // Se o usuário tentar fixar um horário que já tem dono no contrato:
@@ -99,7 +99,7 @@ class NewSessionViewModel: ObservableObject {
                         }
                     }
                 } else {
-                    let livresAvulsos = try await availabilityService.horariosLivresParaSessaoAvulsa(data: selectedDate, userId: userId)
+                    let livresAvulsos = try await availabilityService.freeSlotsForSingleSession(date: selectedDate, userId: userId)
                     
                     await MainActor.run {
                         self.horariosLivres = livresAvulsos

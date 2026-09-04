@@ -24,7 +24,7 @@ class AgendaViewModel: ObservableObject {
     private var pacientesListener: ListenerRegistration?
     
     var timeSlots: [String] {
-        availabilityService.todosHorarios
+        availabilityService.allTimeSlots
     }
     
     private let sessionRepository: SessionRepositoryProtocol

@@ -228,10 +228,10 @@ class HomeViewModel: ObservableObject {
         )
         
         do {
-            return try await service.horariosLivresParaSessaoAvulsa(
-                data: data,
-                ignorandoSessaoID: sessaoID,
-                derivadaDeContratoID: sessaoAtual?.fixedSessionID,
+            return try await service.freeSlotsForSingleSession(
+                date: data,
+                ignoringSessionID: sessaoID,
+                derivedFromContractID: sessaoAtual?.fixedSessionID,
                 userId: userId
             )
         } catch {
