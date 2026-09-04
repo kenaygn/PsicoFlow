@@ -109,7 +109,7 @@ class FinanceViewModel: ObservableObject {
     
     // MARK: - Propriedades Computadas (Inalteradas)
     var dataDaPrimeiraPendenciaAtrasada: Date? {
-        return financeAnalyzer.identificarPrimeiroMesComAtraso(nos: todosPagamentos)
+        return financeAnalyzer.identifyFirstOverdueMonth(in: todosPagamentos)
     }
     
     var labelPrimeiraPendencia: String {
